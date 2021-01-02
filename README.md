@@ -1,7 +1,12 @@
 # Rust\-_V_
-A Rust-written ray tracer for my B.Sc. thesis.
-
+A Rust-written ray tracer for my B.Sc. thesis. \
 The _V_ stands for a ray reflection, and therefore figuratively for ray tracing.
+
+## *NOTICE*
+This repository is in the process of being moved to. During this process, I am re-evaluating
+code paths, simplifying things and writing tests.
+
+Therefore, the current status of this repository is **WIP** and not really useful yet.
 
 ## Building
 ### Features
