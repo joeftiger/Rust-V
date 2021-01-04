@@ -1,10 +1,13 @@
+use crate::renderer::Renderer;
 use std::convert::TryInto;
+use ultraviolet::UVec2;
 
+/// # Summary
+/// A configuration stores all parameters for the renderer.
 #[derive(Debug, Clone)]
 pub struct Configuration {
     pub verbose: bool,
-    pub width: u32,
-    pub height: u32,
+    pub resolution: UVec2,
     pub depth: u32,
     pub passes: u32,
     pub block_size: u32,
@@ -17,11 +20,19 @@ pub struct Configuration {
 }
 
 impl Configuration {
-    // pub fn create_renderer(&self) -> Renderer {
-    //
-    // }
+    pub fn create_renderer(&self) -> Renderer {
+        // let (scene, camera) = match self.demo_type {
+        //     DemoType::SphereScene => SphereScene::create(self.width, self.height),
+        //     DemoType::CornellScene => CornellScene::create(self.width, self.height),
+        //     DemoType::DebugScene => DebugScene::create(self.width, self.height),
+        // };
+
+        unimplemented!()
+    }
 }
 
+/// # Summary
+/// Represents the pixel type to save.
 #[derive(Debug, Clone)]
 pub enum PixelType {
     U8,
@@ -40,6 +51,8 @@ impl TryInto<PixelType> for &str {
     }
 }
 
+/// # Summary
+/// Represents the scene integrator.
 #[derive(Debug, Clone)]
 pub enum IntegratorType {
     Debug,
@@ -60,6 +73,8 @@ impl TryInto<IntegratorType> for &str {
     }
 }
 
+/// # Summary
+/// Represents a demo scene to load.
 #[derive(Debug, Clone)]
 pub enum DemoType {
     SphereScene,
