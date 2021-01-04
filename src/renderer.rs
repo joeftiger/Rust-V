@@ -1,13 +1,14 @@
 use crate::camera::Camera;
 use crate::configuration::Configuration;
-use crate::grid::GridBlock;
+use crate::grid::{Grid, GridBlock};
 use crate::integrator::Integrator;
 use crate::sampler::Sampler;
 use crate::scene::Scene;
 use crate::Spectrum;
-use bitflags::_core::sync::atomic::{AtomicBool, AtomicUsize};
-use std::sync::atomic::Ordering;
-use std::sync::{Arc, RwLock};
+use indicatif::ProgressBar;
+use indicatif::ProgressStyle;
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::thread::JoinHandle;
 use ultraviolet::UVec2;
@@ -72,6 +73,16 @@ struct RenderPixel {
 
 impl RenderPixel {
     /// # Summary
+    /// Adds the given spectrum and increases the sample size by 1.
+    ///
+    /// # Arguments
+    /// * `spectrum` - The spectrum to add
+    pub fn add(&mut self, spectrum: Spectrum) {
+        self.spectrum += spectrum;
+        self.samples += 1;
+    }
+
+    /// # Summary
     /// Computes the average of this pixel.
     ///
     /// # Returns
@@ -109,7 +120,7 @@ struct RenderBlock {
     pixels: Vec<RenderPixel>,
 }
 
-impl From<GridBlock> for RenderBlock {
+impl From<&GridBlock> for RenderBlock {
     /// #Summary
     /// Creates a new render block from the given grid block.
     ///
@@ -118,7 +129,7 @@ impl From<GridBlock> for RenderBlock {
     ///
     /// # Returns
     /// * Self
-    fn from(block: GridBlock) -> Self {
+    fn from(block: &GridBlock) -> Self {
         let pixels = block.prod().iter().map(|v| RenderPixel::from(*v)).collect();
 
         Self { pixels }
@@ -126,12 +137,188 @@ impl From<GridBlock> for RenderBlock {
 }
 
 /// WIP
+#[derive(Clone)]
 pub struct Renderer<'a> {
     scene: &'a Scene<'a>,
     camera: &'a dyn Camera,
     sampler: &'a dyn Sampler,
     integrator: &'a dyn Integrator,
+    config: &'a Configuration,
     render_blocks: Arc<Vec<RwLock<RenderBlock>>>,
-    progress: Arc<AtomicUsize>,
-    configuration: Arc<Configuration>,
+    progress: Arc<AtomicU32>,
+    progress_bar: Arc<Mutex<ProgressBar>>,
+}
+
+impl<'a> Renderer<'a> {
+    /// # Summary
+    /// Creates and initializes a new renderer with the given arguments.
+    ///
+    /// # Arguments
+    /// * `scene` - The objects scene
+    /// * `camera` - The camera to use
+    /// * `sampler` - The random sampler
+    /// * `integrator` - The scene integrator
+    /// * `config` - The original config
+    ///
+    /// # Returns
+    /// * An initialized renderer
+    pub fn new(
+        scene: &'a Scene<'a>,
+        camera: &'a dyn Camera,
+        sampler: &'a dyn Sampler,
+        integrator: &'a dyn Integrator,
+        config: &'a Configuration,
+    ) -> Self {
+        let render_blocks = {
+            let grid = Grid::new(&config.resolution, config.block_size);
+            let blocks = grid
+                .blocks
+                .iter()
+                .map(|b| RwLock::new(RenderBlock::from(b)))
+                .collect();
+
+            Arc::new(blocks)
+        };
+
+        let progress = Arc::new(AtomicU32::default());
+
+        let progress_bar = {
+            let bar = ProgressBar::new(0);
+            bar.set_style(ProgressStyle::default_bar().template(
+                "[{elapsed} elapsed] {wide_bar:.cyan/white} {percent}% [{eta} remaining]",
+            ));
+            Arc::new(Mutex::new(bar))
+        };
+
+        Self {
+            scene,
+            camera,
+            sampler,
+            integrator,
+            config,
+            render_blocks,
+            progress,
+            progress_bar,
+        }
+    }
+}
+
+impl Renderer<'_> {
+    /// # Summary
+    /// Returns the number of render blocks.
+    ///
+    /// # Returns
+    /// * Number of render blocks
+    pub fn get_num_blocks(&self) -> u32 {
+        self.render_blocks.len() as u32
+    }
+
+    /// # Summary
+    /// Returns the current progress. It will/should be in the range `[0, z]` for
+    /// `z = render_blocks * depth`.
+    ///
+    /// # Returns
+    /// * The current progress
+    pub fn get_progress(&self) -> u32 {
+        self.progress.load(Ordering::Relaxed)
+    }
+
+    /// # Summary
+    /// Returns whether the current progress is at/over the limit of `[0, z]` for
+    /// `z = render_blocks * depth`.
+    ///
+    /// # Returns
+    /// * Whether the render is done
+    pub fn is_done(&self) -> bool {
+        self.progress_out_of_range(self.get_progress())
+    }
+
+    /// # Summary
+    /// Returns whether the given progress is at/over the limit of `[0, z]` for
+    /// `z = render_blocks * depth`.
+    ///
+    /// # Returns
+    /// * Whether the progress is at/over the limit
+    fn progress_out_of_range(&self, progress: u32) -> bool {
+        progress >= self.get_num_blocks() * self.config.depth
+    }
+
+    /// # Summary
+    /// Renders the given pixel with this renderer's `sampler` and `integrator`.
+    ///
+    /// # Constraints
+    /// * `pixel` - Should be within the camera's resolution.
+    ///
+    /// # Returns
+    /// * The computed pixel spectrum
+    fn render_pixel(&self, pixel: UVec2) -> Spectrum {
+        debug_assert!(pixel == pixel.min_by_component(self.config.resolution));
+
+        let sample = self.sampler.get_2d();
+        let ray = self.camera.primary_ray(&pixel, &sample);
+
+        self.integrator.integrate(&self.scene, &ray, self.sampler)
+    }
+
+    /// # Summary
+    /// Fetch-adds-1 the current progress and returns the associated render block.
+    /// If the current progress was already at/over the limit of `[0, z]` for
+    ///`z = render_blocks * depth`, `None` will be returned.
+    ///
+    /// # Returns
+    /// * Next block if available
+    fn try_get_next_block(&mut self) -> Option<&RwLock<RenderBlock>> {
+        let mut index = self.progress.fetch_add(1, Ordering::Relaxed);
+
+        if self.progress_out_of_range(index) {
+            None
+        } else {
+            index %= self.get_num_blocks();
+            Some(&self.render_blocks[index as usize])
+        }
+    }
+}
+
+impl Renderer<'static> {
+    /// # Summary
+    /// Starts the rendering progress.
+    ///
+    /// `config.threads` threads will be allocated for this.
+    /// This function returns a render job that can be stopped or
+    /// waited for to end.
+    ///
+    /// # Returns
+    /// * The render job
+    pub fn render(&mut self) -> RenderJob<()> {
+        assert!(!self.is_done());
+
+        let num_threads = self.config.threads;
+        let mut handles = Vec::with_capacity(num_threads as usize);
+
+        let should_stop = Arc::new(AtomicBool::default());
+        for _ in 0..num_threads {
+            let this = self.clone();
+            let this_should_stop = should_stop.clone();
+
+            // each thread loops and gets the next block unless it should stop or has finished.
+            let handle = thread::spawn(move || loop {
+                if this_should_stop.load(Ordering::Relaxed) {
+                    break;
+                }
+
+                if let Some(block) = this.clone().try_get_next_block() {
+                    let mut lock = block.write().expect("Block is poisoned");
+
+                    lock.pixels.iter_mut().for_each(|px| {
+                        let spectrum = this.render_pixel(px.pixel);
+                        px.add(spectrum);
+                    })
+                }
+            });
+
+            handles.push(handle);
+        }
+
+        RenderJob::new(should_stop, handles)
+    }
 }
