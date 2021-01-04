@@ -1,6 +1,6 @@
 [workspace]
-members = [ "color", "geometry", "utility" ]
-default-members = [ "color", "geometry", "utility" ]
+members = [ "color", "geometry", "scenes", "utility" ]
+default-members = [ "color", "geometry", "scenes", "utility" ]
 
 [package]
 name = "rust-v"
@@ -13,10 +13,12 @@ edition = "2018"
 [dependencies]
 # bitmask flag generator
 bitflags = ""
-# linear algebra
-ultraviolet = { version = "", features= ["int"] }
 # fast random types
 fastrand = ""
+# progress bars etc.
+indicatif = ""
+# linear algebra
+ultraviolet = { version = "", features= ["int"] }
 
 color = { path = "./color" }
 geometry = { path = "./geometry" }
