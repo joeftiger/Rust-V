@@ -34,7 +34,7 @@ use geometry::Ray;
 /// An integrator to calculate the color of a pixel / ray.
 ///
 /// This trait provides generic methods like `specular_reflection` and `specular_transmission`.
-pub trait Integrator {
+pub trait Integrator: Send + Sync {
     /// # Summary
     /// Integrates the given scene with the primary ray and the sampler
     ///

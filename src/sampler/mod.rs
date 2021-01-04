@@ -21,7 +21,7 @@ impl Sample {
 
 /// # Summary
 /// A sampler is responsible for generating random values inside `[0, 1)` in various formats.
-pub trait Sampler {
+pub trait Sampler: Send + Sync {
     /// # Summary
     /// Generates a new random value inside `[0, 1)`.
     ///

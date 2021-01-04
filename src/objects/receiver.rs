@@ -3,7 +3,7 @@ use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 
 /// # Summary
 /// A receiver is a geometry that also has a bsdf.
-pub trait ReceiverExt: Geometry {
+pub trait ReceiverExt: Geometry + Send + Sync {
     /// # Summary
     /// Returns the geometry of this receiver.
     ///
@@ -43,7 +43,7 @@ impl<'a, T> Receiver<'a, T> {
 
 impl<T> ReceiverExt for Receiver<'_, T>
 where
-    T: Geometry,
+    T: Geometry + Send + Sync,
 {
     fn geometry(&self) -> &dyn Geometry {
         &self.geometry

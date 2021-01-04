@@ -59,26 +59,24 @@ impl Grid {
     ///
     /// # Returns
     /// * Self
-    pub fn new(width: u32, height: u32, block_size: u32) -> Self {
+    pub fn new(size: &UVec2, block_size: u32) -> Self {
+        let width = size.x;
+        let height = size.y;
         let x_blocks = (width as f32 / block_size as f32).ceil() as u32;
         let y_blocks = (height as f32 / block_size as f32).ceil() as u32;
 
         let mut blocks = Vec::with_capacity((x_blocks * y_blocks) as usize);
 
         for y in 0..y_blocks {
-            let y_start = y * block_size;
-            let y_end = y_start + block_border_size;
-            let y_range = y_start..(y_max.min(y_end));
-
             for x in 0..x_blocks {
                 let x_start = x * block_size;
                 let y_start = y * block_size;
 
-                let x_end = x_start + block_border_size;
-                let y_end = y_start + block_border_size;
+                let x_end = x_start + block_size;
+                let y_end = y_start + block_size;
 
-                let x_range = x_start..(x_max.min(x_end));
-                let y_range = y_start..(y_max.min(y_end));
+                let x_range = x_start..(width.min(x_end));
+                let y_range = y_start..(height.min(y_end));
 
                 blocks.push(GridBlock::new(x_range, y_range));
             }

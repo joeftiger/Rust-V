@@ -1,4 +1,5 @@
 use crate::camera::Camera;
+#[cfg(debug_assertions)]
 use crate::debug_utils::{is_finite, is_normalized, within_01};
 use geometry::Ray;
 use ultraviolet::{Mat4, UVec2, Vec2, Vec3};

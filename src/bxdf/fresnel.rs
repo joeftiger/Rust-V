@@ -79,7 +79,7 @@ pub fn fresnel_dielectric(mut cos_i: f32, mut eta_i: f32, mut eta_t: f32) -> f32
 
 /// # Summary
 /// Provides an interface for computing Fresnel reflection coefficients.
-pub trait Fresnel {
+pub trait Fresnel: Send + Sync {
     /// # Summary
     /// Evaluates the amount of light reflected by the surface.
     ///

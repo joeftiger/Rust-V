@@ -136,7 +136,7 @@ where
 
 impl<T> ReceiverExt for Emitter<'_, T>
 where
-    T: Geometry,
+    T: Geometry + Send + Sync,
 {
     fn geometry(&self) -> &dyn Geometry {
         &self.geometry
@@ -314,7 +314,7 @@ impl SurfaceSample {
 
 /// # Summary
 /// Allows geometries to be sampled for a surface point.
-pub trait Sampleable: Geometry {
+pub trait Sampleable: Geometry + Send + Sync {
     /// # Summary
     /// Returns the surface area of this object.
     ///

@@ -6,8 +6,7 @@ use crate::bxdf::{
     Fresnel, FresnelDielectric, TransportMode,
 };
 #[cfg(debug_assertions)]
-use crate::debug_utils::is_normalized;
-use crate::debug_utils::within_01;
+use crate::debug_utils::{is_normalized, within_01};
 use crate::Spectrum;
 use ultraviolet::{Vec2, Vec3};
 

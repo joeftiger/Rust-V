@@ -5,7 +5,7 @@ pub use perspective::PerspectiveCamera;
 use geometry::Ray;
 use ultraviolet::{UVec2, Vec2};
 
-pub trait Camera {
+pub trait Camera: Send + Sync {
     /// # Summary
     /// Creates a new primary ray of the given pixel.
     ///

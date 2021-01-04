@@ -345,7 +345,7 @@ impl BxDFSample {
 /// The common base shared between BRDFs and BTDFs.
 /// Provides methods for evaluating and sampling the distribution function for pairs of directions
 /// at an intersection.
-pub trait BxDF {
+pub trait BxDF: Send + Sync {
     /// # Summary
     /// Returns the type of this bxdf.
     ///
