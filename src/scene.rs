@@ -1,6 +1,5 @@
 use crate::objects::{EmitterExt, SceneObject};
 use geometry::{Aabb, Boundable, Intersectable, Intersection, Ray};
-use ultraviolet::Vec3;
 
 /// # Summary
 /// A scene intersection is a more detailed `Intersection`, also containing a reference to the
