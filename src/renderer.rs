@@ -1,5 +1,5 @@
 use crate::camera::Camera;
-use crate::configuration::Configuration;
+use crate::configuration::RenderConfig;
 use crate::grid::{Grid, GridBlock};
 use crate::integrator::Integrator;
 use crate::sampler::Sampler;
@@ -143,7 +143,7 @@ pub struct Renderer<'a> {
     camera: &'a dyn Camera,
     sampler: &'a dyn Sampler,
     integrator: &'a dyn Integrator,
-    config: &'a Configuration,
+    config: &'a RenderConfig,
     render_blocks: Arc<Vec<RwLock<RenderBlock>>>,
     progress: Arc<AtomicU32>,
     progress_bar: Arc<Mutex<ProgressBar>>,
@@ -167,7 +167,7 @@ impl<'a> Renderer<'a> {
         camera: &'a dyn Camera,
         sampler: &'a dyn Sampler,
         integrator: &'a dyn Integrator,
-        config: &'a Configuration,
+        config: &'a RenderConfig,
     ) -> Self {
         let render_blocks = {
             let grid = Grid::new(&config.resolution, config.block_size);
