@@ -10,7 +10,6 @@ pub use fresnel::{Fresnel, FresnelDielectric, FresnelNoOp};
 pub use lambertian::{LambertianReflection, LambertianTransmission};
 pub use specular::{FresnelSpecular, SpecularReflection, SpecularTransmission};
 
-#[cfg(debug_assertions)]
 use crate::debug_utils::{in_range_incl, is_finite, is_normalized, within_01};
 use crate::mc::cos_sample_hemisphere;
 use crate::Spectrum;

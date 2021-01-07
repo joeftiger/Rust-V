@@ -3,38 +3,30 @@ use crate::sampler::Sample;
 use crate::Spectrum;
 use ultraviolet::Vec3;
 
-pub struct BSDF<'a> {
-    bxdfs: &'a [&'a dyn BxDF],
+pub struct BSDF {
+    bxdfs: Vec<Box<dyn BxDF>>,
 }
 
-impl<'a> BSDF<'a> {
-    pub fn new(bxdfs: &'a [&'a dyn BxDF]) -> Self {
+impl From<Vec<Box<dyn BxDF>>> for BSDF {
+    fn from(bxdfs: Vec<Box<dyn BxDF>>) -> Self {
         Self { bxdfs }
     }
+}
 
-    pub fn empty() -> Self {
-        Self { bxdfs: &[] }
+impl BSDF {
+    pub fn new(bxdfs: Vec<Box<dyn BxDF>>) -> Self {
+        Self { bxdfs }
     }
 
     pub fn size(&self) -> usize {
         self.bxdfs.len()
     }
 
-    fn get_type(&self) -> BxDFType {
-        self.bxdfs
-            .iter()
-            .fold(BxDFType::NONE, |typ, bxdf| typ | bxdf.get_type())
-    }
-
-    fn is_type(&self, t: BxDFType) -> bool {
-        self.bxdfs.iter().any(|bxdf| bxdf.is_type(t))
-    }
-
     pub fn num_types(&self, t: BxDFType) -> usize {
         self.bxdfs.iter().filter(|bxdf| bxdf.is_type(t)).count()
     }
 
-    fn random_matching_bxdf(&self, t: BxDFType, rand: f32) -> Option<&'a dyn BxDF> {
+    fn random_matching_bxdf<'a>(&self, t: BxDFType, rand: f32) -> Option<&Box<dyn BxDF>> {
         let count = self.num_types(t);
         if count == 0 {
             return None;
@@ -43,7 +35,7 @@ impl<'a> BSDF<'a> {
         let index = (rand * count as f32) as usize;
         self.bxdfs
             .iter()
-            .filter_map(|bxdf| if bxdf.is_type(t) { Some(*bxdf) } else { None })
+            .filter_map(|bxdf| if bxdf.is_type(t) { Some(bxdf) } else { None })
             .nth(index)
     }
 
