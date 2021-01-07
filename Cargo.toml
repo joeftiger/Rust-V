@@ -1,6 +1,6 @@
 [workspace]
-members = [ "color", "geometry", "scenes", "utility" ]
-default-members = [ "color", "geometry", "scenes", "utility" ]
+members = [ "color", "geometry", "utility" ]
+default-members = [ "color", "geometry", "utility" ]
 
 [package]
 name = "rust-v"
@@ -13,13 +13,27 @@ edition = "2018"
 [dependencies]
 # bitmask flag generator
 bitflags = ""
+# Program argument parser
+clap = { version = "", features = ["yaml"] }
 # fast random types
 fastrand = ""
+# image loading / saving
+image = ""
 # progress bars etc.
 indicatif = ""
+# lazy statics / consts refs
+lazy_static = ""
+# num of logical / physical cpus
+num_cpus = ""
+# small vectors for bsdf e.g.
+smallvec = ""
 # linear algebra
 ultraviolet = { version = "", features= ["int"] }
 
 color = { path = "./color" }
 geometry = { path = "./geometry" }
 utility = { path = "./utility" }
+
+[features]
+default = []
+live-window = [] #["show-image"]
