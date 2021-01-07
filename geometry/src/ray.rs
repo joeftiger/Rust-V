@@ -1,4 +1,4 @@
-use crate::debug_util::{in_range, is_finite, is_normalized};
+use crate::debug_util::{is_finite, is_normalized, in_range_incl};
 
 use ultraviolet::Vec3;
 
@@ -105,7 +105,7 @@ impl Ray {
     pub fn contains(&self, t: f32) -> bool {
         debug_assert!(!t.is_nan());
 
-        in_range(t, self.t_start, self.t_end)
+        in_range_incl(t, self.t_start, self.t_end)
     }
 
     /// # Summary

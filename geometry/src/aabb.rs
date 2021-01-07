@@ -101,14 +101,11 @@ impl Intersectable for Aabb {
         let t_min = f32::max(t_min_vec.z, f32::max(t_min_vec.y, t_min_vec.x));
         let t_max = f32::min(t_max_vec.z, f32::min(t_max_vec.y, t_max_vec.x));
 
-        let t;
-        if ray.contains(t_min) {
-            t = t_min;
-        } else if ray.contains(t_max) {
-            t = t_max;
-        } else {
+        if t_max < ray.t_start || t_max < t_min || t_min > ray.t_end {
             return None;
         }
+
+        let t = t_min;
 
         let point = ray.at(t);
         let half_size = self.size() / 2.0;
@@ -120,6 +117,7 @@ impl Intersectable for Aabb {
         normal.x = (normal.x as i32) as f32;
         normal.y = (normal.y as i32) as f32;
         normal.z = (normal.z as i32) as f32;
+        normal.normalize();
 
         Some(Intersection::new(point, normal, t, *ray))
     }
@@ -134,7 +132,7 @@ impl Intersectable for Aabb {
         let t_min = f32::max(t_min_vec.z, f32::max(t_min_vec.y, t_min_vec.x));
         let t_max = f32::min(t_max_vec.z, f32::min(t_max_vec.y, t_max_vec.x));
 
-        ray.contains(t_min) || ray.contains(t_max)
+        t_max >= ray.t_start && t_max >= t_min && t_min <= ray.t_end
     }
 }
 
