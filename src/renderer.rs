@@ -5,6 +5,7 @@ use crate::integrator::Integrator;
 use crate::sampler::Sampler;
 use crate::scene::Scene;
 use crate::Spectrum;
+use image::{ImageBuffer, Rgb};
 use indicatif::ProgressBar;
 use indicatif::ProgressStyle;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
@@ -138,18 +139,18 @@ impl From<&GridBlock> for RenderBlock {
 
 /// WIP
 #[derive(Clone)]
-pub struct Renderer<'a> {
-    scene: &'a Scene<'a>,
-    camera: &'a dyn Camera,
-    sampler: &'a dyn Sampler,
-    integrator: &'a dyn Integrator,
-    config: &'a RenderConfig,
+pub struct Renderer {
+    scene: Arc<Scene>,
+    camera: Arc<dyn Camera>,
+    sampler: Arc<dyn Sampler>,
+    integrator: Arc<dyn Integrator>,
+    config: RenderConfig,
     render_blocks: Arc<Vec<RwLock<RenderBlock>>>,
     progress: Arc<AtomicU32>,
     progress_bar: Arc<Mutex<ProgressBar>>,
 }
 
-impl<'a> Renderer<'a> {
+impl Renderer {
     /// # Summary
     /// Creates and initializes a new renderer with the given arguments.
     ///
@@ -163,11 +164,11 @@ impl<'a> Renderer<'a> {
     /// # Returns
     /// * An initialized renderer
     pub fn new(
-        scene: &'a Scene<'a>,
-        camera: &'a dyn Camera,
-        sampler: &'a dyn Sampler,
-        integrator: &'a dyn Integrator,
-        config: &'a RenderConfig,
+        scene: Scene,
+        camera: Arc<dyn Camera>,
+        sampler: Arc<dyn Sampler>,
+        integrator: Arc<dyn Integrator>,
+        config: RenderConfig,
     ) -> Self {
         let render_blocks = {
             let grid = Grid::new(&config.resolution, config.block_size);
@@ -191,7 +192,7 @@ impl<'a> Renderer<'a> {
         };
 
         Self {
-            scene,
+            scene: Arc::new(scene),
             camera,
             sampler,
             integrator,
@@ -201,9 +202,7 @@ impl<'a> Renderer<'a> {
             progress_bar,
         }
     }
-}
 
-impl Renderer<'_> {
     /// # Summary
     /// Returns the number of render blocks.
     ///
@@ -257,7 +256,7 @@ impl Renderer<'_> {
         let sample = self.sampler.get_2d();
         let ray = self.camera.primary_ray(&pixel, &sample);
 
-        self.integrator.integrate(&self.scene, &ray, self.sampler)
+        self.integrator.integrate(&self.scene, &ray, &*self.sampler)
     }
 
     /// # Summary
@@ -268,18 +267,15 @@ impl Renderer<'_> {
     /// # Returns
     /// * Next block if available
     fn try_get_next_block(&mut self) -> Option<&RwLock<RenderBlock>> {
-        let mut index = self.progress.fetch_add(1, Ordering::Relaxed);
+        let index = self.progress.fetch_add(1, Ordering::Relaxed);
 
         if self.progress_out_of_range(index) {
             None
         } else {
-            index %= self.get_num_blocks();
-            Some(&self.render_blocks[index as usize])
+            Some(&self.render_blocks[(index % self.get_num_blocks()) as usize])
         }
     }
-}
 
-impl Renderer<'static> {
     /// # Summary
     /// Starts the rendering progress.
     ///
@@ -292,33 +288,83 @@ impl Renderer<'static> {
     pub fn render(&mut self) -> RenderJob<()> {
         assert!(!self.is_done());
 
+        // reset progress bar
+        {
+            let bar = self.progress_bar.lock().expect("Progress bar poisoned");
+            bar.set_length((self.get_num_blocks() * self.config.passes) as u64);
+            bar.reset();
+        }
+
         let num_threads = self.config.threads;
         let mut handles = Vec::with_capacity(num_threads as usize);
 
         let should_stop = Arc::new(AtomicBool::default());
-        for _ in 0..num_threads {
+        for i in 0..num_threads {
             let this = self.clone();
             let this_should_stop = should_stop.clone();
 
             // each thread loops and gets the next block unless it should stop or has finished.
-            let handle = thread::spawn(move || loop {
-                if this_should_stop.load(Ordering::Relaxed) {
-                    break;
-                }
+            let handle = thread::Builder::new()
+                .name(format!("Render thread {}", i))
+                .spawn(move || loop {
+                    if this_should_stop.load(Ordering::Relaxed) {
+                        break;
+                    }
 
-                if let Some(block) = this.clone().try_get_next_block() {
-                    let mut lock = block.write().expect("Block is poisoned");
+                    if let Some(block) = this.clone().try_get_next_block() {
+                        let mut lock = block.write().expect("Block is poisoned");
 
-                    lock.pixels.iter_mut().for_each(|px| {
-                        let spectrum = this.render_pixel(px.pixel);
-                        px.add(spectrum);
-                    })
-                }
-            });
+                        lock.pixels.iter_mut().for_each(|px| {
+                            let spectrum = this.render_pixel(px.pixel);
+                            px.add(spectrum);
+                        });
+
+                        this.progress_bar
+                            .lock()
+                            .expect("Progress bar is poisoned")
+                            .inc(1);
+                    } else {
+                        println!("Render thread {} has no more blocks to do. Stopping...", i);
+                        break;
+                    }
+                })
+                .expect(&*format!("Could not spawn thread {}", i));
 
             handles.push(handle);
         }
 
         RenderJob::new(should_stop, handles)
+    }
+
+    //noinspection DuplicatedCode
+    pub fn get_image_u8(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+        let res = self.config.resolution;
+        let mut buffer = ImageBuffer::new(res.x, res.y);
+
+        self.render_blocks.iter().for_each(|block| {
+            let lock = block.read().expect("Block is poisoned");
+
+            lock.pixels
+                .iter()
+                .for_each(|px| buffer.put_pixel(px.pixel.x, px.pixel.y, px.average().into()));
+        });
+
+        buffer
+    }
+
+    //noinspection DuplicatedCode
+    pub fn get_image_u16(&self) -> ImageBuffer<Rgb<u16>, Vec<u16>> {
+        let res = self.config.resolution;
+        let mut buffer = ImageBuffer::new(res.x, res.y);
+
+        self.render_blocks.iter().for_each(|block| {
+            let lock = block.read().expect("Block is poisoned");
+
+            lock.pixels
+                .iter()
+                .for_each(|px| buffer.put_pixel(px.pixel.x, px.pixel.y, px.average().into()));
+        });
+
+        buffer
     }
 }

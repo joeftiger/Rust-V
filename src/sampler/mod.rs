@@ -1,4 +1,9 @@
-#[cfg(debug_assertions)]
+mod noop_sampler;
+mod random_sampler;
+
+pub use noop_sampler::NoOpSampler;
+pub use random_sampler::RandomSampler;
+
 use crate::debug_utils::{in_range_incl_left, within_01};
 use ultraviolet::{Vec2, Vec3};
 
@@ -57,43 +62,5 @@ pub trait Sampler: Send + Sync {
     #[inline]
     fn get_sample(&self) -> Sample {
         Sample::new(self.get_1d(), self.get_2d())
-    }
-}
-
-/// # Summary
-/// A simple random sampler using `fastrand` to generate random valuates.
-///
-/// Using `RandomSampler::default()` initializes the seed with value `0`.
-pub struct RandomSampler;
-
-impl Default for RandomSampler {
-    fn default() -> Self {
-        fastrand::seed(0);
-        Self
-    }
-}
-
-impl Sampler for RandomSampler {
-    #[inline]
-    fn get_1d(&self) -> f32 {
-        let rand = fastrand::f32();
-        debug_assert!(in_range_incl_left(rand, 0.0, 1.0));
-        rand
-    }
-}
-
-/// # Summary
-/// A no-op Sampler only returning `0.5`.
-pub struct NoOpSampler;
-
-impl Sampler for NoOpSampler {
-    /// # Summary
-    /// Always returns `0.5`
-    ///
-    /// # Returns
-    /// * `0.5`
-    #[inline(always)]
-    fn get_1d(&self) -> f32 {
-        0.5
     }
 }

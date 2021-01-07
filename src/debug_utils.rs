@@ -1,4 +1,3 @@
-#![cfg(debug_assertions)]
 #![allow(dead_code)]
 
 use ultraviolet::{Vec2, Vec3};

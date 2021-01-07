@@ -1,17 +1,20 @@
-mod cornell_box;
+mod cornell;
+mod debug;
 mod spheres;
 
-use rust_v::camera::Camera;
-use rust_v::scene::Scene;
+use crate::scene::Scene;
 use ultraviolet::UVec2;
 
-pub use cornell_box::CornellBox;
+use crate::camera::Camera;
+pub use cornell::CornellScene;
+pub use debug::DebugScene;
 pub use spheres::SphereScene;
+use std::sync::Arc;
 
 pub const SIGMA: f32 = 20.0;
 pub const FOVY: f32 = 70.0;
 
 pub trait DemoScene {
     // TODO: WIP
-    fn create<'a>(resolution: UVec2) -> (Scene<'a>, Box<dyn Camera>);
+    fn create(resolution: UVec2) -> (Scene, Arc<dyn Camera>);
 }
