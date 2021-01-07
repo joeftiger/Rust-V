@@ -1,15 +1,16 @@
 use crate::objects::{EmitterExt, SceneObject};
 use geometry::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use std::sync::Arc;
 
 /// # Summary
 /// A scene intersection is a more detailed `Intersection`, also containing a reference to the
 /// intersected object.
-pub struct SceneIntersection<'a> {
+pub struct SceneIntersection {
     pub info: Intersection,
-    pub object: SceneObject<'a>,
+    pub object: SceneObject,
 }
 
-impl<'a> SceneIntersection<'a> {
+impl SceneIntersection {
     /// # Summary
     /// Creates a new scene intersection.
     ///
@@ -19,7 +20,7 @@ impl<'a> SceneIntersection<'a> {
     ///
     /// # Returns
     /// * Self
-    pub fn new(intersection: Intersection, object: SceneObject<'a>) -> Self {
+    pub fn new(intersection: Intersection, object: SceneObject) -> Self {
         Self {
             info: intersection,
             object,
@@ -29,13 +30,13 @@ impl<'a> SceneIntersection<'a> {
 
 /// # Summary
 /// A scene consists of scene objects and lights.
-pub struct Scene<'a> {
+pub struct Scene {
     aabb: Aabb,
-    pub lights: Vec<&'a dyn EmitterExt>,
-    objects: Vec<SceneObject<'a>>,
+    pub lights: Vec<Arc<dyn EmitterExt>>,
+    objects: Vec<SceneObject>,
 }
 
-impl<'a> Scene<'a> {
+impl Scene {
     /// # Summary
     /// Adds the given object to the scene.
     ///
@@ -46,13 +47,13 @@ impl<'a> Scene<'a> {
     ///
     /// # Returns
     /// * This same scene (for chaining operations)
-    pub fn add(&mut self, obj: SceneObject<'a>) -> &mut Self {
-        match obj {
+    pub fn add(&mut self, obj: SceneObject) -> &mut Self {
+        match obj.clone() {
             SceneObject::Emitter(e) => {
-                self.lights.push(e);
-                self.objects.push(obj);
+                self.lights.push(e.clone());
+                self.objects.push(obj.clone());
             }
-            SceneObject::Receiver(_) => self.objects.push(obj),
+            SceneObject::Receiver(_) => self.objects.push(obj.clone()),
         };
 
         self.aabb = self.aabb.join(&obj.bounds());
@@ -72,7 +73,7 @@ impl<'a> Scene<'a> {
     ///
     /// # Returns
     /// * A scene intersection (if any)
-    pub fn intersect(&self, ray: &Ray) -> Option<SceneIntersection<'a>> {
+    pub fn intersect(&self, ray: &Ray) -> Option<SceneIntersection> {
         if !self.aabb.intersects(ray) {
             return None;
         }
@@ -83,7 +84,7 @@ impl<'a> Scene<'a> {
         for o in &self.objects {
             if let Some(i) = o.intersect(&new_ray) {
                 new_ray.t_end = i.t;
-                let si = SceneIntersection::new(i, *o);
+                let si = SceneIntersection::new(i, o.clone());
 
                 intersection = Some(si);
             }
@@ -113,7 +114,7 @@ impl<'a> Scene<'a> {
     }
 }
 
-impl<'a> Default for Scene<'a> {
+impl Default for Scene {
     fn default() -> Self {
         Self {
             aabb: Aabb::empty(),

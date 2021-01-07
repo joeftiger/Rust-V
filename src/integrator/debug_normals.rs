@@ -6,10 +6,11 @@ use color::Color;
 use geometry::Ray;
 use ultraviolet::Vec3;
 
+#[derive(Clone)]
 pub struct DebugNormals;
 
 impl Integrator for DebugNormals {
-    fn integrate<'a>(&self, scene: &Scene<'a>, primary_ray: &Ray, _: &dyn Sampler) -> Spectrum {
+    fn integrate(&self, scene: &Scene, primary_ray: &Ray, _: &dyn Sampler) -> Spectrum {
         if let Some(si) = scene.intersect(primary_ray) {
             let color = (si.info.normal + Vec3::one()) / 2.0;
 
@@ -19,13 +20,7 @@ impl Integrator for DebugNormals {
         }
     }
 
-    fn illumination<'a>(
-        &self,
-        _: &Scene<'a>,
-        _: &SceneIntersection<'a>,
-        _: &dyn Sampler,
-        _: usize,
-    ) -> Spectrum {
+    fn illumination(&self, _: &Scene, _: &SceneIntersection, _: &dyn Sampler, _: u32) -> Spectrum {
         unreachable!()
     }
 }

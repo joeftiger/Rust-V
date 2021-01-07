@@ -45,12 +45,7 @@ pub trait Integrator: Send + Sync {
     ///
     /// # Returns
     /// * The color spectrum of the given ray
-    fn integrate<'a>(
-        &self,
-        scene: &Scene<'a>,
-        primary_ray: &Ray,
-        sampler: &dyn Sampler,
-    ) -> Spectrum;
+    fn integrate(&self, scene: &Scene, primary_ray: &Ray, sampler: &dyn Sampler) -> Spectrum;
 
     /// # Summary
     /// Calculates the illumination (recursively if needed) at the given intersection.
@@ -63,12 +58,12 @@ pub trait Integrator: Send + Sync {
     ///
     /// # Returns
     /// * The illumination at the intersection
-    fn illumination<'a>(
+    fn illumination(
         &self,
-        scene: &Scene<'a>,
-        intersection: &SceneIntersection<'a>,
+        scene: &Scene,
+        intersection: &SceneIntersection,
         sampler: &dyn Sampler,
-        depth: usize,
+        depth: u32,
     ) -> Spectrum;
 
     /// # Summary
@@ -84,12 +79,12 @@ pub trait Integrator: Send + Sync {
     /// # Returns
     /// * The illumination at the intersection
     //noinspection DuplicatedCode
-    fn specular_reflection<'a>(
+    fn specular_reflection(
         &self,
-        scene: &Scene<'a>,
-        intersection: &SceneIntersection<'a>,
+        scene: &Scene,
+        intersection: &SceneIntersection,
         sampler: &dyn Sampler,
-        depth: usize,
+        depth: u32,
     ) -> Spectrum {
         let outgoing = -intersection.info.ray.direction;
 
@@ -141,12 +136,12 @@ pub trait Integrator: Send + Sync {
     /// # Returns
     /// * The illumination at the intersection
     //noinspection DuplicatedCode
-    fn specular_transmission<'a>(
+    fn specular_transmission(
         &self,
-        scene: &Scene<'a>,
-        intersection: &SceneIntersection<'a>,
+        scene: &Scene,
+        intersection: &SceneIntersection,
         sampler: &dyn Sampler,
-        depth: usize,
+        depth: u32,
     ) -> Spectrum {
         let outgoing = -intersection.info.ray.direction;
 

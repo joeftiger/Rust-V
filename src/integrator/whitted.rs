@@ -9,8 +9,9 @@ use geometry::Ray;
 
 /// # Summary
 /// The Whitted integrator is a common integrator following specular reflection/transmission recursively.
+#[derive(Clone)]
 pub struct Whitted {
-    depth: usize,
+    depth: u32,
 }
 
 impl Whitted {
@@ -22,18 +23,13 @@ impl Whitted {
     ///
     /// # Returns
     /// * Self
-    pub fn new(depth: usize) -> Self {
+    pub fn new(depth: u32) -> Self {
         Self { depth }
     }
 }
 
 impl Integrator for Whitted {
-    fn integrate<'a>(
-        &self,
-        scene: &Scene<'a>,
-        primary_ray: &Ray,
-        sampler: &dyn Sampler,
-    ) -> Spectrum {
+    fn integrate(&self, scene: &Scene, primary_ray: &Ray, sampler: &dyn Sampler) -> Spectrum {
         if let Some(si) = scene.intersect(primary_ray) {
             self.illumination(scene, &si, sampler, 0)
         } else {
@@ -41,16 +37,16 @@ impl Integrator for Whitted {
         }
     }
 
-    fn illumination<'a>(
+    fn illumination(
         &self,
-        scene: &Scene<'a>,
-        intersection: &SceneIntersection<'a>,
+        scene: &Scene,
+        intersection: &SceneIntersection,
         sampler: &dyn Sampler,
-        depth: usize,
+        depth: u32,
     ) -> Spectrum {
         let outgoing = -intersection.info.ray.direction;
 
-        let obj = intersection.object;
+        let obj = &intersection.object;
 
         let bsdf = obj.bsdf();
         let point = intersection.info.point;
