@@ -1,4 +1,4 @@
-use crate::debug_util::{is_finite, is_normalized, in_range_incl};
+use crate::debug_util::{in_range_incl, is_finite, is_normalized};
 
 use ultraviolet::Vec3;
 
