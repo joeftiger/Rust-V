@@ -1,5 +1,5 @@
 use crate::bxdf::world_to_bxdf;
-#[cfg(debug_assertions)]
+
 use crate::debug_utils::{is_finite, within_01};
 use crate::mc::{uniform_cone_pdf, uniform_sample_cone, uniform_sample_sphere};
 use crate::objects::emitter::{Sampleable, SurfaceSample};

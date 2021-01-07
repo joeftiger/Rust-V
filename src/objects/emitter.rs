@@ -1,5 +1,5 @@
 use crate::bxdf::BSDF;
-#[cfg(debug_assertions)]
+
 use crate::debug_utils::{in_range_incl, is_finite, is_normalized, within_01};
 use crate::objects::receiver::ReceiverExt;
 use crate::scene::{Scene, SceneIntersection};
@@ -78,13 +78,13 @@ pub trait EmitterExt: ReceiverExt {
 /// # Summary
 /// An emitter is similar to a receiver, consisting of a geometry and a BSDF. Additionally, the
 /// emitter also has an emission.
-pub struct Emitter<'a, T> {
+pub struct Emitter<T> {
     geometry: T,
-    bsdf: BSDF<'a>,
+    bsdf: BSDF,
     emission: Spectrum,
 }
 
-impl<'a, T> Emitter<'a, T> {
+impl<T> Emitter<T> {
     /// # Summary
     /// Creates a new emitter.
     ///
@@ -95,7 +95,7 @@ impl<'a, T> Emitter<'a, T> {
     ///
     /// # Returns
     /// * Self
-    pub fn new(geometry: T, bsdf: BSDF<'a>, emission: Spectrum) -> Self {
+    pub fn new(geometry: T, bsdf: BSDF, emission: Spectrum) -> Self {
         Self {
             geometry,
             bsdf,
@@ -104,7 +104,7 @@ impl<'a, T> Emitter<'a, T> {
     }
 }
 
-impl<T> EmitterExt for Emitter<'_, T>
+impl<T> EmitterExt for Emitter<T>
 where
     T: Sampleable,
 {
@@ -134,7 +134,7 @@ where
     }
 }
 
-impl<T> ReceiverExt for Emitter<'_, T>
+impl<T> ReceiverExt for Emitter<T>
 where
     T: Geometry + Send + Sync,
 {
@@ -142,12 +142,12 @@ where
         &self.geometry
     }
 
-    fn bsdf(&self) -> &BSDF<'_> {
+    fn bsdf(&self) -> &BSDF {
         &self.bsdf
     }
 }
 
-impl<T> Boundable for Emitter<'_, T>
+impl<T> Boundable for Emitter<T>
 where
     T: Boundable,
 {
@@ -156,7 +156,7 @@ where
     }
 }
 
-impl<T> Intersectable for Emitter<'_, T>
+impl<T> Intersectable for Emitter<T>
 where
     T: Intersectable,
 {
@@ -277,7 +277,7 @@ impl OcclusionTester {
     ///
     /// # Returns
     /// * The scene intersection (if any)
-    pub fn test_get<'a>(&self, scene: &'a Scene) -> Option<SceneIntersection<'a>> {
+    pub fn test_get(&self, scene: &Scene) -> Option<SceneIntersection> {
         scene.intersect(&self.ray)
     }
 }

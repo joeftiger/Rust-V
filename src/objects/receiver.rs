@@ -16,17 +16,17 @@ pub trait ReceiverExt: Geometry + Send + Sync {
     ///
     /// # Returns
     /// * A BSDF
-    fn bsdf(&self) -> &BSDF<'_>;
+    fn bsdf(&self) -> &BSDF;
 }
 
 /// # Summary
 /// A receiver consists of a geometry and a BSDF.
-pub struct Receiver<'a, T> {
+pub struct Receiver<T> {
     geometry: T,
-    bsdf: BSDF<'a>,
+    bsdf: BSDF,
 }
 
-impl<'a, T> Receiver<'a, T> {
+impl<T> Receiver<T> {
     /// # Summary
     /// Creates a new receiver.
     ///
@@ -36,12 +36,12 @@ impl<'a, T> Receiver<'a, T> {
     ///
     /// # Returns
     /// * Self
-    pub fn new(geometry: T, bsdf: BSDF<'a>) -> Self {
+    pub fn new(geometry: T, bsdf: BSDF) -> Self {
         Self { geometry, bsdf }
     }
 }
 
-impl<T> ReceiverExt for Receiver<'_, T>
+impl<T> ReceiverExt for Receiver<T>
 where
     T: Geometry + Send + Sync,
 {
@@ -49,12 +49,12 @@ where
         &self.geometry
     }
 
-    fn bsdf(&self) -> &BSDF<'_> {
+    fn bsdf(&self) -> &BSDF {
         &self.bsdf
     }
 }
 
-impl<T> Boundable for Receiver<'_, T>
+impl<T> Boundable for Receiver<T>
 where
     T: Boundable,
 {
@@ -63,7 +63,7 @@ where
     }
 }
 
-impl<T> Intersectable for Receiver<'_, T>
+impl<T> Intersectable for Receiver<T>
 where
     T: Intersectable,
 {
