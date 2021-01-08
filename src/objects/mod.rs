@@ -8,7 +8,7 @@ mod sphere;
 use crate::bxdf::BSDF;
 pub use emitter::{Emitter, EmitterExt, Sampleable};
 pub use receiver::{Receiver, ReceiverExt};
-use smallvec::alloc::sync::Arc;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub enum SceneObject {
