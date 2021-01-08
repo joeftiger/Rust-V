@@ -12,7 +12,7 @@ pub use spheres::SphereScene;
 use std::sync::Arc;
 
 pub const SIGMA: f32 = 20.0;
-pub const FOVY: f32 = 70.0;
+pub const FOVY: f32 = 45.0;
 
 pub trait DemoScene {
     // TODO: WIP
