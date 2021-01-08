@@ -5,6 +5,7 @@ use std::sync::Arc;
 /// # Summary
 /// A scene intersection is a more detailed `Intersection`, also containing a reference to the
 /// intersected object.
+#[derive(Clone)]
 pub struct SceneIntersection {
     pub info: Intersection,
     pub object: SceneObject,
