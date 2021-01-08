@@ -17,9 +17,11 @@
 //! * **Goral** radiosity: `ED*L`
 
 mod debug_normals;
+mod path;
 mod whitted;
 
 pub use debug_normals::DebugNormals;
+pub use path::Path;
 pub use whitted::Whitted;
 
 use crate::bxdf::BxDFType;
@@ -45,7 +47,13 @@ pub trait Integrator: Send + Sync {
     ///
     /// # Returns
     /// * The color spectrum of the given ray
-    fn integrate(&self, scene: &Scene, primary_ray: &Ray, sampler: &dyn Sampler) -> Spectrum;
+    fn integrate(&self, scene: &Scene, primary_ray: &Ray, sampler: &dyn Sampler) -> Spectrum {
+        if let Some(si) = scene.intersect(primary_ray) {
+            self.illumination(scene, &si, sampler, 0)
+        } else {
+            Spectrum::black()
+        }
+    }
 
     /// # Summary
     /// Calculates the illumination (recursively if needed) at the given intersection.

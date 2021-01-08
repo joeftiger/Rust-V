@@ -5,7 +5,6 @@ use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use color::Color;
-use geometry::Ray;
 
 /// # Summary
 /// The Whitted integrator is a common integrator following specular reflection/transmission recursively.
@@ -29,14 +28,6 @@ impl Whitted {
 }
 
 impl Integrator for Whitted {
-    fn integrate(&self, scene: &Scene, primary_ray: &Ray, sampler: &dyn Sampler) -> Spectrum {
-        if let Some(si) = scene.intersect(primary_ray) {
-            self.illumination(scene, &si, sampler, 0)
-        } else {
-            Spectrum::black()
-        }
-    }
-
     fn illumination(
         &self,
         scene: &Scene,
