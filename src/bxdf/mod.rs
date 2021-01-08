@@ -292,7 +292,6 @@ impl BxDFSample {
     ///
     /// # Constraints
     /// * `incident` - Should be normalized.
-    /// * `pdf` - Should be in range `[0, 1]`
     ///
     /// # Arguments
     /// * `spectrum` - The spectrum type
@@ -304,7 +303,6 @@ impl BxDFSample {
     /// * Self
     pub fn new(spectrum: Spectrum, incident: Vec3, pdf: f32, typ: BxDFType) -> Self {
         debug_assert!(is_normalized(&incident));
-        debug_assert!(in_range_incl(pdf, 0.0, 1.0));
 
         Self {
             spectrum,

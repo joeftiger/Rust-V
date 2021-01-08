@@ -189,7 +189,6 @@ impl EmitterSample {
     /// # Constraints
     /// * `incident` - All values should be finite (neither infinite nor `NaN`).
     ///                Should be normalized.
-    /// * `pdf` - Should be inside `[0, 1]`
     ///
     /// # Arguments
     /// * `radiance` - The radiance of the emitter
