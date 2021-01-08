@@ -31,6 +31,7 @@ pub const UNIT_VECTORS: [Vec3; 6] = [
 /// * `normal` - The surface normal (showing outside, even if intersection hits inside!)
 /// * `t` - The ray parameter at which it intersects
 /// * `ray` - The reference to the intersecting ray
+#[derive(Clone)]
 pub struct Intersection {
     pub point: Vec3,
     pub normal: Vec3,
