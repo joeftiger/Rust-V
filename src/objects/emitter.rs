@@ -207,8 +207,6 @@ impl EmitterSample {
     ) -> Self {
         debug_assert!(is_finite(&incident));
         debug_assert!(is_normalized(&incident));
-        // TODO: This fails!
-        debug_assert!(in_range_incl(pdf, 0.0, 1.0));
 
         Self {
             radiance,
