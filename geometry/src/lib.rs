@@ -7,6 +7,7 @@ pub mod sphere;
 
 use ultraviolet::Vec3;
 
+use crate::debug_util::{is_finite, is_normalized};
 pub use aabb::Aabb;
 pub use point::Point;
 pub use ray::Ray;
@@ -157,6 +158,75 @@ impl Intersection {
         let origin = self.point + offset;
 
         Ray::between(origin, target)
+    }
+}
+
+/// # Summary
+/// A coordinate system represents 3 orthogonal vectors in 3D space.
+/// Typically, we view `(e1, e2, e3)` as `(x, y, z)` vectors.
+pub struct CoordinateSystem {
+    pub e1: Vec3,
+    pub e2: Vec3,
+    pub e3: Vec3,
+}
+
+impl CoordinateSystem {
+    /// # Summary
+    /// Creates a new coordinate system.
+    ///
+    /// # Constraints
+    /// * `e1` - All values must be finite (neither infinite nor `NaN`).
+    ///          Should be normalized.
+    /// * `e2` - All values must be finite.
+    ///          Should be normalized.
+    /// * `e3` - All values must be finite.
+    ///          Should be normalized.
+    ///
+    /// # Arguments
+    /// * `e1` - The first vector
+    /// * `e2` - The second vector
+    /// * `e3` - The third vector
+    ///
+    /// # Returns
+    /// * Self
+    pub fn new(e1: Vec3, e2: Vec3, e3: Vec3) -> Self {
+        debug_assert!(is_finite(&e1));
+        debug_assert!(is_normalized(&e1));
+        debug_assert!(is_finite(&e2));
+        debug_assert!(is_normalized(&e2));
+        debug_assert!(is_finite(&e3));
+        debug_assert!(is_normalized(&e3));
+
+        Self { e1, e2, e3 }
+    }
+
+    /// # Summary
+    /// Creates a new coordinate system around the given `y` direction vector.
+    ///
+    /// # Constraints
+    /// * `y` - All values must be finite (neither infinite nor `NaN`).
+    ///          Should be normalized.
+    ///
+    /// # Arguments
+    /// * `y` - The y direction vector
+    ///
+    /// # Returns
+    /// * Self
+    pub fn from_y(e2: Vec3) -> Self {
+        debug_assert!(is_finite(&e2));
+        debug_assert!(is_normalized(&e2));
+
+        let e1 = if e2.x.abs() > e2.y.abs() {
+            let inv_len = 1.0 / f32::sqrt(e2.x * e2.x + e2.z * e2.z);
+            Vec3::new(-e2.z * inv_len, 0.0, e2.x * inv_len)
+        } else {
+            let inv_len = 1.0 / f32::sqrt(e2.y * e2.y + e2.z * e2.z);
+            Vec3::new(0.0, e2.z * inv_len, -e2.y * inv_len)
+        };
+
+        let e3 = e1.cross(e2);
+
+        Self::new(e1, e2, e3)
     }
 }
 
