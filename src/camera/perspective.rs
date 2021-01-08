@@ -47,7 +47,7 @@ impl PerspectiveCamera {
 
         let w = resolution.x as f32;
         let h = resolution.y as f32;
-        let image_height = 2.0 * distance * fov_y.to_radians().tan();
+        let image_height = 2.0 * distance * (0.5 * fov_y).to_radians().tan();
         let image_width = w / h * image_height;
 
         // compute width & height of the image plane
