@@ -239,7 +239,7 @@ impl Renderer {
     /// # Returns
     /// * Whether the progress is at/over the limit
     fn progress_out_of_range(&self, progress: u32) -> bool {
-        progress >= self.get_num_blocks() * self.config.depth
+        progress >= self.get_num_blocks() * self.config.passes
     }
 
     /// # Summary
