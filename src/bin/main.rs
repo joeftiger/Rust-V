@@ -10,6 +10,8 @@ use rust_v::integrator::{DebugNormals, Integrator, Path, Whitted};
 use rust_v::renderer::Renderer;
 use rust_v::sampler::{NoOpSampler, RandomSampler, Sampler};
 use rust_v::RenderConfig;
+#[cfg(feature = "live-window")]
+use rust_v::RenderWindow;
 use std::convert::TryInto;
 use std::sync::Arc;
 
@@ -194,12 +196,22 @@ impl MainConfig {
 
         let mut renderer = self.create_renderer();
 
-        // TODO: Live window
+        #[cfg(feature = "live-window")]
+        {
+            if self.live {
+                let mut window = RenderWindow::new("Rust-V".to_string(), renderer)?;
+                window.render();
 
-        if !self.live {
-            let job = renderer.render();
-            job.join().expect("Could not join render threads");
+                if self.verbose {
+                    println!("Closed window");
+                }
+
+                return Ok(())
+            }
         }
+
+        let job = renderer.render();
+        job.join().expect("Could not join render threads");
 
         self.save_image(&renderer)
     }
