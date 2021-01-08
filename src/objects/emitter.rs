@@ -6,7 +6,7 @@ use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 use ultraviolet::{Vec2, Vec3};
-use utility::floats;
+use utility::floats::BIG_EPSILON;
 
 /// # Summary
 /// An emitter is a receiver that also emits light.
@@ -207,6 +207,7 @@ impl EmitterSample {
     ) -> Self {
         debug_assert!(is_finite(&incident));
         debug_assert!(is_normalized(&incident));
+        // TODO: This fails!
         debug_assert!(in_range_incl(pdf, 0.0, 1.0));
 
         Self {
@@ -245,13 +246,16 @@ impl OcclusionTester {
         debug_assert!(is_finite(&origin));
         debug_assert!(is_finite(&target));
 
-        let dir = target - origin;
-        let ray = Ray::new(
-            origin,
-            dir.normalized(),
-            floats::BIG_EPSILON,
-            dir.mag() - floats::BIG_EPSILON,
-        );
+        let direction = target - origin;
+
+        let mut t_start = BIG_EPSILON;
+        let mut t_end = direction.mag() - BIG_EPSILON;
+        if t_end < t_start {
+            t_start = 0.0;
+            t_end = direction.mag();
+        }
+
+        let ray = Ray::new(origin, direction.normalized(), t_start, t_end);
 
         Self { ray }
     }
