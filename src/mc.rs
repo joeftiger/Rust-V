@@ -1,8 +1,12 @@
 use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI};
 use ultraviolet::{Lerp, Vec2, Vec3};
+use crate::debug_utils::within_01;
 
 /// # Summary
 /// Samples a concentric mapped point from the given random sample.
+///
+/// # Constraints
+/// * `sample` - All values should be within `[0, 1]`.
 ///
 /// # Arguments
 /// * `sample` - A random sample in `[0, 1]`
@@ -10,10 +14,7 @@ use ultraviolet::{Lerp, Vec2, Vec3};
 /// # Results
 /// * `Vec2` - A concentric sample
 pub fn concentric_sample_disk(sample: &Vec2) -> Vec2 {
-    debug_assert!(sample.x >= 0.0);
-    debug_assert!(sample.x < 1.0);
-    debug_assert!(sample.y >= 0.0);
-    debug_assert!(sample.y < 1.0);
+    debug_assert!(within_01(sample));
 
     // Map uniform random numbers to [-1,1]^2
     let offset = 2.0 * *sample - Vec2::one();
@@ -40,12 +41,17 @@ pub fn concentric_sample_disk(sample: &Vec2) -> Vec2 {
 /// # Summary
 /// Samples a hemisphere with a cosine distribution described by the sample.
 ///
+/// # Constraints
+/// * `sample` - All values should be within `[0, 1]`.
+///
 /// # Arguments
 /// * `sample` - A random sample in `[0, 1]`
 ///
 /// # Results
 /// * `Vec3` - A point on the hemisphere around `(0, 0, 1)`
 pub fn cos_sample_hemisphere(sample: &Vec2) -> Vec3 {
+    debug_assert!(within_01(sample));
+
     let d = concentric_sample_disk(sample);
     let z = f32::max(0.0, 1.0 - d.x * d.x - d.y * d.y).sqrt();
 
@@ -55,12 +61,17 @@ pub fn cos_sample_hemisphere(sample: &Vec2) -> Vec3 {
 /// # Summary
 /// Samples a sphere with a uniform distribution described by the sample.
 ///
+/// # Constraints
+/// * `sample` - All values should be within `[0, 1]`.
+///
 /// # Arguments
 /// * `sample` - A random sample in `[0, 1]`
 ///
 /// # Results
 /// * `Vec3` - A point on the sphere around `(0, 0, 0)`
 pub fn uniform_sample_sphere(sample: &Vec2) -> Vec3 {
+    debug_assert!(within_01(sample));
+
     let z = 1.0 - 2.0 * sample.x;
     let r = f32::max(0.0, 1.0 - z * z).sqrt();
     let phi = PI * 2.0 * sample.y;
@@ -71,6 +82,9 @@ pub fn uniform_sample_sphere(sample: &Vec2) -> Vec3 {
 /// # Summary
 /// Samples a cone around the `(0, 1, 0)` axis with a uniform distribution described by the sample.
 ///
+/// # Constraints
+/// * `sample` - All values should be within `[0, 1]`.
+///
 /// # Arguments
 /// * `sample` - A random sample in `[0, 1]`
 /// * `cos_theta_max` - The max angle
@@ -78,6 +92,8 @@ pub fn uniform_sample_sphere(sample: &Vec2) -> Vec3 {
 /// # Results
 /// * `Vec3` - A direction in the cone around `(0, 1, 0)`
 pub fn uniform_sample_cone(sample: &Vec2, cos_theta_max: f32) -> Vec3 {
+    debug_assert!(within_01(sample));
+
     let cos = cos_theta_max.lerp(1.0, sample.x);
     let sin = f32::sqrt(1.0 - cos * cos);
     let phi = sample.y * 2.0 * PI;
