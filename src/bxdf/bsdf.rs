@@ -14,6 +14,10 @@ impl From<Vec<Box<dyn BxDF>>> for BSDF {
 }
 
 impl BSDF {
+    pub fn empty() -> Self {
+        Self::new(vec![])
+    }
+
     pub fn new(bxdfs: Vec<Box<dyn BxDF>>) -> Self {
         Self { bxdfs }
     }
