@@ -37,3 +37,9 @@ utility = { path = "./utility" }
 [features]
 default = []
 live-window = [] #["show-image"]
+
+[profile.release]
+codegen-units = 1
+opt-level = 3
+lto = true
+incremental = true
