@@ -11,12 +11,12 @@ use ultraviolet::{Vec2, Vec3};
 
 /// # Summary
 /// Describes a specular reflection
-pub struct SpecularReflection<'a> {
+pub struct SpecularReflection {
     r: Spectrum,
-    fresnel: &'a dyn Fresnel,
+    fresnel: Box<dyn Fresnel>,
 }
 
-impl<'a> SpecularReflection<'a> {
+impl SpecularReflection {
     /// # Summary
     /// Creates a new specular reflection.
     ///
@@ -26,12 +26,12 @@ impl<'a> SpecularReflection<'a> {
     ///
     /// # Returns
     /// * Self
-    pub fn new(r: Spectrum, fresnel: &'a dyn Fresnel) -> Self {
+    pub fn new(r: Spectrum, fresnel: Box<dyn Fresnel>) -> Self {
         Self { r, fresnel }
     }
 }
 
-impl BxDF for SpecularReflection<'_> {
+impl BxDF for SpecularReflection {
     fn get_type(&self) -> BxDFType {
         BxDFType::REFLECTION | BxDFType::SPECULAR
     }
@@ -134,10 +134,11 @@ impl BxDF for SpecularTransmission {
         };
 
         let normal = face_forward(bxdf_normal(), *outgoing);
-        let (success, incident) = refract(*outgoing, normal, eta_i / eta_t);
+        let (success, mut incident) = refract(*outgoing, normal, eta_i / eta_t);
         if !success {
             return None;
         }
+        incident.normalize();
 
         let cos_i = cos_theta(&incident);
         let mut spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
