@@ -1,6 +1,6 @@
 use crate::bxdf::BSDF;
 
-use crate::debug_utils::{in_range_incl, is_finite, is_normalized, within_01};
+use crate::debug_utils::{is_finite, is_normalized, within_01};
 use crate::objects::receiver::ReceiverExt;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
