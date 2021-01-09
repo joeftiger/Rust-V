@@ -95,17 +95,22 @@ impl Intersectable for Aabb {
         let t1 = (self.min - ray.origin) / ray.direction;
         let t2 = (self.max - ray.origin) / ray.direction;
 
-        let t_min_vec = t1.min_by_component(t2);
-        let t_max_vec = t1.max_by_component(t2);
+        let vec_min = t1.min_by_component(t2);
+        let vec_max = t1.max_by_component(t2);
 
-        let t_min = f32::max(t_min_vec.z, f32::max(t_min_vec.y, t_min_vec.x));
-        let t_max = f32::min(t_max_vec.z, f32::min(t_max_vec.y, t_max_vec.x));
+        let t_min = vec_min.x.max(vec_min.y).max(vec_min.z);
+        let t_max = vec_max.x.max(vec_max.y).max(vec_max.z);
 
-        if t_max < ray.t_start || t_max < t_min || t_min > ray.t_end {
+        // FIXME: Does not work correctly apparently
+        let t;
+        if ray.contains(t_min) {
+            t = t_min;
+        } else if ray.contains(t_max) {
+            t = t_max;
+        } else {
             return None;
         }
-
-        let t = t_min;
+        // FIXME END
 
         let point = ray.at(t);
         let half_size = self.size() / 2.0;
@@ -126,13 +131,13 @@ impl Intersectable for Aabb {
         let t1 = (self.min - ray.origin) / ray.direction;
         let t2 = (self.max - ray.origin) / ray.direction;
 
-        let t_min_vec = t1.min_by_component(t2);
-        let t_max_vec = t1.max_by_component(t2);
+        let vec_min = t1.min_by_component(t2);
+        let vec_max = t1.max_by_component(t2);
 
-        let t_min = f32::max(t_min_vec.z, f32::max(t_min_vec.y, t_min_vec.x));
-        let t_max = f32::min(t_max_vec.z, f32::min(t_max_vec.y, t_max_vec.x));
+        let t_min = vec_min.x.max(vec_min.y).max(vec_min.z);
+        let t_max = vec_max.x.max(vec_max.y).max(vec_max.z);
 
-        t_max >= ray.t_start && t_max >= t_min && t_min <= ray.t_end
+        ray.contains(t_min) || ray.contains(t_max)
     }
 }
 
