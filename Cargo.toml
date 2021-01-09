@@ -25,8 +25,8 @@ indicatif = ""
 lazy_static = ""
 # num of logical / physical cpus
 num_cpus = ""
-# small vectors for bsdf e.g.
-smallvec = ""
+# live image of rendering
+show-image = { version = "", features = ["image", "save"], optional = true }
 # linear algebra
 ultraviolet = { version = "", features= ["int"] }
 
@@ -36,10 +36,13 @@ utility = { path = "./utility" }
 
 [features]
 default = []
-live-window = [] #["show-image"]
+live-window = ["show-image"]
 
 [profile.release]
-codegen-units = 1
+#codegen-units = 1
 opt-level = 3
-lto = true
+#lto = true
+incremental = true
+
+[profile.dev]
 incremental = true
