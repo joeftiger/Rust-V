@@ -169,7 +169,7 @@ pub trait Integrator: Send + Sync {
             &sample,
         );
 
-        let mut reflection = Spectrum::black();
+        let mut transmission = Spectrum::black();
 
         if let Some(bxdf_sample) = bxdf_sample_option {
             if bxdf_sample.pdf > 0.0 && !bxdf_sample.spectrum.is_black() {
@@ -183,7 +183,7 @@ pub trait Integrator: Send + Sync {
 
                         if new_depth < self.max_depth() {
                             let illumination = self.illumination(scene, &si, sampler, new_depth);
-                            reflection += bxdf_sample.spectrum
+                            transmission += bxdf_sample.spectrum
                                 * illumination
                                 * illumination
                                 * (cos.abs() / bxdf_sample.pdf);
@@ -193,6 +193,6 @@ pub trait Integrator: Send + Sync {
             }
         }
 
-        reflection
+        transmission
     }
 }
