@@ -206,7 +206,7 @@ impl MainConfig {
                     println!("Closed window");
                 }
 
-                return Ok(())
+                return Ok(());
             }
         }
 
