@@ -1,6 +1,6 @@
-use show_image::{Window, WindowOptions, make_window_full, KeyCode};
 use crate::renderer::Renderer;
 use bitflags::_core::time::Duration;
+use show_image::{make_window_full, KeyCode, Window, WindowOptions};
 
 pub struct RenderWindow {
     window: Window,
