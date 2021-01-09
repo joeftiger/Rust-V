@@ -26,8 +26,6 @@ impl Sampleable for Sphere {
 
             SurfaceSample::new(self.center + p, normal)
         } else {
-            // FIXME: cone sampling is weird. Maybe coordinate system is bugged?
-
             let cos_theta_max = f32::max(0.0, 1.0 - r2 / dist_sq).sqrt() / 2.0;
             let coordinate_system = CoordinateSystem::from_z(-point_to_center.normalized());
             let direction = uniform_sample_cone_frame(sample, cos_theta_max, &coordinate_system);
