@@ -12,18 +12,20 @@ use geometry::{Aabb, Sphere};
 use std::sync::Arc;
 use ultraviolet::{UVec2, Vec3};
 
-pub const LEFT_WALL: f32 = -1.0;
-pub const RIGHT_WALL: f32 = 1.0;
-pub const BACK_WALL: f32 = -1.0;
-pub const FLOOR: f32 = -1.0;
-pub const CEILING: f32 = 1.0;
-pub const FRONT: f32 = 1.0;
-pub const THICKNESS: f32 = 0.01;
-pub const RADIUS: f32 = 0.25;
+const DIMENSION: f32 = 4.0;
 
-pub const X_CENTER: f32 = (RIGHT_WALL + LEFT_WALL) / 2.0;
-pub const Y_CENTER: f32 = (CEILING + FLOOR) / 2.0;
-pub const Z_CENTER: f32 = (BACK_WALL + FRONT) / 2.0;
+const LEFT_WALL: f32 = -DIMENSION / 2.0;
+const RIGHT_WALL: f32 = DIMENSION / 2.0;
+const BACK_WALL: f32 = -DIMENSION / 2.0;
+const FLOOR: f32 = -DIMENSION / 2.0;
+const CEILING: f32 = DIMENSION / 2.0;
+const FRONT: f32 = DIMENSION / 2.0;
+const THICKNESS: f32 = DIMENSION / 50.0;
+const RADIUS: f32 = DIMENSION / 8.0;
+
+const X_CENTER: f32 = (RIGHT_WALL + LEFT_WALL) / 2.0;
+const Y_CENTER: f32 = (CEILING + FLOOR) / 2.0;
+const Z_CENTER: f32 = (BACK_WALL + FRONT) / 2.0;
 
 pub struct CornellScene;
 
@@ -42,7 +44,7 @@ impl Wall {
 }
 
 fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
-    let position = Vec3::new(X_CENTER, Y_CENTER, FRONT + 1.0);
+    let position = Vec3::new(X_CENTER, Y_CENTER, FRONT + DIMENSION / 2.0);
     let target = Vec3::new(X_CENTER, Y_CENTER, Z_CENTER);
 
     let camera = PerspectiveCamera::new(position, target, Vec3::unit_y(), FOVY, resolution);
@@ -86,11 +88,10 @@ fn create_emitter() -> SceneObject {
     let center = Vec3::new(X_CENTER, Y_CENTER, Z_CENTER);
     let sphere = Sphere::new(center, RADIUS);
 
-    let spectrum = Spectrum::white();
-    let lambertian = Box::new(LambertianReflection::new(spectrum));
-    let bsdf = BSDF::new(vec![lambertian]);
+    let bsdf = BSDF::empty();
 
-    let emitter = Emitter::new(sphere, bsdf, spectrum * 4.0);
+    let emission = Spectrum::white() * 15.0;
+    let emitter = Emitter::new(sphere, bsdf, emission);
     SceneObject::new_emitter(emitter)
 }
 

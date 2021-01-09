@@ -1,16 +1,141 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use crate::camera::Camera;
-use crate::demo_scenes::DemoScene;
+use crate::bxdf::refraction_index::{AIR, GLASS};
+use crate::bxdf::{
+    FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, TransportMode,
+    BSDF,
+};
+use crate::camera::{Camera, PerspectiveCamera};
+use crate::demo_scenes::{DemoScene, FOVY};
+use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::scene::Scene;
+use crate::Spectrum;
+use color::Color;
+use geometry::{Aabb, Point, Sphere};
 use std::sync::Arc;
-use ultraviolet::UVec2;
+use ultraviolet::{UVec2, Vec3};
+
+const FLOOR: f32 = 0.0;
+const RADIUS: f32 = 0.5;
+
+const DISTRIBUTION: f32 = 10.0;
+const NUM_SPHERES_IN_DIMENSION: u32 = 5;
 
 pub struct SphereScene;
 
 impl DemoScene for SphereScene {
     fn create(resolution: UVec2) -> (Scene, Arc<dyn Camera>) {
-        unimplemented!()
+        fastrand::seed(0);
+        let scene = create_scene();
+        let camera = create_camera(resolution);
+
+        (scene, camera)
     }
+}
+
+fn ground() -> SceneObject {
+    let min = Vec3::new(-10000.0, FLOOR - 5.0, -10000.0);
+    let max = Vec3::new(10000.0, FLOOR, 10000.0);
+    let aabb = Aabb::new(min, max);
+
+    let lambertian = LambertianReflection::new(Spectrum::white());
+    let bsdf = BSDF::new(vec![Box::new(lambertian)]);
+
+    let receiver = Receiver::new(aabb, bsdf);
+
+    SceneObject::new_receiver(receiver)
+}
+
+fn random_pos() -> Vec3 {
+    let x = DISTRIBUTION * (fastrand::f32() - 0.5);
+    let z = DISTRIBUTION * (fastrand::f32() - 0.5);
+
+    Vec3::new(x, RADIUS * 1.2, z)
+}
+
+fn random_color() -> Spectrum {
+    let rand = fastrand::f32() * 1.5;
+
+    if rand < 0.25 {
+        Spectrum::red()
+    } else if rand < 0.5 {
+        Spectrum::green()
+    } else if rand < 0.75 {
+        Spectrum::blue()
+    } else {
+        Spectrum::white()
+    }
+}
+
+fn random_bsdf(color: Spectrum) -> (bool, BSDF) {
+    let rand = fastrand::f32();
+
+    let mut out = false;
+    let bsdf = if color == Spectrum::white() {
+        if rand < 0.6 {
+            out = true;
+            let lambertian = LambertianReflection::new(color);
+            BSDF::new(vec![Box::new(lambertian)])
+        } else if rand < 0.8 {
+            let specular = SpecularReflection::new(color, Box::new(FresnelNoOp));
+            BSDF::new(vec![Box::new(specular)])
+        } else {
+            let specular = SpecularTransmission::new(color, AIR, GLASS, TransportMode::Importance);
+            BSDF::new(vec![Box::new(specular)])
+        }
+    } else {
+        let lambertian = LambertianReflection::new(color);
+        BSDF::new(vec![Box::new(lambertian)])
+    };
+
+    (out, bsdf)
+}
+
+fn create_emitter() -> SceneObject {
+    let position = Vec3::new(0.0, 10_000.0, 0.0);
+    let point = Point(position);
+
+    let bsdf = BSDF::empty();
+    let emitter = Emitter::new(point, bsdf, Spectrum::white());
+    SceneObject::new_emitter(emitter)
+}
+
+fn create_scene() -> Scene {
+    let mut scene = Scene::default();
+
+    for _ in 0..NUM_SPHERES_IN_DIMENSION {
+        for _ in 0..NUM_SPHERES_IN_DIMENSION {
+            let center = random_pos();
+            let sphere = Sphere::new(center, RADIUS);
+
+            let color = random_color();
+            let (emitting, bsdf) = random_bsdf(color);
+
+            let obj = if emitting {
+                let emitter = Emitter::new(sphere, bsdf, color * 3.0);
+                SceneObject::new_emitter(emitter)
+            } else {
+                let receiver = Receiver::new(sphere, bsdf);
+                SceneObject::new_receiver(receiver)
+            };
+
+            scene.add(obj);
+        }
+    }
+
+    scene.add(ground());
+    scene.add(create_emitter());
+
+    scene
+}
+
+fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
+    let position = Vec3::new(0.0, 5.0, 10.0);
+    let target = Vec3::new(0.0, 1.0, 0.0);
+
+    let camera = PerspectiveCamera::new(position, target, Vec3::unit_y(), FOVY, resolution);
+    // let camera = crate::camera::perspective_simone::PerspectiveCamera::new(position, target, Vec3::unit_y(), FOVY, resolution);
+
+    Arc::new(camera)
 }
