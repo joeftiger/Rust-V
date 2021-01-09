@@ -163,11 +163,10 @@ impl Intersection {
 
 /// # Summary
 /// A coordinate system represents 3 orthogonal vectors in 3D space.
-/// Typically, we view `(e1, e2, e3)` as `(x, y, z)` vectors.
 pub struct CoordinateSystem {
-    pub e1: Vec3,
-    pub e2: Vec3,
-    pub e3: Vec3,
+    pub x: Vec3,
+    pub y: Vec3,
+    pub z: Vec3,
 }
 
 impl CoordinateSystem {
@@ -175,29 +174,29 @@ impl CoordinateSystem {
     /// Creates a new coordinate system.
     ///
     /// # Constraints
-    /// * `e1` - All values must be finite (neither infinite nor `NaN`).
+    /// * `x` - All values must be finite (neither infinite nor `NaN`).
     ///          Should be normalized.
-    /// * `e2` - All values must be finite.
+    /// * `y` - All values must be finite.
     ///          Should be normalized.
-    /// * `e3` - All values must be finite.
+    /// * `z` - All values must be finite.
     ///          Should be normalized.
     ///
     /// # Arguments
-    /// * `e1` - The first vector
-    /// * `e2` - The second vector
-    /// * `e3` - The third vector
+    /// * `x` - The first vector
+    /// * `y` - The second vector
+    /// * `z` - The third vector
     ///
     /// # Returns
     /// * Self
-    pub fn new(e1: Vec3, e2: Vec3, e3: Vec3) -> Self {
-        debug_assert!(is_finite(&e1));
-        debug_assert!(is_normalized(&e1));
-        debug_assert!(is_finite(&e2));
-        debug_assert!(is_normalized(&e2));
-        debug_assert!(is_finite(&e3));
-        debug_assert!(is_normalized(&e3));
+    pub fn new(x: Vec3, y: Vec3, z: Vec3) -> Self {
+        debug_assert!(is_finite(&x));
+        debug_assert!(is_normalized(&x));
+        debug_assert!(is_finite(&y));
+        debug_assert!(is_normalized(&y));
+        debug_assert!(is_finite(&z));
+        debug_assert!(is_normalized(&z));
 
-        Self { e1, e2, e3 }
+        Self { x, y, z }
     }
 
     /// # Summary
@@ -212,21 +211,49 @@ impl CoordinateSystem {
     ///
     /// # Returns
     /// * Self
-    pub fn from_y(e2: Vec3) -> Self {
-        debug_assert!(is_finite(&e2));
-        debug_assert!(is_normalized(&e2));
+    pub fn from_y(y: Vec3) -> Self {
+        debug_assert!(is_finite(&y));
+        debug_assert!(is_normalized(&y));
 
-        let e1 = if e2.x.abs() > e2.y.abs() {
-            let inv_len = 1.0 / f32::sqrt(e2.x * e2.x + e2.z * e2.z);
-            Vec3::new(-e2.z * inv_len, 0.0, e2.x * inv_len)
+        let x = if y.x.abs() > y.y.abs() {
+            let inv_len = 1.0 / f32::sqrt(y.x * y.x + y.z * y.z);
+            Vec3::new(-y.z * inv_len, 0.0, y.x * inv_len)
         } else {
-            let inv_len = 1.0 / f32::sqrt(e2.y * e2.y + e2.z * e2.z);
-            Vec3::new(0.0, e2.z * inv_len, -e2.y * inv_len)
+            let inv_len = 1.0 / f32::sqrt(y.y * y.y + y.z * y.z);
+            Vec3::new(0.0, y.z * inv_len, -y.y * inv_len)
         };
 
-        let e3 = e1.cross(e2);
+        let z = x.cross(y);
 
-        Self::new(e1, e2, e3)
+        Self::new(x, y, z)
+    }
+
+    /// # Summary
+    /// Creates a new coordinate system around the given `z` direction vector.
+    ///
+    /// # Constraints
+    /// * `z` - All values must be finite (neither infinite nor `NaN`).
+    ///          Should be normalized.
+    ///
+    /// # Arguments
+    /// * `z` - The y direction vector
+    ///
+    /// # Returns
+    /// * Self
+    pub fn from_z(z: Vec3) -> Self {
+        debug_assert!(is_finite(&z));
+        debug_assert!(is_normalized(&z));
+
+        let x = if z.x.abs() > z.y.abs() {
+            let inv_len = 1.0 / f32::sqrt(z.x * z.x + z.z * z.z);
+            Vec3::new(-z.z * inv_len, 0.0, z.x * inv_len)
+        } else {
+            let inv_len = 1.0 / f32::sqrt(z.y * z.y + z.z * z.z);
+            Vec3::new(0.0, z.z * inv_len, -z.y * inv_len)
+        };
+        let y = z.cross(x);
+
+        Self::new(x, y, z)
     }
 }
 
