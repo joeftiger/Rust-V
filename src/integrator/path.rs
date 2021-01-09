@@ -18,6 +18,10 @@ impl Path {
 }
 
 impl Integrator for Path {
+    fn max_depth(&self) -> u32 {
+        self.max_depth
+    }
+
     fn illumination(
         &self,
         scene: &Scene,
@@ -40,7 +44,7 @@ impl Integrator for Path {
 
             if bounce == 0 || specular {
                 if let SceneObject::Emitter(e) = &intersection.object {
-                    bounce_illum += throughput * e.emission()
+                    bounce_illum += throughput * e.radiance(&outgoing, &normal);
                 }
             }
 

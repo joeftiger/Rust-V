@@ -10,7 +10,7 @@ use color::Color;
 /// The Whitted integrator is a common integrator following specular reflection/transmission recursively.
 #[derive(Clone)]
 pub struct Whitted {
-    depth: u32,
+    max_depth: u32,
 }
 
 impl Whitted {
@@ -22,12 +22,16 @@ impl Whitted {
     ///
     /// # Returns
     /// * Self
-    pub fn new(depth: u32) -> Self {
-        Self { depth }
+    pub fn new(max_depth: u32) -> Self {
+        Self { max_depth }
     }
 }
 
 impl Integrator for Whitted {
+    fn max_depth(&self) -> u32 {
+        self.max_depth
+    }
+
     fn illumination(
         &self,
         scene: &Scene,
@@ -47,7 +51,7 @@ impl Integrator for Whitted {
 
         if depth == 0 {
             if let SceneObject::Emitter(e) = obj {
-                illumination += e.emission()
+                illumination += e.radiance(&outgoing, &normal);
             }
         }
 
@@ -75,7 +79,7 @@ impl Integrator for Whitted {
 
         let new_depth = depth + 1;
 
-        if new_depth < self.depth {
+        if new_depth < self.max_depth {
             illumination += self.specular_reflection(scene, intersection, sampler, new_depth);
             illumination += self.specular_transmission(scene, intersection, sampler, new_depth);
         }
