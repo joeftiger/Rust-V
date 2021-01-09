@@ -1,9 +1,7 @@
-use crate::bxdf::world_to_bxdf;
-
 use crate::debug_utils::{is_finite, within_01};
-use crate::mc::{uniform_cone_pdf, uniform_sample_cone, uniform_sample_sphere};
+use crate::mc::{uniform_cone_pdf, uniform_sample_cone_frame, uniform_sample_sphere};
 use crate::objects::emitter::{Sampleable, SurfaceSample};
-use geometry::{Intersectable, Ray, Sphere};
+use geometry::{CoordinateSystem, Intersectable, Ray, Sphere};
 use std::f32::consts::PI;
 use ultraviolet::{Vec2, Vec3};
 use utility::floats;
@@ -17,8 +15,8 @@ impl Sampleable for Sphere {
         debug_assert!(is_finite(point));
         debug_assert!(within_01(sample));
 
-        let to_center = self.center - *point;
-        let dist_sq = to_center.mag_sq();
+        let point_to_center = self.center - *point;
+        let dist_sq = point_to_center.mag_sq();
         let r2 = self.radius * self.radius;
 
         if dist_sq - r2 < floats::BIG_EPSILON {
@@ -28,14 +26,11 @@ impl Sampleable for Sphere {
 
             SurfaceSample::new(self.center + p, normal)
         } else {
+            // FIXME: cone sampling is weird. Maybe coordinate system is bugged?
+            
             let cos_theta_max = f32::max(0.0, 1.0 - r2 / dist_sq).sqrt() / 2.0;
-
-            let axis = to_center;
-
-            let rotation = world_to_bxdf(&axis);
-            let direction =
-                rotation.reversed() * uniform_sample_cone(sample, cos_theta_max).normalized();
-            // let direction = axis.normalized();
+            let coordinate_system = CoordinateSystem::from_z(-point_to_center);
+            let direction = uniform_sample_cone_frame(sample, cos_theta_max, &coordinate_system);
 
             let ray = Ray::new_fast(*point, direction);
 
