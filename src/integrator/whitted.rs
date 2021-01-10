@@ -77,11 +77,9 @@ impl Integrator for Whitted {
             }
         }
 
-        let new_depth = depth + 1;
-
-        if new_depth < self.max_depth {
-            illumination += self.specular_reflection(scene, intersection, sampler, new_depth);
-            illumination += self.specular_transmission(scene, intersection, sampler, new_depth);
+        if depth + 1 < self.max_depth {
+            illumination += self.specular_reflection(scene, intersection, sampler, depth);
+            illumination += self.specular_transmission(scene, intersection, sampler, depth);
         }
 
         illumination
