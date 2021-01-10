@@ -18,12 +18,12 @@ use utility::floats::BIG_EPSILON;
 /// The unit vectors in all directions.
 #[rustfmt::skip]
 pub const UNIT_VECTORS: [Vec3; 6] = [
-    Vec3 { x:  1.0, y:  0.0, z:  0.0 },
-    Vec3 { x: -1.0, y:  0.0, z:  0.0 },
-    Vec3 { x:  0.0, y:  1.0, z:  0.0 },
-    Vec3 { x:  0.0, y: -1.0, z:  0.0 },
-    Vec3 { x:  0.0, y:  0.0, z:  1.0 },
-    Vec3 { x:  0.0, y:  0.0, z: -1.0 },
+    Vec3 { x: 1.0, y: 0.0, z: 0.0 },
+    Vec3 { x: -1.0, y: 0.0, z: 0.0 },
+    Vec3 { x: 0.0, y: 1.0, z: 0.0 },
+    Vec3 { x: 0.0, y: -1.0, z: 0.0 },
+    Vec3 { x: 0.0, y: 0.0, z: 1.0 },
+    Vec3 { x: 0.0, y: 0.0, z: -1.0 },
 ];
 
 /// # Summary
@@ -50,13 +50,39 @@ pub fn offset_point(point: Vec3, normal: Vec3, direction: Vec3) -> Vec3 {
     debug_assert!(is_normalized(&normal));
     debug_assert!(is_finite(&direction));
 
-    let offset =  if direction.dot(normal) >= 0.0 {
+    let offset = if direction.dot(normal) >= 0.0 {
         normal * BIG_EPSILON
     } else {
         normal * -BIG_EPSILON
     };
 
     point + offset
+}
+
+/// # Summary
+/// Converts the given angles in the given coordinate system from a spherical coordinate system
+/// into a cartesian direction.
+///
+/// # Constraints
+/// * `sin_theta` - Should be finite (neither infinite nor `NaN`).
+/// * `cos_theta` - Should be finite.
+/// * `phi` - Should be finite.
+///
+/// # Arguments
+/// * `sin_theta` - The sine of the theta angle
+/// * `cos_theta` - The cosine of the theta angle
+/// * `phi` - The phi angle (in radians)
+/// * `frame` - The coordinate system frame
+///
+/// * Returns
+/// * Normalized direction in cartesian coordinate system
+pub fn from_spherical_direction(sin_theta: f32, cos_theta: f32, phi: f32, frame: &CoordinateSystem) -> Vec3 {
+    debug_assert!(sin_theta.is_finite());
+    debug_assert!(cos_theta.is_finite());
+    debug_assert!(phi.is_finite());
+
+    let (sin_phi, cos_phi) = phi.sin_cos();
+    ((sin_theta * cos_phi * frame.x) + (cos_theta * frame.y) + (sin_theta * sin_phi * frame.z)).normalized()
 }
 
 /// # Summary
@@ -350,4 +376,5 @@ pub trait Intersectable {
 /// # Summary
 /// A super-trait to combine `Boundable` and `Intersectable`, therefore giving a valid geometry.
 pub trait Geometry: Boundable + Intersectable {}
+
 impl<T> Geometry for T where T: Boundable + Intersectable {}
