@@ -120,16 +120,15 @@ where
         debug_assert!(is_finite(point));
         debug_assert!(within_01(sample));
 
-        let surface = self.geometry.sample_surface(&point, sample);
+        let surface_sample = self.geometry.sample_surface(&point, sample);
 
-        let incident = (surface.point - *point).normalized();
+        let incident = (surface_sample.point - *point).normalized();
 
-        let occlusion_tester = OcclusionTester::between(*point, surface.point);
+        let occlusion_tester = OcclusionTester::between(*point, surface_sample.point);
 
-        let pdf = self.geometry.pdf(&occlusion_tester.ray);
-        let radiance = self.radiance(&incident, &surface.normal);
+        let radiance = self.radiance(&incident, &surface_sample.normal);
 
-        EmitterSample::new(radiance, incident, pdf, occlusion_tester)
+        EmitterSample::new(radiance, incident, surface_sample.pdf, occlusion_tester)
     }
 }
 
@@ -242,6 +241,10 @@ impl OcclusionTester {
         debug_assert!(is_finite(&origin));
         debug_assert!(is_finite(&target));
 
+        if origin == target {
+            println!("Origin and Target are the same!");
+        }
+
         let direction = target - origin;
 
         let mut t_start = BIG_EPSILON;
@@ -286,10 +289,11 @@ impl OcclusionTester {
 }
 
 /// # Summary
-/// Describes a `point` and `normal` of a sampled surface.
+/// Describes a `point`, `normal` and `pdf` of a sampled surface.
 pub struct SurfaceSample {
     pub point: Vec3,
     pub normal: Vec3,
+    pub pdf: f32,
 }
 
 impl SurfaceSample {
@@ -300,18 +304,23 @@ impl SurfaceSample {
     /// * `point` - All values should be finite (neither infinite nor `NaN`).
     /// * `normal` - All values should be finite.
     ///              Should be normalized.
+    /// * `pdf` - Should be finite.
+    ///           Should be inside `[0, inf)`
     ///
     /// # Arguments
     /// * `point` - The surface point
     /// * `normal` - The surface normal
+    /// * `pdf` - The pdf of the sample
     ///
     /// # Returns
     /// * Self
-    pub fn new(point: Vec3, normal: Vec3) -> Self {
+    pub fn new(point: Vec3, normal: Vec3, pdf: f32) -> Self {
         debug_assert!(is_finite(&point));
         debug_assert!(is_normalized(&normal));
+        debug_assert!(pdf >= 0.0);
+        debug_assert!(pdf.is_finite());
 
-        Self { point, normal }
+        Self { point, normal, pdf }
     }
 }
 
@@ -339,14 +348,4 @@ pub trait Sampleable: Geometry + Send + Sync {
     /// # Returns
     /// * A surface sample
     fn sample_surface(&self, point: &Vec3, sample: &Vec2) -> SurfaceSample;
-
-    /// # Summary
-    /// Computes the pdf that the ray intersects this object.
-    ///
-    /// # Arguments
-    /// * `ray` - The ray to intersect this object
-    ///
-    /// # Returns
-    /// * The pdf
-    fn pdf(&self, ray: &Ray) -> f32;
 }

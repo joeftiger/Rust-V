@@ -1,5 +1,5 @@
 use crate::objects::emitter::{Sampleable, SurfaceSample};
-use geometry::{Point, Ray};
+use geometry::Point;
 use ultraviolet::{Vec2, Vec3};
 
 impl Sampleable for Point {
@@ -27,18 +27,6 @@ impl Sampleable for Point {
     fn sample_surface(&self, point: &Vec3, _: &Vec2) -> SurfaceSample {
         let normal = self.0 - *point;
 
-        SurfaceSample::new(self.0, normal.normalized())
-    }
-
-    /// # Summary
-    /// A point cannot be sampled plausibly.
-    ///
-    /// # Arguments
-    /// Ignored
-    ///
-    /// # Returns
-    /// * `1.0`
-    fn pdf(&self, _: &Ray) -> f32 {
-        1.0
+        SurfaceSample::new(self.0, normal.normalized(), 1.0)
     }
 }
