@@ -127,13 +127,12 @@ impl BxDF for SpecularTransmission {
         debug_assert!(is_normalized(outgoing));
 
         let entering = cos_theta(outgoing) > 0.0;
-        let (eta_i, eta_t) = if entering {
-            (self.eta_a, self.eta_b)
+        let (eta_i, eta_t, normal) = if entering {
+            (self.eta_a, self.eta_b, bxdf_normal())
         } else {
-            (self.eta_b, self.eta_a)
+            (self.eta_b, self.eta_a, -bxdf_normal())
         };
 
-        let normal = face_forward(bxdf_normal(), *outgoing);
         let (success, mut incident) = refract(*outgoing, normal, eta_i / eta_t);
         if !success {
             return None;
@@ -141,7 +140,8 @@ impl BxDF for SpecularTransmission {
         incident.normalize();
 
         let cos_i = cos_theta(&incident);
-        let mut spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
+        let mut spectrum =
+            self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i)) / cos_i.abs();
         if self.mode == TransportMode::Radiance {
             spectrum *= (eta_i * eta_i) / (eta_t * eta_t);
         }

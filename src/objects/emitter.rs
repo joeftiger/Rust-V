@@ -39,7 +39,7 @@ pub trait EmitterExt: ReceiverExt {
     ///
     /// # Arguments
     /// * `incident` - The incident on the surface of an object
-    /// * `normal` - The nromal on the surface of an object
+    /// * `normal` - The normal on the surface of an object
     ///
     /// # Returns
     /// * The radiated spectrum
