@@ -2,7 +2,7 @@
 
 use crate::bxdf::fresnel::fresnel_dielectric;
 use crate::bxdf::{
-    bxdf_incident_to, bxdf_normal, cos_theta, face_forward, refract, BxDF, BxDFSample, BxDFType,
+    bxdf_incident_to, bxdf_normal, cos_theta, refract, BxDF, BxDFSample, BxDFType,
     Fresnel, FresnelDielectric, TransportMode,
 };
 use crate::debug_utils::{is_normalized, within_01};

@@ -2,6 +2,7 @@ use crate::bxdf::{same_hemisphere, world_to_bxdf, BxDF, BxDFSample, BxDFType};
 use crate::sampler::Sample;
 use crate::Spectrum;
 use ultraviolet::Vec3;
+use std::ops::Deref;
 
 pub struct BSDF {
     bxdfs: Vec<Box<dyn BxDF>>,
@@ -30,7 +31,7 @@ impl BSDF {
         self.bxdfs.iter().filter(|bxdf| bxdf.is_type(t)).count()
     }
 
-    fn random_matching_bxdf<'a>(&self, t: BxDFType, rand: f32) -> Option<&Box<dyn BxDF>> {
+    fn random_matching_bxdf(&self, t: BxDFType, rand: f32) -> Option<&dyn BxDF> {
         let count = self.num_types(t);
         if count == 0 {
             return None;
@@ -39,8 +40,8 @@ impl BSDF {
         let index = (rand * count as f32) as usize;
         self.bxdfs
             .iter()
-            .filter_map(|bxdf| if bxdf.is_type(t) { Some(bxdf) } else { None })
-            .nth(index)
+            .filter(|bxdf| bxdf.is_type(t))
+            .nth(index).map(|boxed| boxed.deref())
     }
 
     pub fn evaluate(

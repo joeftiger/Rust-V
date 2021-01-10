@@ -41,7 +41,7 @@ impl Sampleable for Sphere {
 
         if dist_sq - r2 < BIG_EPSILON {
             // inside the sphere (may happen)
-            return sample_surface_inside(&self, point, sample);
+            sample_surface_inside(&self, point, sample)
         } else {
             let coordinate_system =
                 CoordinateSystem::from_z(point_to_center.normalized() / -dist_sq.sqrt());
@@ -78,24 +78,6 @@ impl Sampleable for Sphere {
             let pdf = uniform_cone_pdf(cos_theta_max);
 
             SurfaceSample::new(point, normal, pdf)
-
-            // let cos_theta_max = f32::max(0.0, 1.0 - r2 / dist_sq).sqrt() / 2.0;
-            //
-            // let direction = uniform_sample_cone_frame(sample, cos_theta_max, &coordinate_system).normalized();
-            //
-            // let ray = Ray::new_fast(*point, direction);
-            //
-            // match self.intersect(&ray) {
-            //     Some(i) => SurfaceSample::new(i.point, i.normal, pdf),
-            //     None => {
-            //         // if we miss, approximate the hit of the edge
-            //         let t = ray.direction.dot(-*point);
-            //         let p = ray.at(t);
-            //         let normal = p.normalized();
-            //
-            //         SurfaceSample::new(p, normal, pdf)
-            //     }
-            // }
         }
     }
 }
