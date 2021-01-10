@@ -1,8 +1,8 @@
 use crate::bxdf::{same_hemisphere, world_to_bxdf, BxDF, BxDFSample, BxDFType};
 use crate::sampler::Sample;
 use crate::Spectrum;
-use ultraviolet::Vec3;
 use std::ops::Deref;
+use ultraviolet::Vec3;
 
 pub struct BSDF {
     bxdfs: Vec<Box<dyn BxDF>>,
@@ -41,7 +41,8 @@ impl BSDF {
         self.bxdfs
             .iter()
             .filter(|bxdf| bxdf.is_type(t))
-            .nth(index).map(|boxed| boxed.deref())
+            .nth(index)
+            .map(|boxed| boxed.deref())
     }
 
     pub fn evaluate(
