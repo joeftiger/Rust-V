@@ -124,8 +124,7 @@ where
 
         let incident = (surface.point - *point).normalized();
 
-        let from = point; // + intersection.info.normal * floats::EPSILON;
-        let occlusion_tester = OcclusionTester::between(*from, surface.point);
+        let occlusion_tester = OcclusionTester::between(*point, surface.point);
 
         let pdf = self.geometry.pdf(&occlusion_tester.ray);
         let radiance = self.radiance(&incident, &surface.normal);
@@ -252,6 +251,9 @@ impl OcclusionTester {
             t_end = direction.mag();
         }
 
+        if !is_finite(&direction) || !is_finite(&direction.normalized()) {
+            println!("{:#?}", direction);
+        }
         let ray = Ray::new(origin, direction.normalized(), t_start, t_end);
 
         Self { ray }
