@@ -133,8 +133,6 @@ impl BxDF for SpecularTransmission {
             (self.eta_b, self.eta_a, -bxdf_normal())
         };
 
-        // let mut incident = outgoing.refracted(normal, eta_i / eta_t);
-
         if let Some(mut incident) = refract(*outgoing, normal, eta_i / eta_t) {
             incident.normalize();
 
