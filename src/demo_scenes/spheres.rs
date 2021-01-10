@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use crate::bxdf::refraction_index::{AIR, GLASS};
+use crate::bxdf::refraction_index::{AIR, GLASS, ICE};
 use crate::bxdf::{
     FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, TransportMode,
     BSDF,
@@ -51,7 +51,7 @@ fn random_pos() -> Vec3 {
     let x = DISTRIBUTION * (fastrand::f32() - 0.5);
     let z = DISTRIBUTION * (fastrand::f32() - 0.5);
 
-    Vec3::new(x, RADIUS * 1.2, z)
+    Vec3::new(x, RADIUS, z)
 }
 
 fn random_color() -> Spectrum {
@@ -78,11 +78,21 @@ fn random_bsdf(color: Spectrum) -> (bool, BSDF) {
             let lambertian = LambertianReflection::new(color);
             BSDF::new(vec![Box::new(lambertian)])
         } else if rand < 0.8 {
-            let specular = SpecularReflection::new(color, Box::new(FresnelNoOp));
+            let specular = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
             BSDF::new(vec![Box::new(specular)])
         } else {
-            let specular = SpecularTransmission::new(color, AIR, GLASS, TransportMode::Importance);
-            BSDF::new(vec![Box::new(specular)])
+            let transmission = SpecularTransmission::new(
+                Spectrum::new_const(1.0),
+                AIR,
+                ICE,
+                TransportMode::Importance,
+            );
+            let reflection =
+                SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
+            BSDF::new(vec![
+                Box::new(transmission),
+                // Box::new(reflection),
+            ])
         }
     } else {
         let lambertian = LambertianReflection::new(color);
@@ -113,7 +123,7 @@ fn create_scene() -> Scene {
             let (emitting, bsdf) = random_bsdf(color);
 
             let obj = if emitting {
-                let emitter = Emitter::new(sphere, bsdf, color * 3.0);
+                let emitter = Emitter::new(sphere, bsdf, color);
                 SceneObject::new_emitter(emitter)
             } else {
                 let receiver = Receiver::new(sphere, bsdf);
