@@ -76,13 +76,19 @@ pub fn offset_point(point: Vec3, normal: Vec3, direction: Vec3) -> Vec3 {
 ///
 /// * Returns
 /// * Normalized direction in cartesian coordinate system
-pub fn from_spherical_direction(sin_theta: f32, cos_theta: f32, phi: f32, frame: &CoordinateSystem) -> Vec3 {
+pub fn from_spherical_direction(
+    sin_theta: f32,
+    cos_theta: f32,
+    phi: f32,
+    frame: &CoordinateSystem,
+) -> Vec3 {
     debug_assert!(sin_theta.is_finite());
     debug_assert!(cos_theta.is_finite());
     debug_assert!(phi.is_finite());
 
     let (sin_phi, cos_phi) = phi.sin_cos();
-    ((sin_theta * cos_phi * frame.x) + (cos_theta * frame.y) + (sin_theta * sin_phi * frame.z)).normalized()
+    ((sin_theta * cos_phi * frame.x) + (cos_theta * frame.y) + (sin_theta * sin_phi * frame.z))
+        .normalized()
 }
 
 /// # Summary
