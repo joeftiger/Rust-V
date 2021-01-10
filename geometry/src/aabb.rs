@@ -98,19 +98,13 @@ impl Intersectable for Aabb {
         let vec_min = t1.min_by_component(t2);
         let vec_max = t1.max_by_component(t2);
 
-        let t_min = vec_min.x.max(vec_min.y).max(vec_min.z);
-        let t_max = vec_max.x.max(vec_max.y).max(vec_max.z);
+        let t_min = vec_min.component_max();
+        let t_max = vec_max.component_min();
 
-        // FIXME: Does not work correctly apparently
-        let t;
-        if ray.contains(t_min) {
-            t = t_min;
-        } else if ray.contains(t_max) {
-            t = t_max;
-        } else {
+        if t_max < ray.t_start || t_min > ray.t_end {
             return None;
         }
-        // FIXME END
+        let t = t_min;
 
         let point = ray.at(t);
         let half_size = self.size() / 2.0;
