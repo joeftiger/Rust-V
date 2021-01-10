@@ -1,7 +1,6 @@
 use crate::debug_utils::within_01;
-use geometry::CoordinateSystem;
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI, TAU};
-use ultraviolet::{Lerp, Vec2, Vec3};
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI};
+use ultraviolet::{Vec2, Vec3};
 
 /// # Summary
 /// Samples a concentric mapped point from the given random sample.
@@ -80,58 +79,58 @@ pub fn uniform_sample_sphere(sample: &Vec2) -> Vec3 {
     Vec3::new(phi.cos() * r, phi.sin() * r, z)
 }
 
-/// # Summary
-/// Samples a cone around the `(0, 1, 0)` axis with a uniform distribution described by the sample.
-///
-/// # Constraints
-/// * `sample` - All values should be within `[0, 1]`.
-///
-/// # Arguments
-/// * `sample` - A random sample in `[0, 1]`
-/// * `cos_theta_max` - The max angle
-///
-/// # Results
-/// * `Vec3` - A direction in the cone around `(0, 1, 0)`
-pub fn uniform_sample_cone(sample: &Vec2, cos_theta_max: f32) -> Vec3 {
-    debug_assert!(within_01(sample));
-
-    let cos = cos_theta_max.lerp(1.0, sample.x);
-    let sin = f32::sqrt(1.0 - cos * cos);
-    let phi = sample.y * TAU;
-
-    // TODO: This is weird: The commented out version should be correct but results in non-correct images
-    // Maybe there is a bug somewhere else?
-
-    // Vec3::new(phi.cos() * sin, cos, phi.sin() * sin)
-    Vec3::new(phi.cos() * sin, phi.sin() * sin, cos)
-}
-
-/// # Summary
-/// Samples a cone around the `frame.e2` axis with a uniform distribution described by the sample.
-///
-/// # Constraints
-/// * `sample` - All values should be within `[0, 1]`.
-///
-/// # Arguments
-/// * `sample` - A random sample in `[0, 1]`
-/// * `cos_theta_max` - The max angle
-/// * `frame` - The coordinate system frame. Y-axis is "up"-axis.
-///
-/// # Results
-/// * `Vec3` - A direction in the cone around `frame.e2`
-pub fn uniform_sample_cone_frame(
-    sample: &Vec2,
-    cos_theta_max: f32,
-    frame: &CoordinateSystem,
-) -> Vec3 {
-    debug_assert!(within_01(sample));
-
-    let cos = cos_theta_max.lerp(1.0, sample.x);
-    let sin = f32::sqrt(1.0 - cos * cos);
-    let phi = sample.y * 2.0 * PI;
-
-    (phi.cos() * sin * frame.x) - (cos * frame.y) + (phi.sin() * sin * frame.z)
-}
+// /// # Summary
+// /// Samples a cone around the `(0, 1, 0)` axis with a uniform distribution described by the sample.
+// ///
+// /// # Constraints
+// /// * `sample` - All values should be within `[0, 1]`.
+// ///
+// /// # Arguments
+// /// * `sample` - A random sample in `[0, 1]`
+// /// * `cos_theta_max` - The max angle
+// ///
+// /// # Results
+// /// * `Vec3` - A direction in the cone around `(0, 1, 0)`
+// pub fn uniform_sample_cone(sample: &Vec2, cos_theta_max: f32) -> Vec3 {
+//     debug_assert!(within_01(sample));
+//
+//     let cos = cos_theta_max.lerp(1.0, sample.x);
+//     let sin = f32::sqrt(1.0 - cos * cos);
+//     let phi = sample.y * TAU;
+//
+//     // TODO: This is weird: The commented out version should be correct but results in non-correct images
+//     // Maybe there is a bug somewhere else?
+//
+//     Vec3::new(phi.cos() * sin, cos, phi.sin() * sin)
+//     // Vec3::new(phi.cos() * sin, phi.sin() * sin, cos)
+// }
+//
+// /// # Summary
+// /// Samples a cone around the `frame.e2` axis with a uniform distribution described by the sample.
+// ///
+// /// # Constraints
+// /// * `sample` - All values should be within `[0, 1]`.
+// ///
+// /// # Arguments
+// /// * `sample` - A random sample in `[0, 1]`
+// /// * `cos_theta_max` - The max angle
+// /// * `frame` - The coordinate system frame. Y-axis is "up"-axis.
+// ///
+// /// # Results
+// /// * `Vec3` - A direction in the cone around `frame.e2`
+// pub fn uniform_sample_cone_frame(
+//     sample: &Vec2,
+//     cos_theta_max: f32,
+//     frame: &CoordinateSystem,
+// ) -> Vec3 {
+//     debug_assert!(within_01(sample));
+//
+//     let cos = cos_theta_max.lerp(1.0, sample.x);
+//     let sin = f32::sqrt(1.0 - cos * cos);
+//     let phi = sample.y * 2.0 * PI;
+//
+//     (phi.cos() * sin * frame.x) - (cos * frame.y) + (phi.sin() * sin * frame.z)
+// }
 
 /// # Summary
 /// Computes the pdf for uniformly sampling a code.
