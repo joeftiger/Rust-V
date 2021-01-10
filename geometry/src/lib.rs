@@ -27,6 +27,39 @@ pub const UNIT_VECTORS: [Vec3; 6] = [
 ];
 
 /// # Summary
+/// Offsets a point by an epsilon into the normal direction, depending on the angle to the given
+/// direction.
+///
+/// # Constraints
+/// * `point` - ALl values should be finite (neither infinite nor `NaN`).
+/// * `normal` - All values should be finite.
+///              Should be normalized.
+/// * `direction` - Should be finite.
+///                 (Does not need to be normalized.)
+///
+/// # Arguments
+/// * `point` - The starting point
+/// * `normal` - The normal vector to offset towards
+/// * `direction` - The direction helper to decide whether to invert the normal
+///
+/// # Returns
+/// * The offset point
+pub fn offset_point(point: Vec3, normal: Vec3, direction: Vec3) -> Vec3 {
+    debug_assert!(is_finite(&point));
+    debug_assert!(is_finite(&normal));
+    debug_assert!(is_normalized(&normal));
+    debug_assert!(is_finite(&direction));
+
+    let offset =  if direction.dot(normal) >= 0.0 {
+        normal * BIG_EPSILON
+    } else {
+        normal * -BIG_EPSILON
+    };
+
+    point + offset
+}
+
+/// # Summary
 /// An intersection consists of the following 4 properties:
 /// * `point` - The intersection point
 /// * `normal` - The surface normal (showing outside, even if intersection hits inside!)
@@ -58,10 +91,7 @@ impl Intersection {
     /// * Self
     pub fn new(point: Vec3, normal: Vec3, t: f32, ray: Ray) -> Self {
         debug_assert!(ray.contains(t));
-        debug_assert!({
-            let mag = normal.mag();
-            1.0 - BIG_EPSILON < mag && mag < 1.0 + BIG_EPSILON
-        });
+        debug_assert!(is_normalized(&normal));
 
         Self {
             point,
@@ -83,10 +113,7 @@ impl Intersection {
     /// # Returns
     /// * Ray from this intersection
     pub fn ray_towards(&self, direction: Vec3) -> Ray {
-        debug_assert!({
-            let mag = direction.mag();
-            1.0 - BIG_EPSILON < mag && mag < 1.0 + BIG_EPSILON
-        });
+        debug_assert!(is_normalized(&direction));
 
         Ray::new_fast(self.point, direction)
     }
@@ -119,18 +146,9 @@ impl Intersection {
     /// # Returns
     /// * Ray from this intersection, offset by an epsilon
     pub fn offset_ray_towards(&self, direction: Vec3) -> Ray {
-        debug_assert!({
-            let mag = direction.mag();
-            1.0 - BIG_EPSILON < mag && mag < 1.0 + BIG_EPSILON
-        });
+        debug_assert!(is_normalized(&direction));
 
-        let offset = if self.normal.dot(direction) > 0.0 {
-            self.normal * BIG_EPSILON
-        } else {
-            self.normal * -BIG_EPSILON
-        };
-
-        let origin = self.point + offset;
+        let origin = offset_point(self.point, self.normal, direction);
 
         Ray::new_fast(origin, direction)
     }
@@ -149,15 +167,11 @@ impl Intersection {
     /// # Returns
     /// * Ray from this intersection to the target, offset by an epsilon
     pub fn offset_ray_to(&self, target: Vec3) -> Ray {
-        let offset = if self.normal.dot(target - self.point) >= 0.0 {
-            self.normal * BIG_EPSILON
-        } else {
-            self.normal * -BIG_EPSILON
-        };
+        let direction = target - self.point;
 
-        let origin = self.point + offset;
+        let origin = offset_point(self.point, self.normal, direction);
 
-        Ray::between(origin, target)
+        Ray::new(origin, direction.normalized(), 0.0, direction.mag())
     }
 }
 
