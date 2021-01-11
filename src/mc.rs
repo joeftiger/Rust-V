@@ -1,5 +1,5 @@
 use crate::debug_utils::within_01;
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI};
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI, TAU};
 use ultraviolet::{Vec2, Vec3};
 
 /// # Summary
@@ -141,5 +141,5 @@ pub fn uniform_sample_sphere(sample: &Vec2) -> Vec3 {
 /// # Results
 /// * `f32` - The pdf
 pub fn uniform_cone_pdf(cos_theta: f32) -> f32 {
-    1.0 / (2.0 * PI * (1.0 - cos_theta))
+    1.0 / (TAU * (1.0 - cos_theta))
 }
