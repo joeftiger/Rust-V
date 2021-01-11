@@ -44,9 +44,9 @@ impl Sampleable for Sphere {
             sample_surface_inside(&self, point, sample)
         } else {
             let coordinate_system =
-                CoordinateSystem::from_z(point_to_center.normalized() / -dist_sq.sqrt());
+                CoordinateSystem::from_z(point_to_center / -dist_sq.sqrt());
 
-            let sin_theta_max = self.radius * self.radius / dist_sq;
+            let sin_theta_max = r2 / dist_sq;
             let sin_theta_max2 = sin_theta_max * sin_theta_max;
             let inv_sin_theta_max = 1.0 / sin_theta_max;
             let cos_theta_max = f32::max(0.0, 1.0 - sin_theta_max2);
