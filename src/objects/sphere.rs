@@ -39,7 +39,7 @@ impl Sampleable for Sphere {
         let dist_sq = point_to_center.mag_sq();
         let r2 = self.radius * self.radius;
 
-        if dist_sq - r2 < BIG_EPSILON {
+        if dist_sq <= r2 {
             // inside the sphere (may happen)
             sample_surface_inside(&self, point, sample)
         } else {
@@ -48,7 +48,7 @@ impl Sampleable for Sphere {
             let sin_theta_max = r2 / dist_sq;
             let sin_theta_max2 = sin_theta_max * sin_theta_max;
             let inv_sin_theta_max = 1.0 / sin_theta_max;
-            let cos_theta_max = f32::max(0.0, 1.0 - sin_theta_max2);
+            let cos_theta_max = f32::max(0.0, 1.0 - sin_theta_max2).sqrt();
 
             let mut cos_theta = cos_theta_max.lerp(1.0, sample.x);
             let mut sin_theta2 = 1.0 - cos_theta * cos_theta;

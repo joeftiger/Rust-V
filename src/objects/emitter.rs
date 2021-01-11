@@ -305,7 +305,7 @@ impl SurfaceSample {
     /// * `normal` - All values should be finite.
     ///              Should be normalized.
     /// * `pdf` - Should be finite.
-    ///           Should be inside `[0, inf)`
+    ///           Should be `NaN`.
     ///
     /// # Arguments
     /// * `point` - The surface point
@@ -318,7 +318,7 @@ impl SurfaceSample {
         debug_assert!(is_finite(&point));
         debug_assert!(is_normalized(&normal));
         debug_assert!(pdf >= 0.0);
-        debug_assert!(pdf.is_finite());
+        debug_assert!(!pdf.is_nan());
 
         Self { point, normal, pdf }
     }
