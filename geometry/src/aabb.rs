@@ -101,10 +101,18 @@ impl Intersectable for Aabb {
         let t_min = vec_min.component_max();
         let t_max = vec_max.component_min();
 
-        if t_max < ray.t_start || t_min > ray.t_end {
+        let t;
+        if t_min < t_max {
+            if ray.contains(t_min) {
+                t = t_min;
+            } else if ray.contains(t_max) {
+                t = t_max;
+            } else {
+                return None;
+            }
+        } else {
             return None;
         }
-        let t = t_min;
 
         let point = ray.at(t);
         let half_size = self.size() / 2.0;
