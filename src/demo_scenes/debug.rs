@@ -1,15 +1,15 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+use crate::bxdf::{FresnelNoOp, LambertianReflection, SpecularReflection, BSDF};
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY};
+use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::scene::Scene;
+use crate::Spectrum;
+use geometry::{Aabb, Point, Sphere};
 use std::sync::Arc;
 use ultraviolet::{UVec2, Vec3};
-use crate::objects::{SceneObject, Receiver, Emitter};
-use geometry::{Aabb, Sphere, Point};
-use crate::bxdf::{LambertianReflection, BSDF, SpecularReflection, FresnelNoOp};
-use crate::Spectrum;
 
 const FLOOR: f32 = 0.0;
 const RADIUS: f32 = 0.5;
@@ -20,7 +20,8 @@ impl DemoScene for DebugScene {
     fn create(resolution: UVec2) -> (Scene, Arc<dyn Camera>) {
         let mut scene = Scene::default();
 
-        scene.add(ground())
+        scene
+            .add(ground())
             .add(sphere())
             .add(sphere_emitter())
             .add(create_emitter());

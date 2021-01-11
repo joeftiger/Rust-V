@@ -50,9 +50,9 @@ impl Integrator for Whitted {
         let mut illumination = Spectrum::black();
 
         // if depth == 0 {
-            if let SceneObject::Emitter(e) = obj {
-                illumination += e.radiance(&outgoing, &normal);
-            }
+        if let SceneObject::Emitter(e) = obj {
+            illumination += e.radiance(&outgoing, &normal);
+        }
         // }
 
         for light in &scene.lights {
@@ -62,7 +62,8 @@ impl Integrator for Whitted {
                 && !emitter_sample.radiance.is_black()
                 && !emitter_sample.occlusion_tester.test(scene)
             {
-                let bsdf_spectrum = bsdf.evaluate(&normal, &emitter_sample.incident, &outgoing, BxDFType::ALL);
+                let bsdf_spectrum =
+                    bsdf.evaluate(&normal, &emitter_sample.incident, &outgoing, BxDFType::ALL);
 
                 if !bsdf_spectrum.is_black() {
                     let cos = emitter_sample.incident.dot(normal);

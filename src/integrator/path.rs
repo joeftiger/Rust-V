@@ -5,7 +5,6 @@ use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use color::Color;
-use utility::floats::fast_clamp;
 
 pub struct Path {
     max_depth: u32,

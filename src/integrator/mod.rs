@@ -122,9 +122,8 @@ pub trait Integrator: Send + Sync {
 
                     if let Some(si) = scene.intersect(&refl_ray) {
                         let illumination = self.illumination(scene, &si, sampler, depth + 1);
-                        reflection += illumination
-                            * bxdf_sample.spectrum
-                            * (cos.abs() / bxdf_sample.pdf);
+                        reflection +=
+                            illumination * bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
                     }
                 }
             }
@@ -179,9 +178,8 @@ pub trait Integrator: Send + Sync {
 
                     if let Some(si) = scene.intersect(&refl_ray) {
                         let illumination = self.illumination(scene, &si, sampler, depth + 1);
-                        transmission += illumination
-                            * bxdf_sample.spectrum
-                            * (cos.abs() / bxdf_sample.pdf);
+                        transmission +=
+                            illumination * bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
                     }
                 }
             }
