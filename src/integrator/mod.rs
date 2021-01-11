@@ -96,6 +96,8 @@ pub trait Integrator: Send + Sync {
         sampler: &dyn Sampler,
         depth: u32,
     ) -> Spectrum {
+        debug_assert!(depth + 1 < self.max_depth());
+
         let outgoing = -intersection.info.ray.direction;
 
         let bsdf = intersection.object.bsdf();
@@ -119,15 +121,10 @@ pub trait Integrator: Send + Sync {
                     let refl_ray = intersection.info.offset_ray_towards(bxdf_sample.incident);
 
                     if let Some(si) = scene.intersect(&refl_ray) {
-                        let new_depth = depth + 1;
-
-                        if new_depth < self.max_depth() {
-                            let illumination = self.illumination(scene, &si, sampler, new_depth);
-                            reflection += bxdf_sample.spectrum
-                                * illumination
-                                * illumination
-                                * (cos.abs() / bxdf_sample.pdf);
-                        }
+                        let illumination = self.illumination(scene, &si, sampler, depth + 1);
+                        reflection += illumination
+                            * bxdf_sample.spectrum
+                            * (cos.abs() / bxdf_sample.pdf);
                     }
                 }
             }
@@ -156,6 +153,8 @@ pub trait Integrator: Send + Sync {
         sampler: &dyn Sampler,
         depth: u32,
     ) -> Spectrum {
+        debug_assert!(depth + 1 < self.max_depth());
+
         let outgoing = -intersection.info.ray.direction;
 
         let bsdf = intersection.object.bsdf();
@@ -179,15 +178,10 @@ pub trait Integrator: Send + Sync {
                     let refl_ray = intersection.info.offset_ray_towards(bxdf_sample.incident);
 
                     if let Some(si) = scene.intersect(&refl_ray) {
-                        let new_depth = depth + 1;
-
-                        if new_depth < self.max_depth() {
-                            let illumination = self.illumination(scene, &si, sampler, new_depth);
-                            transmission += bxdf_sample.spectrum
-                                * illumination
-                                * illumination
-                                * (cos.abs() / bxdf_sample.pdf);
-                        }
+                        let illumination = self.illumination(scene, &si, sampler, depth + 1);
+                        transmission += illumination
+                            * bxdf_sample.spectrum
+                            * (cos.abs() / bxdf_sample.pdf);
                     }
                 }
             }
