@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use crate::bxdf::refraction_index::{AIR, GLASS, ICE};
+use crate::bxdf::refraction_index::{AIR, GLASS};
 use crate::bxdf::{
     FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, TransportMode,
     BSDF,
@@ -84,7 +84,7 @@ fn random_bsdf(color: Spectrum) -> (bool, BSDF) {
             let transmission = SpecularTransmission::new(
                 Spectrum::new_const(1.0),
                 AIR,
-                ICE,
+                GLASS,
                 TransportMode::Importance,
             );
             let reflection =
@@ -103,7 +103,7 @@ fn random_bsdf(color: Spectrum) -> (bool, BSDF) {
 }
 
 fn create_emitter() -> SceneObject {
-    let position = Vec3::new(0.0, 10_000.0, 0.0);
+    let position = Vec3::new(0.0, 10.0, 0.0);
     let point = Point(position);
 
     let bsdf = BSDF::empty();
@@ -140,6 +140,7 @@ fn create_scene() -> Scene {
     scene
 }
 
+//noinspection DuplicatedCode
 fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
     let position = Vec3::new(0.0, 5.0, 10.0);
     let target = Vec3::new(0.0, 1.0, 0.0);

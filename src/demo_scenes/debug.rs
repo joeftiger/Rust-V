@@ -1,16 +1,85 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use crate::camera::Camera;
-use crate::demo_scenes::DemoScene;
+use crate::camera::{Camera, PerspectiveCamera};
+use crate::demo_scenes::{DemoScene, FOVY};
 use crate::scene::Scene;
 use std::sync::Arc;
-use ultraviolet::UVec2;
+use ultraviolet::{UVec2, Vec3};
+use crate::objects::{SceneObject, Receiver, Emitter};
+use geometry::{Aabb, Sphere, Point};
+use crate::bxdf::{LambertianReflection, BSDF, SpecularReflection, FresnelNoOp};
+use crate::Spectrum;
+
+const FLOOR: f32 = 0.0;
+const RADIUS: f32 = 0.5;
 
 pub struct DebugScene;
 
 impl DemoScene for DebugScene {
     fn create(resolution: UVec2) -> (Scene, Arc<dyn Camera>) {
-        unimplemented!()
+        let mut scene = Scene::default();
+
+        scene.add(ground())
+            .add(sphere())
+            .add(sphere_emitter())
+            .add(create_emitter());
+
+        let camera = create_camera(resolution);
+
+        (scene, camera)
     }
+}
+
+//noinspection DuplicatedCode
+fn ground() -> SceneObject {
+    let min = Vec3::new(-10000.0, FLOOR - 5.0, -10000.0);
+    let max = Vec3::new(10000.0, FLOOR, 10000.0);
+    let aabb = Aabb::new(min, max);
+
+    let lambertian = LambertianReflection::new(Spectrum::new_const(1.0));
+    let bsdf = BSDF::new(vec![Box::new(lambertian)]);
+
+    let receiver = Receiver::new(aabb, bsdf);
+
+    SceneObject::new_receiver(receiver)
+}
+
+fn sphere() -> SceneObject {
+    let center = Vec3::new(-RADIUS * 1.25, RADIUS, 0.0);
+    let sphere = Sphere::new(center, RADIUS);
+
+    let specular = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
+    let bsdf = BSDF::new(vec![Box::new(specular)]);
+
+    let receiver = Receiver::new(sphere, bsdf);
+    SceneObject::new_receiver(receiver)
+}
+
+fn sphere_emitter() -> SceneObject {
+    let center = Vec3::new(RADIUS * 1.25, RADIUS, 0.0);
+    let sphere = Sphere::new(center, RADIUS);
+
+    let bsdf = BSDF::empty();
+
+    let emitter = Emitter::new(sphere, bsdf, Spectrum::new_const(2.0));
+    SceneObject::new_emitter(emitter)
+}
+
+fn create_emitter() -> SceneObject {
+    let position = Vec3::new(0.0, 10.0, 0.0);
+    let point = Point(position);
+
+    let bsdf = BSDF::empty();
+    let emitter = Emitter::new(point, bsdf, Spectrum::new_const(1.0));
+    SceneObject::new_emitter(emitter)
+}
+
+//noinspection DuplicatedCode
+fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
+    let position = Vec3::new(0.0, 2.0, 5.0);
+    let target = Vec3::new(0.0, RADIUS, 0.0);
+
+    let camera = PerspectiveCamera::new(position, target, Vec3::unit_y(), FOVY / 2.0, resolution);
+    Arc::new(camera)
 }
