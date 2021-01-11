@@ -40,10 +40,10 @@ impl Integrator for Path {
             let normal = hit.info.normal;
             let mut bounce_illum = Spectrum::black();
 
-            let bsdf = intersection.object.bsdf();
+            let bsdf = hit.object.bsdf();
 
             if bounce == 0 || specular {
-                if let SceneObject::Emitter(e) = &intersection.object {
+                if let SceneObject::Emitter(e) = &hit.object {
                     bounce_illum += throughput * e.radiance(&outgoing, &normal);
                 }
             }
@@ -79,15 +79,12 @@ impl Integrator for Path {
                     break;
                 }
 
-                let cos_abs = if bxdf_sample.typ.is_specular() {
-                    specular = true;
-                    1.0
-                } else {
-                    specular = false;
-                    fast_clamp(bxdf_sample.incident.dot(normal).abs(), 0.0, 1.0)
-                };
+                specular = bxdf_sample.typ.is_specular();
+                let cos = bxdf_sample.incident.dot(normal);
 
-                throughput *= bxdf_sample.spectrum * (cos_abs / bxdf_sample.pdf);
+                if cos != 0.0 {
+                    throughput *= bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
+                }
 
                 let ray = hit.info.offset_ray_towards(bxdf_sample.incident);
                 match scene.intersect(&ray) {

@@ -49,11 +49,11 @@ impl Integrator for Whitted {
 
         let mut illumination = Spectrum::black();
 
-        if depth == 0 {
+        // if depth == 0 {
             if let SceneObject::Emitter(e) = obj {
                 illumination += e.radiance(&outgoing, &normal);
             }
-        }
+        // }
 
         for light in &scene.lights {
             let emitter_sample = light.sample(&point, &sampler.get_2d());
