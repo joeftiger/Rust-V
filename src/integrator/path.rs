@@ -81,9 +81,7 @@ impl Integrator for Path {
                 specular = bxdf_sample.typ.is_specular();
                 let cos = bxdf_sample.incident.dot(normal);
 
-                if cos != 0.0 {
-                    throughput *= bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
-                }
+                throughput *= bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
 
                 let ray = hit.info.offset_ray_towards(bxdf_sample.incident);
                 match scene.intersect(&ray) {
