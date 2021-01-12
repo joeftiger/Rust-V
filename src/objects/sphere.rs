@@ -42,23 +42,15 @@ impl Sampleable for Sphere {
             // inside the sphere (may happen)
             sample_surface_inside(&self, point, sample)
         } else {
-            let coordinate_system = CoordinateSystem::from_z(point_to_center / -dist_sq.sqrt());
+            let coordinate_system = CoordinateSystem::from_y(point_to_center / -dist_sq.sqrt());
 
             let sin_theta_max = r2 / dist_sq;
             let sin_theta_max2 = sin_theta_max * sin_theta_max;
             let inv_sin_theta_max = 1.0 / sin_theta_max;
             let cos_theta_max = f32::max(0.0, 1.0 - sin_theta_max2).sqrt();
 
-            let mut cos_theta = cos_theta_max.lerp(1.0, sample.x);
-            let mut sin_theta2 = 1.0 - cos_theta * cos_theta;
-
-            if sin_theta_max2 < 0.00068523 {
-                // sin^2(1.5 deg)
-                // Fall back to a Taylor series expansion for small angles, where the standard
-                // approach suffers from sever cancellation errors.
-                sin_theta2 = sin_theta_max2 * sample.x;
-                cos_theta = f32::sqrt(1.0 - sin_theta2);
-            }
+            let cos_theta = cos_theta_max.lerp(1.0, sample.x);
+            let sin_theta2 = 1.0 - cos_theta * cos_theta;
 
             let cos_alpha = sin_theta2
                 * inv_sin_theta_max

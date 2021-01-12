@@ -241,22 +241,18 @@ impl OcclusionTester {
         debug_assert!(is_finite(&origin));
         debug_assert!(is_finite(&target));
 
-        if origin == target {
-            println!("Origin and Target are the same!");
-        }
-
         let direction = target - origin;
+        let distance = direction.mag();
 
         let mut t_start = BIG_EPSILON;
-        let mut t_end = direction.mag() - BIG_EPSILON;
+        let mut t_end = distance - BIG_EPSILON;
+
         if t_end < t_start {
+            // edge case when distance very small
             t_start = 0.0;
-            t_end = direction.mag();
+            t_end = distance;
         }
 
-        if !is_finite(&direction) || !is_finite(&direction.normalized()) {
-            println!("{:#?}", direction);
-        }
         let ray = Ray::new(origin, direction.normalized(), t_start, t_end);
 
         Self { ray }
