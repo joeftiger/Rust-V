@@ -3,11 +3,16 @@ use image::Rgb;
 use ultraviolet::Vec3;
 use utility::floats;
 
-colors!(
+color!(
     Srgb => f32, f32, 3
 );
 
 impl Srgb {
+    /// # Summary
+    /// Converts itself to a vector.
+    ///
+    /// # Returns
+    /// * Self as vector
     pub fn to_vec3(&self) -> Vec3 {
         Vec3::from(self.data)
     }
@@ -78,6 +83,12 @@ impl Into<Rgb<u16>> for Srgb {
             .for_each(|(d0, d1)| *d0 = (d1 * 2u32.pow(16) as f32) as u16);
 
         Rgb::from(data)
+    }
+}
+
+impl Into<Rgb<f32>> for Srgb {
+    fn into(self) -> Rgb<f32> {
+        Rgb::from(self.data)
     }
 }
 

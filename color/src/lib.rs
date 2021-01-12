@@ -16,7 +16,7 @@ pub use srgb::Srgb;
 pub use xyz::Xyz;
 
 #[macro_export]
-macro_rules! colors {
+macro_rules! color {
     ($($name:ident => $storage:ident, $mul:ident, $size:expr), +) => {
         $(
             #[derive(Clone, Copy, Debug)]
@@ -228,6 +228,9 @@ macro_rules! colors {
     }
 }
 
+/// # Summary
+/// A trait for colors. Allows arithmetic operations to be performed and gives utility functions
+/// like `is_black()` or `white()`.
 pub trait Color:
     Add
     + AddAssign
@@ -249,35 +252,101 @@ pub trait Color:
     + Into<Rgb<u16>>
     + Sum
 {
-    /// Whether this color is black. Some computations can be omitted, if the color is black.
+    /// # Summary
+    /// Returns whether this color is black.
+    ///
+    /// # Returns
+    /// * Whether this color is black
     fn is_black(&self) -> bool;
 
     /// Clamps the color values between min and max.
+    /// # Summary
+    /// Clamps the color values between min and max.
+    ///
+    /// # Constraints
+    /// * `min` - Should be finite (neither infinite nor `NaN`).
+    ///           Should be less than `max`.
+    /// * `max` - Should be finite.
+    ///
+    /// # Arguments
+    /// * `min` - The minimum for each color value
+    /// * `max` - The maximum for each color value
+    ///
+    /// # Returns
+    /// * Clamped self
     fn clamp(&self, min: f32, max: f32) -> Self;
 
-    /// Whether this color has NaN values.
+    /// # Summary
+    /// Returns whether any value in this color is `NaN`.
+    ///
+    /// # Returns
+    /// * Whether this color has `NaN`s
     fn has_nans(&self) -> bool;
 
+    /// # Summary
+    /// Returns the square-root of this color.
+    ///
+    /// # Returns
+    /// * Square-rooted self
     fn sqrt(&self) -> Self;
 
-    /// Converts this color to sRGB.
+    /// # Summary
+    /// Converts this color to `Srgb` space.
+    ///
+    /// # Returns
+    /// * Self as `Srgb`
     fn to_rgb(&self) -> Srgb;
 
-    /// Converts this color to XYZ.
-    fn to_xyz(&self) -> Xyz;
+    /// # Summary
+    /// Converts this color to `Srgb` space.
+    ///
+    /// # Returns
+    /// * Self as `Srgb`
+    fn to_xyz(&self) -> Xyz {
+        self.to_rgb().to_xyz()
+    }
 
+    /// # Summary
+    /// Returns black of this color space.
+    ///
+    /// # Returns
+    /// * Black
     fn black() -> Self;
 
+    /// # Summary
+    /// Returns white of this color space.
+    ///
+    /// # Returns
+    /// * White
     fn white() -> Self;
 
+    /// # Summary
+    /// Returns red of this color space.
+    ///
+    /// # Returns
+    /// * Red
     fn red() -> Self;
 
+    /// # Summary
+    /// Returns greeen of this color space.
+    ///
+    /// # Returns
+    /// * Green
     fn green() -> Self;
 
+    /// # Summary
+    /// Returns blue of this color space.
+    ///
+    /// # Returns
+    /// * Blue
     fn blue() -> Self;
 }
 
-/// Returns the XYZ to sRGB matrix
+/// # Summary
+/// Returns the matrix to convert `Xyz` to `Srgb`.
+///
+/// # Returns
+/// * Conversion matrix
 #[allow(clippy::excessive_precision)]
 pub fn xyz_to_srgb_mat() -> Mat3 {
     // https://en.wikipedia.org/wiki/SRGB#The_forward_transformation_(CIE_XYZ_to_sRGB)
@@ -288,7 +357,12 @@ pub fn xyz_to_srgb_mat() -> Mat3 {
     )
 }
 
-/// Returns the sRGB to XYZ matrix
+
+/// # Summary
+/// Returns the matrix to convert `Srgb` to `Xyz`.
+///
+/// # Returns
+/// * Conversion matrix
 #[allow(clippy::excessive_precision)]
 pub fn srgb_to_xyz_mat() -> Mat3 {
     // https://en.wikipedia.org/wiki/SRGB#The_reverse_transformation
@@ -299,7 +373,17 @@ pub fn srgb_to_xyz_mat() -> Mat3 {
     )
 }
 
-/// Converts sRGB to linear
+/// # Summary
+/// Converts an `Srgb` value to linear `Srgb`.
+///
+/// # Constraints
+/// * `val` - Should be within `[0, 1]`.
+///
+/// # Arguments
+/// * `val` - The `Srgb` value
+///
+/// # Returns
+/// * Linear `Srgb` value
 #[allow(clippy::excessive_precision)]
 pub fn srgb_to_linear(val: f32) -> f32 {
     assert!(val >= 0.0);
@@ -312,12 +396,32 @@ pub fn srgb_to_linear(val: f32) -> f32 {
     }
 }
 
-/// Converts sRGB to linear
+/// # Summary
+/// Converts an `Srgb` vector to linear `Srgb`.
+///
+/// # Constraints
+/// * `val` - All values should be within `[0, 1]`.
+///
+/// # Arguments
+/// * `val` - The `Srgb` vector
+///
+/// # Returns
+/// * Linear `Srgb` vector
 pub fn srgbs_to_linear(val: Vec3) -> Vec3 {
     val.map(srgb_to_linear)
 }
 
-/// Converts linelar to sRGB
+/// # Summary
+/// Converts a linear `Srgb` value to `Srgb`.
+///
+/// # Constraints
+/// * `val` - Should be within `[0, 1]`.
+///
+/// # Arguments
+/// * `val` - The linear `Srgb` value
+///
+/// # Returns
+/// * `Srgb` value
 #[allow(clippy::excessive_precision)]
 pub fn linear_to_srgb(val: f32) -> f32 {
     assert!(val >= 0.0);
@@ -330,7 +434,17 @@ pub fn linear_to_srgb(val: f32) -> f32 {
     }
 }
 
-/// Converts linelar to sRGB
+/// # Summary
+/// Converts a linear `Srgb` vector to `Srgb`.
+///
+/// # Constraints
+/// * `val` - All values should be within `[0, 1]`.
+///
+/// # Arguments
+/// * `val` - The linear `Srgb` vector
+///
+/// # Returns
+/// * `Srgb` vector
 pub fn linears_to_srgb(val: Vec3) -> Vec3 {
     val.map(linear_to_srgb)
 }

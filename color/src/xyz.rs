@@ -3,11 +3,16 @@ use image::Rgb;
 use ultraviolet::Vec3;
 use utility::floats;
 
-colors!(
+color!(
     Xyz => f32, f32, 3
 );
 
 impl Xyz {
+    /// # Summary
+    /// Converts itself to a vector.
+    ///
+    /// # Returns
+    /// * Self as vector
     pub fn to_vec3(&self) -> Vec3 {
         Vec3::from(self.data)
     }
@@ -71,6 +76,12 @@ impl Into<Rgb<u8>> for Xyz {
 impl Into<Rgb<u16>> for Xyz {
     fn into(self) -> Rgb<u16> {
         self.to_rgb().into()
+    }
+}
+
+impl Into<Rgb<f32>> for Xyz {
+    fn into(self) -> Rgb<f32> {
+        Rgb::from(self.data)
     }
 }
 
