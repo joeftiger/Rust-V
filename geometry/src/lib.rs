@@ -1,4 +1,4 @@
-pub mod aabb;
+mod aabb;
 pub mod bvh;
 mod debug_util;
 mod point;
