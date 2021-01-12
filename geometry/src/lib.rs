@@ -257,21 +257,21 @@ impl CoordinateSystem {
     ///
     /// # Returns
     /// * Self
-    pub fn from_y(y: Vec3) -> Self {
-        debug_assert!(is_finite(&y));
-        debug_assert!(is_normalized(&y));
+    pub fn from_y(y_axis: Vec3) -> Self {
+        debug_assert!(is_finite(&y_axis));
+        debug_assert!(is_normalized(&y_axis));
 
-        let x = if y.x.abs() > y.y.abs() {
-            let inv_len = 1.0 / f32::sqrt(y.x * y.x + y.z * y.z);
-            Vec3::new(-y.z * inv_len, 0.0, y.x * inv_len)
+        let x = if y_axis.x.abs() > y_axis.y.abs() {
+            let inv_len = 1.0 / f32::sqrt(y_axis.x * y_axis.x + y_axis.z * y_axis.z);
+            Vec3::new(-y_axis.z * inv_len, 0.0, y_axis.x * inv_len)
         } else {
-            let inv_len = 1.0 / f32::sqrt(y.y * y.y + y.z * y.z);
-            Vec3::new(0.0, y.z * inv_len, -y.y * inv_len)
+            let inv_len = 1.0 / f32::sqrt(y_axis.y * y_axis.y + y_axis.z * y_axis.z);
+            Vec3::new(0.0, y_axis.z * inv_len, -y_axis.y * inv_len)
         };
 
-        let z = x.cross(y);
+        let z = x.cross(y_axis);
 
-        Self::new(x, y, z)
+        Self::new(x, y_axis, z)
     }
 
     /// # Summary
@@ -286,20 +286,20 @@ impl CoordinateSystem {
     ///
     /// # Returns
     /// * Self
-    pub fn from_z(z: Vec3) -> Self {
-        debug_assert!(is_finite(&z));
-        debug_assert!(is_normalized(&z));
+    pub fn from_z(z_axis: Vec3) -> Self {
+        debug_assert!(is_finite(&z_axis));
+        debug_assert!(is_normalized(&z_axis));
 
-        let x = if z.x.abs() > z.y.abs() {
-            let inv_len = 1.0 / f32::sqrt(z.x * z.x + z.z * z.z);
-            Vec3::new(-z.z * inv_len, 0.0, z.x * inv_len)
+        let x = if z_axis.x.abs() > z_axis.y.abs() {
+            let inv_len = 1.0 / f32::sqrt(z_axis.x * z_axis.x + z_axis.z * z_axis.z);
+            Vec3::new(-z_axis.z * inv_len, 0.0, z_axis.x * inv_len)
         } else {
-            let inv_len = 1.0 / f32::sqrt(z.y * z.y + z.z * z.z);
-            Vec3::new(0.0, z.z * inv_len, -z.y * inv_len)
+            let inv_len = 1.0 / f32::sqrt(z_axis.y * z_axis.y + z_axis.z * z_axis.z);
+            Vec3::new(0.0, z_axis.z * inv_len, -z_axis.y * inv_len)
         };
-        let y = z.cross(x);
+        let y = z_axis.cross(x);
 
-        Self::new(x, y, z)
+        Self::new(x, y, z_axis)
     }
 }
 
