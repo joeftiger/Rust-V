@@ -96,7 +96,7 @@ pub trait Integrator: Send + Sync {
         sampler: &dyn Sampler,
         depth: u32,
     ) -> Spectrum {
-        debug_assert!(depth + 1 < self.max_depth());
+        debug_assert!(depth < self.max_depth());
 
         let outgoing = -intersection.info.ray.direction;
 
@@ -121,7 +121,7 @@ pub trait Integrator: Send + Sync {
                     let refl_ray = intersection.info.offset_ray_towards(bxdf_sample.incident);
 
                     if let Some(si) = scene.intersect(&refl_ray) {
-                        let illumination = self.illumination(scene, &si, sampler, depth + 1);
+                        let illumination = self.illumination(scene, &si, sampler, depth);
                         reflection +=
                             illumination * bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
                     }
@@ -152,7 +152,7 @@ pub trait Integrator: Send + Sync {
         sampler: &dyn Sampler,
         depth: u32,
     ) -> Spectrum {
-        debug_assert!(depth + 1 < self.max_depth());
+        debug_assert!(depth < self.max_depth());
 
         let outgoing = -intersection.info.ray.direction;
 

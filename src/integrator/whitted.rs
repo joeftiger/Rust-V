@@ -49,11 +49,9 @@ impl Integrator for Whitted {
 
         let mut illumination = Spectrum::black();
 
-        // if depth == 0 {
         if let SceneObject::Emitter(e) = obj {
             illumination += e.radiance(&outgoing, &normal);
         }
-        // }
 
         for light in &scene.lights {
             let emitter_sample = light.sample(&point, &sampler.get_2d());
@@ -77,9 +75,10 @@ impl Integrator for Whitted {
             }
         }
 
-        if depth + 1 < self.max_depth {
-            illumination += self.specular_reflection(scene, intersection, sampler, depth);
-            illumination += self.specular_transmission(scene, intersection, sampler, depth);
+        let new_depth = depth + 1;
+        if new_depth < self.max_depth {
+            illumination += self.specular_reflection(scene, intersection, sampler, new_depth);
+            illumination += self.specular_transmission(scene, intersection, sampler, new_depth);
         }
 
         illumination
