@@ -259,16 +259,16 @@ impl OcclusionTester {
     }
 
     /// # Summary
-    /// Tests the contained ray against the scene.
+    /// Tests the contained ray against the scene, whether it is unoccluded.
     ///
     /// # Arguments
-    /// * `scene` - The scene to test against
+    /// * `scene` - The scene to intersect against
     ///
     /// # Returns
-    /// * `true` - If the scene intersects
+    /// * `true` - If unoccluded
     /// * `false` - Otherwise
-    pub fn test(&self, scene: &Scene) -> bool {
-        scene.intersects(&self.ray)
+    pub fn unoccluded(&self, scene: &Scene) -> bool {
+        !scene.intersects(&self.ray)
     }
 
     /// # Summary

@@ -58,7 +58,7 @@ impl Integrator for Whitted {
 
             if emitter_sample.pdf > 0.0
                 && !emitter_sample.radiance.is_black()
-                && !emitter_sample.occlusion_tester.test(scene)
+                && emitter_sample.occlusion_tester.unoccluded(scene) // FIXME: Always returns true
             {
                 let bsdf_spectrum =
                     bsdf.evaluate(&normal, &emitter_sample.incident, &outgoing, BxDFType::ALL);

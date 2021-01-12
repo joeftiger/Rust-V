@@ -52,7 +52,7 @@ impl Integrator for Path {
 
                 if emitter_sample.pdf > 0.0
                     && !emitter_sample.radiance.is_black()
-                    && !emitter_sample.occlusion_tester.test(scene)
+                    && emitter_sample.occlusion_tester.unoccluded(scene)
                 {
                     let c =
                         bsdf.evaluate(&normal, &emitter_sample.incident, &outgoing, BxDFType::ALL);
