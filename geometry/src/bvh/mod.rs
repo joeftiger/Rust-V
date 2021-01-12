@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-
 // TODO: WIP
 
 //! Credit for Morton code calculation goes to

@@ -4,7 +4,6 @@ use crate::objects::emitter::{Sampleable, SurfaceSample};
 use geometry::{from_spherical_direction, CoordinateSystem, Sphere};
 use std::f32::consts::{PI, TAU};
 use ultraviolet::{Lerp, Vec2, Vec3};
-use utility::floats::BIG_EPSILON;
 
 fn sample_surface_inside(sphere: &Sphere, point: &Vec3, sample: &Vec2) -> SurfaceSample {
     let p = uniform_sample_sphere(sample) * sphere.radius;

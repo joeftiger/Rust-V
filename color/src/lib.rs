@@ -357,7 +357,6 @@ pub fn xyz_to_srgb_mat() -> Mat3 {
     )
 }
 
-
 /// # Summary
 /// Returns the matrix to convert `Srgb` to `Xyz`.
 ///

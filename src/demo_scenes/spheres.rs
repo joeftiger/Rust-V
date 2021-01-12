@@ -17,6 +17,7 @@ use std::sync::Arc;
 use ultraviolet::{UVec2, Vec3};
 
 const FLOOR: f32 = 0.0;
+const SKY: f32 = 100.0;
 const RADIUS: f32 = 0.5;
 
 const DISTRIBUTION: f32 = 10.0;
@@ -35,8 +36,8 @@ impl DemoScene for SphereScene {
 }
 
 fn ground() -> SceneObject {
-    let min = Vec3::new(-10000.0, FLOOR - 5.0, -10000.0);
-    let max = Vec3::new(10000.0, FLOOR, 10000.0);
+    let min = Vec3::new(-1000000.0, FLOOR - 5.0, -1000000.0);
+    let max = Vec3::new(1000000.0, FLOOR, 1000000.0);
     let aabb = Aabb::new(min, max);
 
     let lambertian = LambertianReflection::new(Spectrum::white());
@@ -44,6 +45,18 @@ fn ground() -> SceneObject {
 
     let receiver = Receiver::new(aabb, bsdf);
 
+    SceneObject::new_receiver(receiver)
+}
+
+fn sky() -> SceneObject {
+    let min = Vec3::new(-1000000.0, SKY, -1000000.0);
+    let max = Vec3::new(1000000.0, SKY + 5.0, 1000000.0);
+    let aabb = Aabb::new(min, max);
+
+    let lambertian = LambertianReflection::new(Spectrum::blue());
+    let bsdf = BSDF::new(vec![Box::new(lambertian)]);
+
+    let receiver = Receiver::new(aabb, bsdf);
     SceneObject::new_receiver(receiver)
 }
 
@@ -107,7 +120,11 @@ fn create_emitter() -> SceneObject {
     let point = Point(position);
 
     let bsdf = BSDF::empty();
-    let emitter = Emitter::new(point, bsdf, Spectrum::white());
+    let emitter = Emitter::new(
+        point,
+        bsdf,
+        (Spectrum::white() + Spectrum::green() + Spectrum::red()) * 0.5,
+    );
     SceneObject::new_emitter(emitter)
 }
 
@@ -135,6 +152,7 @@ fn create_scene() -> Scene {
     }
 
     scene.add(ground());
+    scene.add(sky());
     scene.add(create_emitter());
 
     scene
