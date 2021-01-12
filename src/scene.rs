@@ -49,13 +49,11 @@ impl Scene {
     /// # Returns
     /// * This same scene (for chaining operations)
     pub fn add(&mut self, obj: SceneObject) -> &mut Self {
-        match obj.clone() {
-            SceneObject::Emitter(e) => {
-                self.lights.push(e.clone());
-                self.objects.push(obj.clone());
-            }
-            SceneObject::Receiver(_) => self.objects.push(obj.clone()),
-        };
+        self.objects.push(obj.clone());
+
+        if let SceneObject::Emitter(ref e) = obj {
+            self.lights.push(e.clone())
+        }
 
         self.aabb = self.aabb.join(&obj.bounds());
 
@@ -75,7 +73,8 @@ impl Scene {
     /// # Returns
     /// * A scene intersection (if any)
     pub fn intersect(&self, ray: &Ray) -> Option<SceneIntersection> {
-        if !self.aabb.intersects(ray) {
+        let infinity_ray = Ray::new_fast(ray.origin, ray.direction);
+        if !self.aabb.intersects(&infinity_ray) {
             return None;
         }
 
@@ -107,7 +106,8 @@ impl Scene {
     /// # Returns
     /// * Whether the ray intersects
     pub fn intersects(&self, ray: &Ray) -> bool {
-        if !self.aabb.intersects(ray) {
+        let infinity_ray = Ray::new_fast(ray.origin, ray.direction);
+        if !self.aabb.intersects(&infinity_ray) {
             return false;
         }
 
