@@ -1,6 +1,10 @@
 #![allow(dead_code)]
 
-use crate::bxdf::{LambertianReflection, BSDF};
+use crate::bxdf::refraction_index::{AIR, GLASS};
+use crate::bxdf::{
+    FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, TransportMode,
+    BSDF,
+};
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY};
 use crate::objects::Receiver;
@@ -52,6 +56,23 @@ fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
     Arc::new(camera)
 }
 
+fn create_sphere() -> SceneObject {
+    let center = Vec3::new(X_CENTER + 2.0 * RADIUS, Y_CENTER, Z_CENTER);
+    let sphere = Sphere::new(center, RADIUS * 0.75);
+
+    // let transmission = SpecularTransmission::new(
+    //     Spectrum::new_const(1.0),
+    //     AIR,
+    //     GLASS,
+    //     TransportMode::Radiance
+    // );
+    let reflection = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
+    let bsdf = BSDF::new(vec![Box::new(reflection)]);
+
+    let receiver = Receiver::new(sphere, bsdf);
+    SceneObject::new_receiver(receiver)
+}
+
 fn create_wall(wall: &Wall) -> SceneObject {
     let min = match wall {
         Wall::Top => Vec3::new(LEFT_WALL - THICKNESS, CEILING, BACK_WALL - THICKNESS),
@@ -90,7 +111,7 @@ fn create_emitter() -> SceneObject {
 
     let bsdf = BSDF::empty();
 
-    let emission = Spectrum::white() * 10.0;
+    let emission = Spectrum::white() * 200.0;
     let emitter = Emitter::new(sphere, bsdf, emission);
     SceneObject::new_emitter(emitter)
 }
@@ -105,6 +126,7 @@ impl DemoScene for CornellScene {
             scene.add(create_wall(wall));
         });
 
+        scene.add(create_sphere());
         scene.add(create_emitter());
 
         (scene, camera)
