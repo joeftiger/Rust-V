@@ -93,6 +93,10 @@ impl Scene {
         intersection
     }
 
+    pub fn is_occluded(&self, ray: &Ray) -> bool {
+        self.objects.iter().any(|o| o.intersects(ray))
+    }
+
     /// # Summary
     /// Intersects the scene with the given ray.
     ///

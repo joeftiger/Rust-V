@@ -268,7 +268,7 @@ impl OcclusionTester {
     /// * `true` - If unoccluded
     /// * `false` - Otherwise
     pub fn unoccluded(&self, scene: &Scene) -> bool {
-        !scene.intersects(&self.ray)
+        !scene.is_occluded(&self.ray)
     }
 
     /// # Summary

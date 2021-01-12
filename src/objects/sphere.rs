@@ -1,9 +1,9 @@
 use crate::debug_utils::{is_finite, within_01};
-use crate::mc::{uniform_cone_pdf, uniform_sample_sphere};
+use crate::mc::{uniform_cone_pdf, uniform_sample_cone_frame, uniform_sample_sphere};
 use crate::objects::emitter::{Sampleable, SurfaceSample};
-use geometry::{from_spherical_direction, CoordinateSystem, Sphere};
-use std::f32::consts::{PI, TAU};
-use ultraviolet::{Lerp, Vec2, Vec3};
+use geometry::{CoordinateSystem, Sphere};
+use std::f32::consts::PI;
+use ultraviolet::{Vec2, Vec3};
 
 fn sample_surface_inside(sphere: &Sphere, point: &Vec3, sample: &Vec2) -> SurfaceSample {
     let p = uniform_sample_sphere(sample) * sphere.radius;
@@ -42,28 +42,11 @@ impl Sampleable for Sphere {
             // inside the sphere (may happen)
             sample_surface_inside(&self, point, sample)
         } else {
-            let coordinate_system = CoordinateSystem::from_y(point_to_center / -dist_sq.sqrt());
+            let frame = CoordinateSystem::from_y(point_to_center / -dist_sq.sqrt());
 
-            let sin_theta_max = r2 / dist_sq;
-            let sin_theta_max2 = sin_theta_max * sin_theta_max;
-            let inv_sin_theta_max = 1.0 / sin_theta_max;
-            let cos_theta_max = f32::max(0.0, 1.0 - sin_theta_max2).sqrt();
+            let cos_theta_max = f32::max(0.0, 1.0 - r2 / dist_sq).sqrt();
 
-            let cos_theta = cos_theta_max.lerp(1.0, sample.x);
-            let sin_theta2 = 1.0 - cos_theta * cos_theta;
-
-            let cos_alpha = sin_theta2
-                * inv_sin_theta_max
-                * cos_theta
-                * f32::max(
-                    0.0,
-                    1.0 - sin_theta2 * inv_sin_theta_max * inv_sin_theta_max,
-                )
-                .sqrt();
-            let sin_alpha = f32::max(0.0, 1.0 - cos_alpha * cos_alpha).sqrt();
-            let phi = sample.y * TAU;
-
-            let normal = from_spherical_direction(sin_alpha, cos_alpha, phi, &coordinate_system);
+            let normal = uniform_sample_cone_frame(sample, cos_theta_max, &frame);
             let point = self.center + self.radius * normal;
             let pdf = uniform_cone_pdf(cos_theta_max);
 
