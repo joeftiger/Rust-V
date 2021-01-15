@@ -12,12 +12,12 @@ use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::scene::Scene;
 use crate::Spectrum;
 use color::Color;
-use geometry::{Aabb, Point, Sphere};
+use geometry::{Cube, Point, Sphere};
 use std::sync::Arc;
 use ultraviolet::{UVec2, Vec3};
 
 const FLOOR: f32 = 0.0;
-const SKY: f32 = 100.0;
+const SKY_RADIUS: f32 = 50.0;
 const RADIUS: f32 = 0.5;
 
 const DISTRIBUTION: f32 = 10.0;
@@ -38,25 +38,24 @@ impl DemoScene for SphereScene {
 fn ground() -> SceneObject {
     let min = Vec3::new(-1000000.0, FLOOR - 5.0, -1000000.0);
     let max = Vec3::new(1000000.0, FLOOR, 1000000.0);
-    let aabb = Aabb::new(min, max);
+    let cube = Cube::new(min, max);
 
     let lambertian = LambertianReflection::new(Spectrum::white());
     let bsdf = BSDF::new(vec![Box::new(lambertian)]);
 
-    let receiver = Receiver::new(aabb, bsdf);
+    let receiver = Receiver::new(cube, bsdf);
 
     SceneObject::new_receiver(receiver)
 }
 
 fn sky() -> SceneObject {
-    let min = Vec3::new(-1000000.0, SKY, -1000000.0);
-    let max = Vec3::new(1000000.0, SKY + 5.0, 1000000.0);
-    let aabb = Aabb::new(min, max);
+    let center = Vec3::zero();
+    let sphere = Sphere::new(center, SKY_RADIUS);
 
-    let lambertian = LambertianReflection::new(Spectrum::blue());
+    let lambertian = LambertianReflection::new(Spectrum::blue() + Spectrum::white() * 0.2);
     let bsdf = BSDF::new(vec![Box::new(lambertian)]);
 
-    let receiver = Receiver::new(aabb, bsdf);
+    let receiver = Receiver::new(sphere, bsdf);
     SceneObject::new_receiver(receiver)
 }
 
@@ -88,8 +87,7 @@ fn random_bsdf(color: Spectrum) -> (bool, BSDF) {
     let bsdf = if color == Spectrum::white() {
         if rand < 0.6 {
             out = true;
-            let lambertian = LambertianReflection::new(color);
-            BSDF::new(vec![Box::new(lambertian)])
+            BSDF::empty()
         } else if rand < 0.8 {
             let specular = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
             BSDF::new(vec![Box::new(specular)])
@@ -116,14 +114,14 @@ fn random_bsdf(color: Spectrum) -> (bool, BSDF) {
 }
 
 fn create_emitter() -> SceneObject {
-    let position = Vec3::new(0.0, 10.0, 0.0);
+    let position = Vec3::new(0.0, SKY_RADIUS / 2.0, 0.0);
     let point = Point(position);
 
     let bsdf = BSDF::empty();
     let emitter = Emitter::new(
         point,
         bsdf,
-        (Spectrum::white() + Spectrum::green() + Spectrum::red()) * 0.5,
+        Spectrum::white() + Spectrum::green() + Spectrum::red(),
     );
     SceneObject::new_emitter(emitter)
 }

@@ -32,7 +32,7 @@ impl SceneIntersection {
 /// # Summary
 /// A scene consists of scene objects and lights.
 pub struct Scene {
-    aabb: Aabb,
+    bounding_box: Aabb,
     pub lights: Vec<Arc<dyn EmitterExt>>,
     objects: Vec<SceneObject>,
 }
@@ -55,7 +55,7 @@ impl Scene {
             self.lights.push(e.clone())
         }
 
-        self.aabb = self.aabb.join(&obj.bounds());
+        self.bounding_box = self.bounding_box.join(&obj.bounds());
 
         self
     }
@@ -74,7 +74,7 @@ impl Scene {
     /// * A scene intersection (if any)
     pub fn intersect(&self, ray: &Ray) -> Option<SceneIntersection> {
         let infinity_ray = Ray::new_fast(ray.origin, ray.direction);
-        if !self.aabb.intersects(&infinity_ray) {
+        if !self.bounding_box.intersects(&infinity_ray) {
             return None;
         }
 
@@ -111,7 +111,7 @@ impl Scene {
     /// * Whether the ray intersects
     pub fn intersects(&self, ray: &Ray) -> bool {
         let infinity_ray = Ray::new_fast(ray.origin, ray.direction);
-        if !self.aabb.intersects(&infinity_ray) {
+        if !self.bounding_box.intersects(&infinity_ray) {
             return false;
         }
 
@@ -122,7 +122,7 @@ impl Scene {
 impl Default for Scene {
     fn default() -> Self {
         Self {
-            aabb: Aabb::empty(),
+            bounding_box: Aabb::empty(),
             lights: Vec::default(),
             objects: Vec::default(),
         }

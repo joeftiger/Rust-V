@@ -127,10 +127,10 @@ where
 
                 (vec![n1, n2], vec![])
             } else {
-                unreachable!("Unreachable. Is an aabb infinite?");
+                unreachable!("Unreachable. Is a cube infinite?");
             };
 
-            let aabb = children
+            let cube = children
                 .iter()
                 .map(|c| c.bounds())
                 .chain(objects.iter().map(|o| o.bounds()))
@@ -139,7 +139,7 @@ where
             let key = node_counter;
             node_counter += 1;
 
-            let new_node = Self::new(aabb, children, objects);
+            let new_node = Self::new(cube, children, objects);
             nodes.insert(key, Arc::new(new_node));
         }
 

@@ -1,10 +1,6 @@
 #![allow(dead_code)]
 
-use crate::bxdf::refraction_index::{AIR, GLASS};
-use crate::bxdf::{
-    FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, TransportMode,
-    BSDF,
-};
+use crate::bxdf::{FresnelNoOp, LambertianReflection, SpecularReflection, BSDF};
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY};
 use crate::objects::Receiver;
@@ -12,7 +8,7 @@ use crate::objects::{Emitter, SceneObject};
 use crate::scene::Scene;
 use crate::Spectrum;
 use color::Color;
-use geometry::{Aabb, Sphere};
+use geometry::{Cube, Sphere};
 use std::sync::Arc;
 use ultraviolet::{UVec2, Vec3};
 
@@ -90,7 +86,7 @@ fn create_wall(wall: &Wall) -> SceneObject {
         Wall::Right => Vec3::new(RIGHT_WALL + THICKNESS, CEILING + THICKNESS, FRONT),
         Wall::Bottom => Vec3::new(RIGHT_WALL + THICKNESS, FLOOR, FRONT),
     };
-    let aabb = Aabb::new(min, max);
+    let cube = Cube::new(min, max);
 
     let spectrum = match wall {
         Wall::Top | Wall::Back | Wall::Bottom => Spectrum::white(),
@@ -101,7 +97,7 @@ fn create_wall(wall: &Wall) -> SceneObject {
     let lambertian = Box::new(LambertianReflection::new(spectrum));
     let bsdf = BSDF::new(vec![lambertian]);
 
-    let receiver = Receiver::new(aabb, bsdf);
+    let receiver = Receiver::new(cube, bsdf);
     SceneObject::new_receiver(receiver)
 }
 

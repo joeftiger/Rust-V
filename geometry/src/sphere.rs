@@ -1,8 +1,7 @@
-use crate::aabb::Aabb;
 use crate::ray::Ray;
 #[cfg(test)]
 use crate::UNIT_VECTORS;
-use crate::{Boundable, Container, Intersectable, Intersection};
+use crate::{Aabb, Boundable, Container, Intersectable, Intersection};
 use ultraviolet::Vec3;
 use utility::math::solve_quadratic;
 

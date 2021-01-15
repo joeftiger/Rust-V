@@ -7,7 +7,7 @@ use crate::demo_scenes::{DemoScene, FOVY};
 use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::scene::Scene;
 use crate::Spectrum;
-use geometry::{Aabb, Point, Sphere};
+use geometry::{Cube, Point, Sphere};
 use std::sync::Arc;
 use ultraviolet::{UVec2, Vec3};
 
@@ -36,12 +36,12 @@ impl DemoScene for DebugScene {
 fn ground() -> SceneObject {
     let min = Vec3::new(-10000.0, FLOOR - 5.0, -10000.0);
     let max = Vec3::new(10000.0, FLOOR, 10000.0);
-    let aabb = Aabb::new(min, max);
+    let cube = Cube::new(min, max);
 
     let lambertian = LambertianReflection::new(Spectrum::new_const(1.0));
     let bsdf = BSDF::new(vec![Box::new(lambertian)]);
 
-    let receiver = Receiver::new(aabb, bsdf);
+    let receiver = Receiver::new(cube, bsdf);
 
     SceneObject::new_receiver(receiver)
 }

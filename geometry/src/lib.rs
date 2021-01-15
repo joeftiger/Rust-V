@@ -1,5 +1,6 @@
 mod aabb;
 pub mod bvh;
+mod cube;
 mod debug_util;
 mod point;
 pub mod ray;
@@ -9,6 +10,7 @@ use ultraviolet::Vec3;
 
 use crate::debug_util::{is_finite, is_normalized};
 pub use aabb::Aabb;
+pub use cube::Cube;
 pub use point::Point;
 pub use ray::Ray;
 pub use sphere::Sphere;
@@ -122,7 +124,7 @@ impl Intersection {
     /// # Returns
     /// * Self
     pub fn new(point: Vec3, normal: Vec3, t: f32, ray: Ray) -> Self {
-        debug_assert!(ray.contains(t));
+        // debug_assert!(ray.contains(t));
         debug_assert!(is_normalized(&normal));
 
         Self {
@@ -318,7 +320,7 @@ pub trait Container {
 }
 
 /// # Summary
-/// A trait for objects that can report an aabb as their bounds.
+/// A trait for objects that can report a cube as their bounds.
 pub trait Boundable {
     /// # Summary
     /// Returns the bounds of this object
@@ -342,13 +344,13 @@ pub trait Intersectable {
     /// The **intersection normal** always points to the **outside**.
     /// To obtain the normal from inside the object, one can use following
     /// ```rust
-    /// use geometry::{Aabb, Intersectable, Ray};
+    /// use geometry::{Cube, Intersectable, Ray};
     /// use ultraviolet::Vec3;
     ///
-    /// let aabb = Aabb::default();
+    /// let cube = Cube::default();
     /// let mut ray = Ray::new_fast(Vec3::zero(), Vec3::unit_x());
     ///
-    /// let intersection = aabb.intersect(&mut ray).unwrap(); // intersects surely
+    /// let intersection = cube.intersect(&mut ray).unwrap(); // intersects surely
     ///
     /// let mut normal = intersection.normal;
     /// assert_eq!(Vec3::unit_x(), normal); // normal points to the outside

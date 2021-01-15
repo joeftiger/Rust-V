@@ -1,16 +1,22 @@
-use crate::{Boundable, Container, Intersectable, Intersection, Ray};
+use crate::ray::Ray;
+#[cfg(test)]
+use crate::UNIT_VECTORS;
+use crate::{Aabb, Boundable, Container, Intersectable, Intersection};
 use ultraviolet::Vec3;
 use utility::floats::BIG_EPSILON;
 
+/// # Summary
+/// A cube represents an axis-aligned bounding box in 3 dimension. It is very efficient using only
+/// 2 coordinates to represent such a box.
 #[derive(Copy, Clone)]
-pub struct Aabb {
+pub struct Cube {
     pub min: Vec3,
     pub max: Vec3,
 }
 
-impl Aabb {
+impl Cube {
     /// # Summary
-    /// Creates a new aabb.
+    /// Creates a new cube.
     ///
     /// # Constraints
     /// * The `min` components should be less-or-equal to the `max` components.
@@ -28,10 +34,10 @@ impl Aabb {
     }
 
     /// # Summary
-    /// Returns the "empty aabb", spanning from `min: INFINITY` to `max: NEG_INFINITY`.
+    /// Returns the "empty cube", spanning from `min: INFINITY` to `max: NEG_INFINITY`.
     ///
-    /// This aabb is effectively **invalid**, but might be useful to compute bounding boxes
-    /// of many objects, taking this empty aabb as starting point.
+    /// This cube is effectively **invalid**, but might be useful to compute bounding boxes
+    /// of many objects, taking this empty cube as starting point.
     pub fn empty() -> Self {
         let min = Vec3::one() * f32::INFINITY;
         let max = Vec3::one() * f32::NEG_INFINITY;
@@ -40,7 +46,7 @@ impl Aabb {
     }
 
     /// # Summary
-    /// Returns the size of this aabb in all 3 dimensions.
+    /// Returns the size of this cube in all 3 dimensions.
     ///
     /// # Returns
     /// * The size
@@ -49,7 +55,7 @@ impl Aabb {
     }
 
     /// # Summary
-    /// Returns the center of this aabb.
+    /// Returns the center of this cube.
     ///
     /// # Returns
     /// * The center
@@ -58,10 +64,10 @@ impl Aabb {
     }
 
     /// # Summary
-    /// Joins this aabb with another one, effectively creating a aabb spanning both aabbs.
+    /// Joins this cube with another one, effectively creating a cube spanning both cubes.
     ///
     /// # Arguments
-    /// * `other` - Another aabb
+    /// * `other` - Another cube
     ///
     /// # Returns
     /// * The outer join
@@ -72,28 +78,19 @@ impl Aabb {
     }
 }
 
-impl Container for Aabb {
+impl Container for Cube {
     fn contains(&self, point: &Vec3) -> bool {
         *point == point.clamped(self.min, self.max)
     }
 }
 
-impl Boundable for Aabb {
+impl Boundable for Cube {
     fn bounds(&self) -> Aabb {
-        *self
+        Aabb::new(self.min, self.max)
     }
 }
 
-impl Intersectable for Aabb {
-    /// # Summary
-    /// Intersects the given ray **as infinite ray** with this object. Upon intersection, it will return some
-    /// intersection info containing the reference to the infinite ray.
-    ///
-    /// # Arguments
-    /// * `ray` - The ray to intersect with (interpreted as infinite ray)
-    ///
-    /// # Returns
-    /// * Intersection or `None`
+impl Intersectable for Cube {
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         let t1 = (self.min - ray.origin) / ray.direction;
         let t2 = (self.max - ray.origin) / ray.direction;
@@ -108,9 +105,9 @@ impl Intersectable for Aabb {
             return None;
         }
 
-        let t = if t_min >= 0.0 {
+        let t = if ray.contains(t_min) {
             t_min
-        } else if t_max >= 0.0 {
+        } else if ray.contains(t_max) {
             t_max
         } else {
             return None;
@@ -128,31 +125,69 @@ impl Intersectable for Aabb {
         normal.z = (normal.z as i32) as f32;
         normal.normalize();
 
-        Some(Intersection::new(point, normal, t, Ray::new_fast(ray.origin, ray.direction)))
+        Some(Intersection::new(point, normal, t, *ray))
     }
 
-    /// # Summary
-    /// Checks whether the given ray **as infinite ray** intersects with this object.
-    ///
-    /// # Arguments
-    /// * `ray` - The ray to intersect with (interpreted as infinite ray)
-    ///
-    /// # Returns
-    /// * Whether an intersection occurs
     fn intersects(&self, ray: &Ray) -> bool {
-        if self.contains(&ray.origin) {
-            return true;
-        }
-
         let t1 = (self.min - ray.origin) / ray.direction;
         let t2 = (self.max - ray.origin) / ray.direction;
 
         let vec_min = t1.min_by_component(t2);
         let vec_max = t1.max_by_component(t2);
 
-        let t_min = vec_min.component_max();
-        let t_max = vec_max.component_min();
+        let t_min = vec_min.x.max(vec_min.y).max(vec_min.z);
+        let t_max = vec_max.x.max(vec_max.y).max(vec_max.z);
 
-        t_min <= t_max && t_min >= 0.0 || t_max >= 0.0
+        t_min <= t_max && ray.contains(t_min) || ray.contains(t_max)
+    }
+}
+
+impl Default for Cube {
+    /// # Summary
+    /// Constructs the default cube spanning the 3 dimensional space of `[-1, 1]`.
+    ///
+    /// # Returns
+    /// * `[-1, 1]` Self
+    fn default() -> Self {
+        Self::new(-Vec3::one(), Vec3::one())
+    }
+}
+
+#[test]
+fn intersect_outside() {
+    let mut origins = UNIT_VECTORS;
+    origins.iter_mut().for_each(|v| *v *= 2.0);
+
+    let mut directions = UNIT_VECTORS;
+    directions.iter_mut().for_each(|v| *v *= -1.0);
+
+    let cube = Cube::default();
+
+    for i in 0..UNIT_VECTORS.len() {
+        let ray = Ray::new_fast(origins[i], directions[i]);
+
+        let intersection = cube.intersect(&ray).unwrap();
+
+        assert_eq!(UNIT_VECTORS[i], intersection.normal);
+    }
+}
+
+#[test]
+fn intersect_inside() {
+    let origins = [Vec3::zero(); UNIT_VECTORS.len()];
+    let directions = UNIT_VECTORS;
+
+    let cube = Cube::default();
+
+    for i in 0..UNIT_VECTORS.len() {
+        let ray = Ray::new_fast(origins[i], directions[i]);
+
+        let intersection = cube.intersect(&ray).unwrap();
+
+        // test normals
+        assert_eq!(UNIT_VECTORS[i], intersection.normal);
+
+        // test normal and ray direction show into the same general direction
+        assert!(intersection.normal.dot(ray.direction) > 0.0);
     }
 }
