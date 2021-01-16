@@ -4,6 +4,7 @@ use crate::UNIT_VECTORS;
 use crate::{Aabb, Boundable, Container, Intersectable, Intersection};
 use ultraviolet::Vec3;
 use utility::math::solve_quadratic;
+use crate::debug_util::is_finite;
 
 /// # Summary
 /// A sphere consists of a center and a radius.
@@ -27,6 +28,7 @@ impl Sphere {
     /// # Returns
     /// Self
     pub fn new(center: Vec3, radius: f32) -> Self {
+        debug_assert!(is_finite(&center));
         debug_assert!(radius > 0.0);
 
         Self { center, radius }
@@ -60,14 +62,13 @@ impl Intersectable for Sphere {
 
         let (t_min, t_max) = solve_quadratic(a, b, c)?;
 
-        let t;
-        if ray.contains(t_min) {
-            t = t_min;
+        let t = if ray.contains(t_min) {
+            t_min
         } else if ray.contains(t_max) {
-            t = t_max;
+            t_max
         } else {
             return None;
-        }
+        };
 
         let point = ray.at(t);
         let normal = (point - self.center).normalized();
