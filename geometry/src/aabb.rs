@@ -128,7 +128,12 @@ impl Intersectable for Aabb {
         normal.z = (normal.z as i32) as f32;
         normal.normalize();
 
-        Some(Intersection::new(point, normal, t, Ray::new_fast(ray.origin, ray.direction)))
+        Some(Intersection::new(
+            point,
+            normal,
+            t,
+            Ray::new_fast(ray.origin, ray.direction),
+        ))
     }
 
     /// # Summary

@@ -1,10 +1,10 @@
+use crate::debug_util::is_finite;
 use crate::ray::Ray;
 #[cfg(test)]
 use crate::UNIT_VECTORS;
 use crate::{Aabb, Boundable, Container, Intersectable, Intersection};
 use ultraviolet::Vec3;
 use utility::math::solve_quadratic;
-use crate::debug_util::is_finite;
 
 /// # Summary
 /// A sphere consists of a center and a radius.
