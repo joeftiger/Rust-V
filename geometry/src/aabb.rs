@@ -153,6 +153,6 @@ impl Intersectable for Aabb {
         let t_min = vec_min.component_max();
         let t_max = vec_max.component_min();
 
-        t_min <= t_max && t_min >= 0.0 || t_max >= 0.0
+        t_min <= t_max && (t_min >= 0.0 || t_max >= 0.0)
     }
 }

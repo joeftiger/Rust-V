@@ -138,7 +138,7 @@ impl Intersectable for Cube {
         let t_min = vec_min.x.max(vec_min.y).max(vec_min.z);
         let t_max = vec_max.x.max(vec_max.y).max(vec_max.z);
 
-        t_min <= t_max && ray.contains(t_min) || ray.contains(t_max)
+        t_min <= t_max && (ray.contains(t_min) || ray.contains(t_max))
     }
 }
 
