@@ -89,8 +89,9 @@ pub fn from_spherical_direction(
     debug_assert!(phi.is_finite());
 
     let (sin_phi, cos_phi) = phi.sin_cos();
-    ((sin_theta * cos_phi * frame.x) + (cos_theta * frame.y) + (sin_theta * sin_phi * frame.z))
-        .normalized()
+    // ((sin_theta * cos_phi * frame.x) + (cos_theta * frame.y) + (sin_theta * sin_phi * frame.z))
+    //     .normalized()
+    ((sin_theta * cos_phi * frame.x) + (sin_theta * sin_phi * frame.y) + (cos_theta * frame.z)).normalized()
 }
 
 /// # Summary
@@ -248,6 +249,33 @@ impl CoordinateSystem {
     }
 
     /// # Summary
+    /// Creates a new coordinate system around the given `x` direction vector.
+    ///
+    /// # Constraints
+    /// * `x` - All values must be finite (neither infinite nor `NaN`).
+    ///          Should be normalized.
+    ///
+    /// # Arguments
+    /// * `x` - The x direction vector
+    ///
+    /// # Returns
+    /// * Self
+    // TODO: Make more efficient
+    pub fn from_x(x_axis: Vec3) -> Self {
+        debug_assert!(is_finite(&z_axis));
+        debug_assert!(is_normalized(&z_axis));
+
+        if y_axis == Vec3::unit_x() {
+            Self::new(Vec3::unit_x(), Vec3::unit_y(), Vec3::unit_z())
+        } else {
+            let z = x_axis.cross(Vec3::unit_x()).normalized();
+            let y = z.cross(x_axis).normalized();
+
+            Self::new(x_axis, y, z)
+        }
+    }
+
+    /// # Summary
     /// Creates a new coordinate system around the given `y` direction vector.
     ///
     /// # Constraints
@@ -259,21 +287,19 @@ impl CoordinateSystem {
     ///
     /// # Returns
     /// * Self
+    // TODO: Make more efficient
     pub fn from_y(y_axis: Vec3) -> Self {
         debug_assert!(is_finite(&y_axis));
         debug_assert!(is_normalized(&y_axis));
 
-        let x = if y_axis.x.abs() > y_axis.y.abs() {
-            let inv_len = 1.0 / f32::sqrt(y_axis.x * y_axis.x + y_axis.z * y_axis.z);
-            Vec3::new(-y_axis.z * inv_len, 0.0, y_axis.x * inv_len)
+        if y_axis == Vec3::unit_y() {
+            Self::new(Vec3::unit_x(), Vec3::unit_y(), Vec3::unit_z())
         } else {
-            let inv_len = 1.0 / f32::sqrt(y_axis.y * y_axis.y + y_axis.z * y_axis.z);
-            Vec3::new(0.0, y_axis.z * inv_len, -y_axis.y * inv_len)
-        };
+            let x = y_axis.cross(Vec3::unit_y()).normalized();
+            let z = x.cross(y_axis).normalized();
 
-        let z = x.cross(y_axis);
-
-        Self::new(x, y_axis, z)
+            Self::new(x, y_axis, z)
+        }
     }
 
     /// # Summary
@@ -284,24 +310,23 @@ impl CoordinateSystem {
     ///          Should be normalized.
     ///
     /// # Arguments
-    /// * `z` - The y direction vector
+    /// * `z` - The z direction vector
     ///
     /// # Returns
     /// * Self
+    // TODO: Make more efficient
     pub fn from_z(z_axis: Vec3) -> Self {
         debug_assert!(is_finite(&z_axis));
         debug_assert!(is_normalized(&z_axis));
 
-        let x = if z_axis.x.abs() > z_axis.y.abs() {
-            let inv_len = 1.0 / f32::sqrt(z_axis.x * z_axis.x + z_axis.z * z_axis.z);
-            Vec3::new(-z_axis.z * inv_len, 0.0, z_axis.x * inv_len)
+        if y_axis == Vec3::unit_z() {
+            Self::new(Vec3::unit_x(), Vec3::unit_y(), Vec3::unit_z())
         } else {
-            let inv_len = 1.0 / f32::sqrt(z_axis.y * z_axis.y + z_axis.z * z_axis.z);
-            Vec3::new(0.0, z_axis.z * inv_len, -z_axis.y * inv_len)
-        };
-        let y = z_axis.cross(x);
+            let x = z_axis.cross(Vec3::unit_z()).normalized();
+            let y = z_axis.cross(x).normalized();
 
-        Self::new(x, y, z_axis)
+            Self::new(x, y, z_axis)
+        }
     }
 }
 
