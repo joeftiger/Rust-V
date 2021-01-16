@@ -88,11 +88,9 @@ impl Intersectable for Sphere {
         let b = 2.0 * dir.dot(oc);
         let c = oc.dot(oc) - self.radius * self.radius;
 
-        if let Some((t_min, t_max)) = solve_quadratic(a, b, c) {
-            ray.contains(t_min) || ray.contains(t_max)
-        } else {
-            false
-        }
+        let (t_min, t_max) = solve_quadratic(a, b, c)?;
+
+        ray.contains(t_min) || ray.contains(t_max)
     }
 }
 
