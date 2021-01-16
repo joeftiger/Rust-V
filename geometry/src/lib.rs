@@ -89,9 +89,16 @@ pub fn from_spherical_direction(
     debug_assert!(phi.is_finite());
 
     let (sin_phi, cos_phi) = phi.sin_cos();
-    // ((sin_theta * cos_phi * frame.x) + (cos_theta * frame.y) + (sin_theta * sin_phi * frame.z))
-    //     .normalized()
-    ((sin_theta * cos_phi * frame.x) + (sin_theta * sin_phi * frame.y) + (cos_theta * frame.z)).normalized()
+
+    let x = frame.x * sin_phi * sin_theta;
+    let y = frame.y * cos_phi;
+    let z = frame.z * sin_phi * cos_phi;
+
+    let x = sin_theta * frame.x;
+    let y = sin_phi * frame.y;
+    let z = cos_theta * frame.z;
+
+    (x + y + z).normalized()
 }
 
 /// # Summary
@@ -262,10 +269,10 @@ impl CoordinateSystem {
     /// * Self
     // TODO: Make more efficient
     pub fn from_x(x_axis: Vec3) -> Self {
-        debug_assert!(is_finite(&z_axis));
-        debug_assert!(is_normalized(&z_axis));
+        debug_assert!(is_finite(&x_axis));
+        debug_assert!(is_normalized(&x_axis));
 
-        if y_axis == Vec3::unit_x() {
+        if x_axis == Vec3::unit_x() {
             Self::new(Vec3::unit_x(), Vec3::unit_y(), Vec3::unit_z())
         } else {
             let z = x_axis.cross(Vec3::unit_x()).normalized();
@@ -319,7 +326,7 @@ impl CoordinateSystem {
         debug_assert!(is_finite(&z_axis));
         debug_assert!(is_normalized(&z_axis));
 
-        if y_axis == Vec3::unit_z() {
+        if z_axis == Vec3::unit_z() {
             Self::new(Vec3::unit_x(), Vec3::unit_y(), Vec3::unit_z())
         } else {
             let x = z_axis.cross(Vec3::unit_z()).normalized();
