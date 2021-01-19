@@ -90,7 +90,13 @@ impl Scene {
             }
         }
 
-        intersection
+        if let Some(mut i) = intersection {
+            i.info.ray = *ray;
+
+            Some(i)
+        } else {
+            None
+        }
     }
 
     pub fn is_occluded(&self, ray: &Ray) -> bool {
