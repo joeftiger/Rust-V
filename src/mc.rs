@@ -1,6 +1,6 @@
 use crate::debug_utils::within_01;
 use geometry::{from_spherical_direction, CoordinateSystem};
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI, TAU};
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, TAU};
 use ultraviolet::{Lerp, Vec2, Vec3};
 
 /// # Summary
@@ -74,38 +74,36 @@ pub fn uniform_sample_sphere(sample: &Vec2) -> Vec3 {
     debug_assert!(within_01(sample));
 
     let z = 1.0 - 2.0 * sample.x;
-    let r = f32::max(0.0, 1.0 - z * z).sqrt();
-    let phi = PI * 2.0 * sample.y;
 
-    Vec3::new(phi.cos() * r, phi.sin() * r, z)
+    let r = f32::max(0.0, 1.0 - z * z).sqrt();
+    let (sin_phi, cos_phi) = f32::sin_cos(sample.y * TAU);
+
+    let x = r * cos_phi;
+    let y = r * sin_phi;
+
+    Vec3::new(x, y, z)
 }
 
-// /// # Summary
-// /// Samples a cone around the `(0, 1, 0)` axis with a uniform distribution described by the sample.
-// ///
-// /// # Constraints
-// /// * `sample` - All values should be within `[0, 1]`.
-// ///
-// /// # Arguments
-// /// * `sample` - A random sample in `[0, 1]`
-// /// * `cos_theta_max` - The max angle
-// ///
-// /// # Results
-// /// * `Vec3` - A direction in the cone around `(0, 1, 0)`
-// pub fn uniform_sample_cone(sample: &Vec2, cos_theta_max: f32) -> Vec3 {
-//     debug_assert!(within_01(sample));
-//
-//     let cos = cos_theta_max.lerp(1.0, sample.x);
-//     let sin = f32::sqrt(1.0 - cos * cos);
-//     let phi = sample.y * TAU;
-//
-//     // TODO: This is weird: The commented out version should be correct but results in non-correct images
-//     // Maybe there is a bug somewhere else?
-//
-//     Vec3::new(phi.cos() * sin, cos, phi.sin() * sin)
-//     // Vec3::new(phi.cos() * sin, phi.sin() * sin, cos)
-// }
-//
+/// # Summary
+/// Samples a cone around the `(0, 1, 0)` axis with a uniform distribution described by the sample.
+///
+/// # Constraints
+/// * `sample` - All values should be within `[0, 1]`.
+///
+/// # Arguments
+/// * `sample` - A random sample in `[0, 1]`
+/// * `cos_theta_max` - The max angle
+///
+/// # Results
+/// * `Vec3` - A direction in the cone around `(0, 1, 0)`
+// TODO: Make more efficient for this edge case!
+pub fn uniform_sample_cone(sample: &Vec2, cos_theta_max: f32) -> Vec3 {
+    debug_assert!(within_01(sample));
+
+    let frame = CoordinateSystem::default();
+    uniform_sample_cone_frame(sample, cos_theta_max, &frame)
+}
+
 /// # Summary
 /// Samples a cone around the `frame.e2` axis with a uniform distribution described by the sample.
 ///
@@ -126,11 +124,11 @@ pub fn uniform_sample_cone_frame(
 ) -> Vec3 {
     debug_assert!(within_01(sample));
 
-    let cos = cos_theta_max.lerp(1.0, sample.x);
-    let sin = f32::sqrt(1.0 - cos * cos);
+    let cos_theta = cos_theta_max.lerp(1.0, sample.x);
+    let sin_theta = f32::sqrt(1.0 - cos_theta * cos_theta);
     let phi = sample.y * TAU;
 
-    from_spherical_direction(sin, cos, phi, frame)
+    from_spherical_direction(sin_theta, cos_theta, phi, frame)
 }
 
 /// # Summary
