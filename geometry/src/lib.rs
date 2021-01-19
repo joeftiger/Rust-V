@@ -128,7 +128,7 @@ impl Intersection {
     /// # Returns
     /// * Self
     pub fn new(point: Vec3, normal: Vec3, t: f32, ray: Ray) -> Self {
-        // debug_assert!(ray.contains(t));
+        debug_assert!(ray.contains(t));
         debug_assert!(is_normalized(&normal));
 
         Self {
