@@ -90,13 +90,9 @@ pub fn from_spherical_direction(
 
     let (sin_phi, cos_phi) = phi.sin_cos();
 
-    let x = frame.x * sin_phi * sin_theta;
-    let y = frame.y * cos_phi;
-    let z = frame.z * sin_phi * cos_phi;
-
-    let x = sin_theta * frame.x;
-    let y = sin_phi * frame.y;
-    let z = cos_theta * frame.z;
+    let x = frame.x_axis * sin_phi * sin_theta;
+    let y = frame.y_axis * cos_phi;
+    let z = frame.z_axis * sin_phi * cos_phi;
 
     (x + y + z).normalized()
 }
@@ -218,11 +214,11 @@ impl Intersection {
 }
 
 /// # Summary
-/// A coordinate system represents 3 orthogonal vectors in 3D space.
+/// A coordinate system represents 3 (orthogonal) vectors in 3D space.
 pub struct CoordinateSystem {
-    pub x: Vec3,
-    pub y: Vec3,
-    pub z: Vec3,
+    pub x_axis: Vec3,
+    pub y_axis: Vec3,
+    pub z_axis: Vec3,
 }
 
 impl CoordinateSystem {
@@ -252,18 +248,18 @@ impl CoordinateSystem {
         debug_assert!(is_finite(&z));
         debug_assert!(is_normalized(&z));
 
-        Self { x, y, z }
+        Self { x_axis: x, y_axis: y, z_axis: z }
     }
 
     /// # Summary
     /// Creates a new coordinate system around the given `x` direction vector.
     ///
     /// # Constraints
-    /// * `x` - All values must be finite (neither infinite nor `NaN`).
-    ///          Should be normalized.
+    /// * `x_axis` - All values must be finite (neither infinite nor `NaN`).
+    ///              Should be normalized.
     ///
     /// # Arguments
-    /// * `x` - The x direction vector
+    /// * `x_axis` - The x direction vector
     ///
     /// # Returns
     /// * Self
@@ -286,11 +282,11 @@ impl CoordinateSystem {
     /// Creates a new coordinate system around the given `y` direction vector.
     ///
     /// # Constraints
-    /// * `y` - All values must be finite (neither infinite nor `NaN`).
-    ///          Should be normalized.
+    /// * `y_axis` - All values must be finite (neither infinite nor `NaN`).
+    ///              Should be normalized.
     ///
     /// # Arguments
-    /// * `y` - The y direction vector
+    /// * `y_axis` - The y direction vector
     ///
     /// # Returns
     /// * Self
@@ -313,11 +309,11 @@ impl CoordinateSystem {
     /// Creates a new coordinate system around the given `z` direction vector.
     ///
     /// # Constraints
-    /// * `z` - All values must be finite (neither infinite nor `NaN`).
-    ///          Should be normalized.
+    /// * `z_axis` - All values must be finite (neither infinite nor `NaN`).
+    ///              Should be normalized.
     ///
     /// # Arguments
-    /// * `z` - The z direction vector
+    /// * `z_axis` - The z direction vector
     ///
     /// # Returns
     /// * Self
@@ -334,6 +330,12 @@ impl CoordinateSystem {
 
             Self::new(x, y, z_axis)
         }
+    }
+}
+
+impl Default for CoordinateSystem {
+    fn default() -> Self {
+        Self::new(Vec3::unit_x(), Vec3::unit_y(), Vec3::unit_z())
     }
 }
 
