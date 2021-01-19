@@ -248,7 +248,11 @@ impl CoordinateSystem {
         debug_assert!(is_finite(&z));
         debug_assert!(is_normalized(&z));
 
-        Self { x_axis: x, y_axis: y, z_axis: z }
+        Self {
+            x_axis: x,
+            y_axis: y,
+            z_axis: z,
+        }
     }
 
     /// # Summary
