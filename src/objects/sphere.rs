@@ -56,7 +56,7 @@ impl Sampleable for Sphere {
             // let direction = uniform_sample_cone_frame(sample, cos_theta_max, &frame);
 
             /* PBR code */
-            // let sin_theta_max = f32::sqrt(r2 / dist_sq).powf(2.0);
+            // let sin_theta_max = f32::sqrt(r2 / dist_sq);
             // let sin_theta_max2 = sin_theta_max * sin_theta_max;
             // let inv_sin_theta_max = 1.0 / sin_theta_max;
             // let cos_theta_max = f32::max(0.0, 1.0 - sin_theta_max2).sqrt();
