@@ -1,13 +1,17 @@
 use crate::objects::{EmitterExt, SceneObject};
 use geometry::{Aabb, Boundable, Intersectable, Intersection, Ray};
 use std::sync::Arc;
+use ultraviolet::Vec3;
 
 /// # Summary
 /// A scene intersection is a more detailed `Intersection`, also containing a reference to the
 /// intersected object.
 #[derive(Clone)]
 pub struct SceneIntersection {
-    pub info: Intersection,
+    pub point: Vec3,
+    pub normal: Vec3,
+    pub ray: Ray,
+    pub t: f32,
     pub object: SceneObject,
 }
 
@@ -23,7 +27,10 @@ impl SceneIntersection {
     /// * Self
     pub fn new(intersection: Intersection, object: SceneObject) -> Self {
         Self {
-            info: intersection,
+            point: intersection.point,
+            normal: intersection.normal,
+            ray: intersection.ray,
+            t: intersection.t,
             object,
         }
     }
@@ -55,7 +62,7 @@ impl Scene {
             self.lights.push(e.clone())
         }
 
-        self.bounding_box = self.bounding_box.join(&obj.bounds());
+        self.bounding_box = self.bounding_box.join(&obj.bounds().into());
 
         self
     }
@@ -73,8 +80,7 @@ impl Scene {
     /// # Returns
     /// * A scene intersection (if any)
     pub fn intersect(&self, ray: &Ray) -> Option<SceneIntersection> {
-        let infinity_ray = Ray::new_fast(ray.origin, ray.direction);
-        if !self.bounding_box.intersects(&infinity_ray) {
+        if !self.bounding_box.intersects(&ray) {
             return None;
         }
 
@@ -91,7 +97,7 @@ impl Scene {
         }
 
         if let Some(mut i) = intersection {
-            i.info.ray = *ray;
+            i.ray = *ray;
 
             Some(i)
         } else {
@@ -116,8 +122,7 @@ impl Scene {
     /// # Returns
     /// * Whether the ray intersects
     pub fn intersects(&self, ray: &Ray) -> bool {
-        let infinity_ray = Ray::new_fast(ray.origin, ray.direction);
-        if !self.bounding_box.intersects(&infinity_ray) {
+        if !self.bounding_box.intersects(&ray) {
             return false;
         }
 

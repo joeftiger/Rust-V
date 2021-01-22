@@ -5,6 +5,7 @@ use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use color::Color;
+use geometry::offset_ray_towards;
 
 pub struct Path {
     max_depth: u32,
@@ -35,8 +36,8 @@ impl Integrator for Path {
         let mut specular = false;
 
         for bounce in 0..self.max_depth {
-            let outgoing = -hit.info.ray.direction;
-            let normal = hit.info.normal;
+            let outgoing = -hit.ray.direction;
+            let normal = hit.normal;
             let mut bounce_illum = Spectrum::black();
 
             let bsdf = hit.object.bsdf();
@@ -48,7 +49,7 @@ impl Integrator for Path {
             }
 
             for light in &scene.lights {
-                let emitter_sample = light.sample(&hit.info.point, &sampler.get_2d());
+                let emitter_sample = light.sample(&hit.point, &sampler.get_2d());
 
                 if emitter_sample.pdf > 0.0
                     && !emitter_sample.radiance.is_black()
@@ -83,7 +84,11 @@ impl Integrator for Path {
 
                 throughput *= bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
 
-                let ray = hit.info.offset_ray_towards(bxdf_sample.incident);
+                let ray = offset_ray_towards(
+                    intersection.point,
+                    intersection.normal,
+                    bxdf_sample.incident,
+                );
                 match scene.intersect(&ray) {
                     Some(i) => hit = i,
                     None => break,

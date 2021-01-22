@@ -8,12 +8,13 @@ pub mod sphere;
 
 use ultraviolet::Vec3;
 
-use crate::debug_util::{is_finite, is_normalized};
+use crate::debug_util::{in_range_incl, is_finite, is_normalized};
 pub use aabb::Aabb;
 pub use cube::Cube;
 pub use point::Point;
 pub use ray::Ray;
 pub use sphere::Sphere;
+use std::f32::consts::{PI, TAU};
 use utility::floats::BIG_EPSILON;
 
 /// # Summary
@@ -62,39 +63,210 @@ pub fn offset_point(point: Vec3, normal: Vec3, direction: Vec3) -> Vec3 {
 }
 
 /// # Summary
-/// Converts the given angles in the given coordinate system from a spherical coordinate system
-/// into a cartesian direction.
+/// Offsets a point by an epsilon into the normal direction, depending on the angle to the given
+/// direction and creates a ray from it.
+///
+/// If the parameter `direction` shows into the same general direction of this intersection
+/// normal, the ray origin will be offset by an epsilon into the intersection normal.
+/// Otherwise, the opposite normal will be used.
 ///
 /// # Constraints
-/// * `sin_theta` - Should be finite (neither infinite nor `NaN`).
-/// * `cos_theta` - Should be finite.
-/// * `phi` - Should be finite.
+/// * `point` - ALl values should be finite (neither infinite nor `NaN`).
+/// * `normal` - All values should be finite.
+///              Should be normalized.
+/// * `direction` - Should be finite.
+///                 Should be normalized.
 ///
 /// # Arguments
-/// * `sin_theta` - The sine of the theta angle
-/// * `cos_theta` - The cosine of the theta angle
-/// * `phi` - The phi angle (in radians)
-/// * `frame` - The coordinate system frame
+/// * `point` - The starting point
+/// * `normal` - The normal vector to offset towards
+/// * `direction` - The direction of the ray
 ///
-/// * Returns
-/// * Normalized direction in cartesian coordinate system
-pub fn from_spherical_direction(
-    sin_theta: f32,
-    cos_theta: f32,
-    phi: f32,
-    frame: &CoordinateSystem,
-) -> Vec3 {
-    debug_assert!(sin_theta.is_finite());
-    debug_assert!(cos_theta.is_finite());
-    debug_assert!(phi.is_finite());
+/// # Returns
+/// * Ray from this intersection, offset by an epsilon
+pub fn offset_ray_towards(point: Vec3, normal: Vec3, direction: Vec3) -> Ray {
+    debug_assert!(is_finite(&point));
+    debug_assert!(is_finite(&normal));
+    debug_assert!(is_normalized(&normal));
+    debug_assert!(is_finite(&direction));
+    debug_assert!(is_normalized(&direction));
 
+    let origin = offset_point(point, normal, direction);
+
+    Ray::new_fast(origin, direction)
+}
+
+/// # Summary
+/// Offsets a point by an epsilon into the normal direction, depending on the angle to the given
+/// direction and creates a ray to the target from it.
+///
+/// If the direction to the parameter `target` shows into the same general direction of this
+/// intersection normal, the ray origin will be offset by an epsilon into the intersection
+/// normal.
+/// Otherwise, the opposite normal will be used.
+///
+/// # Constraints
+/// * `point` - ALl values should be finite (neither infinite nor `NaN`).
+/// * `normal` - All values should be finite.
+///              Should be normalized.
+/// * `target` - Should be finite.
+///
+/// # Arguments
+/// * `point` - The starting point
+/// * `normal` - The normal vector to offset towards
+/// * `target` - The target position
+///
+/// # Returns
+/// * Ray from this intersection to the target, offset by an epsilon
+pub fn offset_ray_to(point: Vec3, normal: Vec3, target: Vec3) -> Ray {
+    debug_assert!(is_finite(&point));
+    debug_assert!(is_finite(&normal));
+    debug_assert!(is_normalized(&normal));
+    debug_assert!(is_finite(&target));
+
+    let dir = target - point;
+    let origin = offset_point(point, normal, dir);
+    let direction = target - origin;
+
+    Ray::new(origin, direction.normalized(), 0.0, direction.mag())
+}
+
+/// # Summary
+/// Converts spherical coordinates to cartesian coordinates in the given frame wth following description:
+/// * `frame.x_axis`: to your right
+/// * `frame.y_axis`: to your top
+/// * `frame.z_axis`: towards you
+///
+/// # Constraints
+/// * `theta` - Should be within `[0, 2π]`.
+/// * `phi` - Should be within `[0, π]`.
+///
+/// # Arguments
+/// * `theta` - The angle between the `z`-axis and the spherical direction in the `zx` plane
+/// * `phi` - The angle between the  `y`-axis and the spherical direction
+/// * `frame` - The coordinate system/frame to use
+///
+/// # Returns
+/// * The corresponding cartesian vector
+pub fn spherical_to_cartesian_frame(theta: f32, phi: f32, frame: &CoordinateSystem) -> Vec3 {
+    debug_assert!(in_range_incl(theta, 0.0, TAU));
+    debug_assert!(in_range_incl(phi, 0.0, PI));
+
+    let (sin_theta, cos_theta) = theta.sin_cos();
     let (sin_phi, cos_phi) = phi.sin_cos();
 
-    let x = frame.x_axis * sin_phi * sin_theta;
+    spherical_to_cartesian_frame_trig(sin_theta, cos_theta, sin_phi, cos_phi, frame)
+}
+
+/// # Summary
+/// Converts spherical coordinates to cartesian coordinates in the given frame wth following description:
+/// * `frame.x_axis`: to your right
+/// * `frame.y_axis`: to your top
+/// * `frame.z_axis`: towards you
+///
+/// To make below descriptions easier, we define the following:
+/// * `theta` - The angle between the `z`-axis and the spherical direction in the `zx` plane.
+/// * `phi` - The angle between the  `y`-axis and the spherical direction .
+///
+/// # Constraints
+/// * `sin_theta` - Should be within `[-1, 1]`
+/// * `cos_theta` - Should be within `[-1, 1]`
+/// * `sin_phi` - Should be within `[-1, 1]`
+/// * `cos_phi` - Should be within `[-1, 1]`
+///
+/// # Arguments
+/// * `sin_theta` - The sine of `theta`
+/// * `cos_theta` - The cosine of `theta`
+/// * `sin_phi` - The sine of `phi`
+/// * `cos_phi` - The cosine of `phi`
+/// * `frame` - The coordinate system/frame to use
+///
+/// # Returns
+/// * The corresponding cartesian vector
+pub fn spherical_to_cartesian_frame_trig(
+    sin_theta: f32,
+    cos_theta: f32,
+    sin_phi: f32,
+    cos_phi: f32,
+    frame: &CoordinateSystem,
+) -> Vec3 {
+    debug_assert!(in_range_incl(sin_theta, -1.0, 1.0));
+    debug_assert!(in_range_incl(cos_theta, -1.0, 1.0));
+    debug_assert!(in_range_incl(sin_phi, -1.0, 1.0));
+    debug_assert!(in_range_incl(cos_phi, -1.0, 1.0));
+
+    let x = frame.x_axis * sin_theta * sin_phi;
     let y = frame.y_axis * cos_phi;
-    let z = frame.z_axis * sin_phi * cos_phi;
+    let z = frame.z_axis * sin_theta * cos_phi;
 
     (x + y + z).normalized()
+}
+
+/// Converts spherical coordinates to cartesian coordinates in the following describe frame:
+/// * x-axis: to your right
+/// * y-axis: to your top
+/// * z-axis: towards you
+///
+/// # Constraints
+/// * `theta` - Should be within `[0, 2π]`.
+/// * `phi` - Should be within `[0, π]`.
+///
+/// # Arguments
+/// * `theta` - The angle between the `z`-axis and the spherical direction in the `zx` plane.
+/// * `phi` - The angle between the  `y`-axis and the spherical direction .
+///
+/// # Returns
+/// * The corresponding cartesian vector
+pub fn spherical_to_cartesian(theta: f32, phi: f32) -> Vec3 {
+    debug_assert!(in_range_incl(theta, 0.0, TAU));
+    debug_assert!(in_range_incl(phi, 0.0, PI));
+
+    let (sin_theta, cos_theta) = theta.sin_cos();
+    let (sin_phi, cos_phi) = phi.sin_cos();
+
+    spherical_to_cartesian_trig(sin_theta, cos_theta, sin_phi, cos_phi)
+}
+
+/// # Summary
+/// Converts spherical coordinates to cartesian coordinates in the following described frame:
+/// * x-axis: to your right
+/// * y-axis: to your top
+/// * z-axis: towards you
+///
+/// To make below descriptions easier, we define the following:
+/// * `theta` - The angle between the `z`-axis and the spherical direction in the `zx` plane.
+/// * `phi` - The angle between the  `y`-axis and the spherical direction .
+///
+/// # Constraints
+/// * `sin_theta` - Should be within `[-1, 1]`
+/// * `cos_theta` - Should be within `[-1, 1]`
+/// * `sin_phi` - Should be within `[-1, 1]`
+/// * `cos_phi` - Should be within `[-1, 1]`
+///
+/// # Arguments
+/// * `sin_theta` - The sine of `theta`
+/// * `cos_theta` - The cosine of `theta`
+/// * `sin_phi` - The sine of `phi`
+/// * `cos_phi` - The cosine of `phi`
+///
+/// # Returns
+/// * The corresponding cartesian vector
+pub fn spherical_to_cartesian_trig(
+    sin_theta: f32,
+    cos_theta: f32,
+    sin_phi: f32,
+    cos_phi: f32,
+) -> Vec3 {
+    debug_assert!(in_range_incl(sin_theta, -1.0, 1.0));
+    debug_assert!(in_range_incl(cos_theta, -1.0, 1.0));
+    debug_assert!(in_range_incl(sin_phi, -1.0, 1.0));
+    debug_assert!(in_range_incl(cos_phi, -1.0, 1.0));
+
+    let x = sin_theta * sin_phi;
+    let y = cos_theta;
+    let z = sin_theta * cos_phi;
+
+    Vec3::new(x, y, z)
 }
 
 /// # Summary
@@ -138,83 +310,11 @@ impl Intersection {
             ray,
         }
     }
-
-    /// # Summary
-    /// Creates a ray from this intersection into the given direction.
-    ///
-    /// # Constraints
-    /// * `direction` - Should be normalized.
-    ///
-    /// # Arguments
-    /// * `direction` - The direction of the ray
-    ///
-    /// # Returns
-    /// * Ray from this intersection
-    pub fn ray_towards(&self, direction: Vec3) -> Ray {
-        debug_assert!(is_normalized(&direction));
-
-        Ray::new_fast(self.point, direction)
-    }
-
-    /// # Summary
-    /// Creates a ray from this intersection to the given target.
-    ///
-    /// # Arguments
-    /// * `target` - The target position
-    ///
-    /// # Returns
-    /// * Ray from this intersection to the target
-    pub fn ray_to(&self, target: Vec3) -> Ray {
-        Ray::between(self.point, target)
-    }
-
-    /// # Summary
-    /// Creates a ray from this intersection into the given direction.
-    ///
-    /// If the parameter `direction` shows into the same general direction of this intersection
-    /// normal, the ray origin will be offset by an epsilon into the intersection normal.
-    /// Otherwise, the opposite normal will be used.
-    ///
-    /// # Constraints
-    /// * `direction` - Should be normalized.
-    ///
-    /// # Arguments
-    /// * `direction` - The direction of the ray
-    ///
-    /// # Returns
-    /// * Ray from this intersection, offset by an epsilon
-    pub fn offset_ray_towards(&self, direction: Vec3) -> Ray {
-        debug_assert!(is_normalized(&direction));
-
-        let origin = offset_point(self.point, self.normal, direction);
-
-        Ray::new_fast(origin, direction)
-    }
-
-    /// # Summary
-    /// Creates a ray from this intersection to the given target.
-    ///
-    /// If the direction to the paremeter `target` shows into the same general direction of this
-    /// intersection normal, the ray origin will be offset by an epsilon into the intersection
-    /// normal.
-    /// Otherwise, the opposite normal will be used.
-    ///
-    /// # Arguments
-    /// * `target` - The target position
-    ///
-    /// # Returns
-    /// * Ray from this intersection to the target, offset by an epsilon
-    pub fn offset_ray_to(&self, target: Vec3) -> Ray {
-        let direction = target - self.point;
-
-        let origin = offset_point(self.point, self.normal, direction);
-
-        Ray::new(origin, direction.normalized(), 0.0, direction.mag())
-    }
 }
 
 /// # Summary
 /// A coordinate system represents 3 (orthogonal) vectors in 3D space.
+#[derive(Copy, Clone, Debug)]
 pub struct CoordinateSystem {
     pub x_axis: Vec3,
     pub y_axis: Vec3,
@@ -365,7 +465,7 @@ pub trait Boundable {
     ///
     /// # Returns
     /// * The bounds
-    fn bounds(&self) -> Aabb;
+    fn bounds(&self) -> Cube;
 }
 
 /// # Summary

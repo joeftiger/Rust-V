@@ -4,7 +4,7 @@ use crate::debug_utils::{is_finite, is_normalized, within_01};
 use crate::objects::receiver::ReceiverExt;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
-use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
+use geometry::{Boundable, Cube, Geometry, Intersectable, Intersection, Ray};
 use ultraviolet::{Vec2, Vec3};
 use utility::floats::BIG_EPSILON;
 
@@ -122,9 +122,8 @@ where
 
         let surface_sample = self.geometry.sample_surface(&point, sample);
 
-        let incident = (surface_sample.point - *point).normalized();
-
         let occlusion_tester = OcclusionTester::between(*point, surface_sample.point);
+        let incident = occlusion_tester.ray.direction;
 
         let radiance = self.radiance(&incident, &surface_sample.normal);
 
@@ -149,7 +148,7 @@ impl<T> Boundable for Emitter<T>
 where
     T: Boundable,
 {
-    fn bounds(&self) -> Aabb {
+    fn bounds(&self) -> Cube {
         self.geometry.bounds()
     }
 }
@@ -240,6 +239,7 @@ impl OcclusionTester {
     pub fn between(origin: Vec3, target: Vec3) -> Self {
         debug_assert!(is_finite(&origin));
         debug_assert!(is_finite(&target));
+        debug_assert!(origin != target);
 
         let direction = target - origin;
         let distance = direction.mag();
@@ -253,7 +253,7 @@ impl OcclusionTester {
             t_end = distance;
         }
 
-        let ray = Ray::new(origin, direction.normalized(), t_start, t_end);
+        let ray = Ray::new(origin, direction / distance, t_start, t_end);
 
         Self { ray }
     }
@@ -343,5 +343,5 @@ pub trait Sampleable: Geometry + Send + Sync {
     ///
     /// # Returns
     /// * A surface sample
-    fn sample_surface(&self, point: &Vec3, sample: &Vec2) -> SurfaceSample;
+    fn sample_surface(&self, origin: &Vec3, sample: &Vec2) -> SurfaceSample;
 }

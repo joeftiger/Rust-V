@@ -1,4 +1,4 @@
-use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
+use geometry::{Boundable, Cube, Geometry, Intersectable, Intersection, Ray};
 
 mod emitter;
 mod point;
@@ -43,7 +43,7 @@ impl ReceiverExt for SceneObject {
 }
 
 impl Boundable for SceneObject {
-    fn bounds(&self) -> Aabb {
+    fn bounds(&self) -> Cube {
         match self {
             SceneObject::Emitter(e) => e.bounds(),
             SceneObject::Receiver(r) => r.bounds(),

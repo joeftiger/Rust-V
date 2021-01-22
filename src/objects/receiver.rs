@@ -1,5 +1,5 @@
 use crate::bxdf::BSDF;
-use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
+use geometry::{Boundable, Cube, Geometry, Intersectable, Intersection, Ray};
 
 /// # Summary
 /// A receiver is a geometry that also has a bsdf.
@@ -58,7 +58,7 @@ impl<T> Boundable for Receiver<T>
 where
     T: Boundable,
 {
-    fn bounds(&self) -> Aabb {
+    fn bounds(&self) -> Cube {
         self.geometry.bounds()
     }
 }

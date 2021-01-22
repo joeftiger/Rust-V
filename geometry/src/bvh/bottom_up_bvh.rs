@@ -1,4 +1,4 @@
-use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use crate::{Aabb, Boundable, Cube, Intersectable, Intersection, Ray};
 use std::collections::HashMap;
 use std::ops::Deref;
 use std::sync::Arc;
@@ -40,14 +40,14 @@ where
             let object = objects.drain().next().unwrap();
             let aabb = object.1.bounds();
 
-            return Arc::new(Self::new(aabb, vec![], vec![object.1]));
+            return Arc::new(Self::new(aabb.into(), vec![], vec![object.1]));
         } else if objects.len() == 2 {
             let mut drain = objects.drain();
             let o1 = drain.next().unwrap();
             let o2 = drain.next().unwrap();
             let aabb = o1.1.bounds().join(&o2.1.bounds());
 
-            return Arc::new(Self::new(aabb, vec![], vec![o1.1, o2.1]));
+            return Arc::new(Self::new(aabb.into(), vec![], vec![o1.1, o2.1]));
         }
 
         let mut nodes: HashMap<usize, Arc<Self>> = HashMap::default();
@@ -134,7 +134,7 @@ where
                 .iter()
                 .map(|c| c.bounds())
                 .chain(objects.iter().map(|o| o.bounds()))
-                .fold(Aabb::empty(), |acc, next| acc.join(&next));
+                .fold(Aabb::empty(), |acc, next| acc.join(&next.into()));
 
             let key = node_counter;
             node_counter += 1;
@@ -158,8 +158,8 @@ impl<T> Boundable for BottomUpBVH<T>
 where
     T: Boundable,
 {
-    fn bounds(&self) -> Aabb {
-        self.aabb
+    fn bounds(&self) -> Cube {
+        self.aabb.into()
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use crate::{Boundable, Cube, Intersectable, Intersection, Ray};
 use ultraviolet::Vec3;
 
 /// # Summary
@@ -6,8 +6,8 @@ use ultraviolet::Vec3;
 pub struct Point(pub Vec3);
 
 impl Boundable for Point {
-    fn bounds(&self) -> Aabb {
-        Aabb::new(self.0, self.0)
+    fn bounds(&self) -> Cube {
+        Cube::new(self.0, self.0)
     }
 }
 

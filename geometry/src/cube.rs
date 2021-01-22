@@ -85,8 +85,8 @@ impl Container for Cube {
 }
 
 impl Boundable for Cube {
-    fn bounds(&self) -> Aabb {
-        Aabb::new(self.min, self.max)
+    fn bounds(&self) -> Cube {
+        *self
     }
 }
 
@@ -150,6 +150,18 @@ impl Default for Cube {
     /// * `[-1, 1]` Self
     fn default() -> Self {
         Self::new(-Vec3::one(), Vec3::one())
+    }
+}
+
+impl From<Aabb> for Cube {
+    fn from(aabb: Aabb) -> Self {
+        Self::new(aabb.min, aabb.max)
+    }
+}
+
+impl From<&Aabb> for Cube {
+    fn from(aabb: &Aabb) -> Self {
+        Self::new(aabb.min, aabb.max)
     }
 }
 

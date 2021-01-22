@@ -1,4 +1,4 @@
-use crate::{Boundable, Container, Intersectable, Intersection, Ray};
+use crate::{Boundable, Container, Cube, Intersectable, Intersection, Ray};
 use ultraviolet::Vec3;
 use utility::floats::BIG_EPSILON;
 
@@ -79,8 +79,8 @@ impl Container for Aabb {
 }
 
 impl Boundable for Aabb {
-    fn bounds(&self) -> Aabb {
-        *self
+    fn bounds(&self) -> Cube {
+        self.into()
     }
 }
 
@@ -159,5 +159,17 @@ impl Intersectable for Aabb {
         let t_max = vec_max.component_min();
 
         t_min <= t_max && (t_min >= 0.0 || t_max >= 0.0)
+    }
+}
+
+impl From<Cube> for Aabb {
+    fn from(cube: Cube) -> Self {
+        Self::new(cube.min, cube.max)
+    }
+}
+
+impl From<&Cube> for Aabb {
+    fn from(cube: &Cube) -> Self {
+        Self::new(cube.min, cube.max)
     }
 }

@@ -2,7 +2,7 @@ use crate::debug_util::is_finite;
 use crate::ray::Ray;
 #[cfg(test)]
 use crate::UNIT_VECTORS;
-use crate::{Aabb, Boundable, Container, Intersectable, Intersection};
+use crate::{Boundable, Container, Cube, Intersectable, Intersection};
 use ultraviolet::Vec3;
 use utility::math::solve_quadratic;
 
@@ -42,12 +42,12 @@ impl Container for Sphere {
 }
 
 impl Boundable for Sphere {
-    fn bounds(&self) -> Aabb {
+    fn bounds(&self) -> Cube {
         let diff = Vec3::one() * self.radius;
         let min = self.center - diff;
         let max = self.center + diff;
 
-        Aabb::new(min, max)
+        Cube::new(min, max)
     }
 }
 
@@ -70,8 +70,12 @@ impl Intersectable for Sphere {
             return None;
         };
 
+        // println!("t:\t{}", t);
         let point = ray.at(t);
+        // println!("point:\t{:?}", point);
+        // println!("center:\t{:?}", self.center);
         let normal = (point - self.center).normalized();
+        // println!("normal:\t{:?}", normal);
 
         Some(Intersection::new(point, normal, t, *ray))
     }

@@ -11,7 +11,7 @@ pub use lambertian::{LambertianReflection, LambertianTransmission};
 pub use specular::{FresnelSpecular, SpecularReflection, SpecularTransmission};
 
 use crate::debug_utils::{is_finite, is_normalized, within_01};
-use crate::mc::cos_sample_hemisphere;
+use crate::mc::sample_unit_hemisphere;
 use crate::Spectrum;
 use std::f32::consts::{FRAC_1_PI, PI};
 use ultraviolet::{Rotor3, Vec2, Vec3};
@@ -197,7 +197,19 @@ pub fn world_to_bxdf(v: &Vec3) -> Rotor3 {
     } else if *v == -Vec3::unit_y() {
         Rotor3::from_rotation_xy(PI)
     } else {
-        Rotor3::from_rotation_between(*v, Vec3::unit_y())
+        Rotor3::from_rotation_between(*v, bxdf_normal())
+    }
+}
+
+pub fn bxdf_to_world(v: Vec3) -> Rotor3 {
+    debug_assert!(is_finite(&v));
+
+    if v == Vec3::unit_y() {
+        Rotor3::default()
+    } else if v == -Vec3::unit_y() {
+        Rotor3::from_rotation_xy(-PI)
+    } else {
+        Rotor3::from_rotation_between(bxdf_normal(), v)
     }
 }
 
@@ -392,7 +404,7 @@ pub trait BxDF: Send + Sync {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
 
-        let incident = cos_sample_hemisphere(sample);
+        let incident = sample_unit_hemisphere(sample);
         let incident = flip_if_neg(incident);
 
         let spectrum = self.evaluate(&incident, outgoing);

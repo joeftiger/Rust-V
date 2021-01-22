@@ -39,17 +39,16 @@ impl Integrator for Whitted {
         sampler: &dyn Sampler,
         depth: u32,
     ) -> Spectrum {
-        let outgoing = -intersection.info.ray.direction;
+        let outgoing = -intersection.ray.direction;
+        let point = intersection.point;
+        let normal = intersection.normal;
+        let object = &intersection.object;
 
-        let obj = &intersection.object;
-
-        let bsdf = obj.bsdf();
-        let point = intersection.info.point;
-        let normal = intersection.info.normal;
+        let bsdf = object.bsdf();
 
         let mut illumination = Spectrum::black();
 
-        if let SceneObject::Emitter(e) = obj {
+        if let SceneObject::Emitter(e) = object {
             illumination += e.radiance(&outgoing, &normal);
         }
 

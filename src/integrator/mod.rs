@@ -30,7 +30,7 @@ use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use color::Color;
-use geometry::Ray;
+use geometry::{offset_ray_towards, Ray};
 
 /// # Summary
 /// An integrator to calculate the color of a pixel / ray.
@@ -98,10 +98,10 @@ pub trait Integrator: Send + Sync {
     ) -> Spectrum {
         debug_assert!(depth < self.max_depth());
 
-        let outgoing = -intersection.info.ray.direction;
+        let outgoing = -intersection.ray.direction;
 
         let bsdf = intersection.object.bsdf();
-        let normal = intersection.info.normal;
+        let normal = intersection.normal;
         let sample = sampler.get_sample();
 
         let bxdf_sample_option = bsdf.sample(
@@ -118,7 +118,11 @@ pub trait Integrator: Send + Sync {
                 let cos = bxdf_sample.incident.dot(normal);
 
                 if cos != 0.0 {
-                    let refl_ray = intersection.info.offset_ray_towards(bxdf_sample.incident);
+                    let refl_ray = offset_ray_towards(
+                        intersection.point,
+                        intersection.normal,
+                        bxdf_sample.incident,
+                    );
 
                     if let Some(si) = scene.intersect(&refl_ray) {
                         let illumination = self.illumination(scene, &si, sampler, depth);
@@ -154,10 +158,10 @@ pub trait Integrator: Send + Sync {
     ) -> Spectrum {
         debug_assert!(depth < self.max_depth());
 
-        let outgoing = -intersection.info.ray.direction;
+        let outgoing = -intersection.ray.direction;
 
         let bsdf = intersection.object.bsdf();
-        let normal = intersection.info.normal;
+        let normal = intersection.normal;
         let sample = sampler.get_sample();
 
         let bxdf_sample_option = bsdf.sample(
@@ -174,7 +178,11 @@ pub trait Integrator: Send + Sync {
                 let cos = bxdf_sample.incident.dot(normal);
 
                 if cos != 0.0 {
-                    let refl_ray = intersection.info.offset_ray_towards(bxdf_sample.incident);
+                    let refl_ray = offset_ray_towards(
+                        intersection.point,
+                        intersection.normal,
+                        bxdf_sample.incident,
+                    );
 
                     if let Some(si) = scene.intersect(&refl_ray) {
                         let illumination = self.illumination(scene, &si, sampler, depth + 1);

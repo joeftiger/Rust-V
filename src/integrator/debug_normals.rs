@@ -19,7 +19,7 @@ impl Integrator for DebugNormals {
         _: &dyn Sampler,
         _: u32,
     ) -> Spectrum {
-        let color = (intersection.info.normal + Vec3::one()) / 2.0;
+        let color = (intersection.normal + Vec3::one()) / 2.0;
         color.into()
     }
 }
