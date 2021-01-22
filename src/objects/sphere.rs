@@ -1,6 +1,6 @@
 use crate::bxdf::bxdf_to_world;
 use crate::debug_utils::{is_finite, within_01};
-use crate::mc::{sample_unit_disk, sample_unit_sphere, uniform_cone_pdf};
+use crate::mc::{sample_unit_disk, sample_unit_sphere, uniform_cone_pdf, sample_unit_disk_concentric};
 use crate::objects::emitter::SurfaceSample;
 use crate::objects::Sampleable;
 use geometry::{Intersectable, Ray, Sphere};
@@ -42,9 +42,10 @@ impl Sampleable for Sphere {
             let cos_theta_max = f32::sqrt(1.0 - r2 / dist_sq);
             debug_assert!(cos_theta_max > 0.0);
 
+            // FIXME: multiplying with it makes everything go dark, sicne the radius get small.
             // let disk_radius = self.radius * cos_theta_max;
 
-            let disk = sample_unit_disk(sample);
+            let disk = sample_unit_disk_concentric(sample); // * disk_radius
             let target = bxdf_to_world(axis) * Vec3::new(disk.x, 0.0, disk.y);
             let direction = (target - *origin).normalized();
 
