@@ -3,7 +3,7 @@ extern crate clap;
 
 use clap::App;
 
-use rust_v::demo_scenes::{CornellScene, DebugScene, DemoScene, SphereScene};
+use rust_v::demo_scenes::{CornellScene, DebugScene, DebugSphereScene, DemoScene, SphereScene};
 use rust_v::integrator::{DebugNormals, Integrator, Path, Whitted};
 use rust_v::renderer::Renderer;
 use rust_v::sampler::{NoOpSampler, RandomSampler, Sampler};
@@ -14,9 +14,6 @@ use std::convert::TryInto;
 use std::sync::Arc;
 
 const LIVE: &str = "LIVE_WINDOW";
-const SPHERE_SCENE: &str = "spheres";
-const CORNELL_SCENE: &str = "cornell";
-const DEBUG_SCENE: &str = "debug";
 const VERBOSE: &str = "VERBOSE";
 #[allow(dead_code)]
 const INPUT: &str = "INPUT";
@@ -41,17 +38,33 @@ fn create_config() -> MainConfig {
     let yaml = load_yaml!("cli-live.yml");
 
     let app_matches = App::from_yaml(yaml).get_matches();
-    let demo = if let Some(spheres) = app_matches.subcommand_matches(SPHERE_SCENE) {
-        (spheres, DemoType::SphereScene)
-    } else if let Some(cornell) = app_matches.subcommand_matches(CORNELL_SCENE) {
-        (cornell, DemoType::CornellScene)
-    } else if let Some(debug) = app_matches.subcommand_matches(DEBUG_SCENE) {
-        (debug, DemoType::DebugScene)
-    } else {
-        panic!("Currently we only support the subcommands (spheres, cornell, debug)!");
-    };
+    // let demo = if let Some(spheres) = app_matches.subcommand_matches(SPHERE_SCENE) {
+    //     (spheres, DemoType::SphereScene)
+    // } else if let Some(cornell) = app_matches.subcommand_matches(CORNELL_SCENE) {
+    //     (cornell, DemoType::CornellScene)
+    // } else if let Some(debug) = app_matches.subcommand_matches(DEBUG_SCENE) {
+    //     (debug, DemoType::DebugScene)
+    // } else {
+    //     panic!("Currently we only support the subcommands (spheres, cornell, debug)!");
+    // };
 
-    let matches = demo.0;
+    let (demo_type, matches) = match app_matches.subcommand() {
+        (name, Some(m)) => {
+            let typ: DemoType = match name.try_into() {
+                Ok(t) => t,
+                Err(err) => panic!("Cannot parse demo type: {}", err),
+            };
+
+            (typ, m)
+        }
+        (_, None) => panic!("No subcommand given"),
+    };
+    // let (demo_type_name, Some(matches)) = app_matches.subcommand();
+    // let demo_type: DemoType = match demo_type_name.try_into() {
+    //     Ok(typ) => typ,
+    //     Err(err) => panic!("Cannot parse demo type: {}", err),
+    // };
+
     let verbose = matches.is_present(VERBOSE);
 
     let width = match matches.value_of(WIDTH).unwrap_or("900").parse() {
@@ -113,7 +126,6 @@ fn create_config() -> MainConfig {
         Some(output)
     };
 
-    let demo_type = demo.1;
     let render_config = RenderConfig::new(width, height, depth, passes, block_size, threads);
 
     MainConfig {
@@ -144,6 +156,7 @@ impl MainConfig {
             DemoType::SphereScene => SphereScene::create(self.render_config.resolution),
             DemoType::CornellScene => CornellScene::create(self.render_config.resolution),
             DemoType::DebugScene => DebugScene::create(self.render_config.resolution),
+            DemoType::DebugSphereScene => DebugSphereScene::create(self.render_config.resolution),
         };
 
         let integrator: Arc<dyn Integrator> = match self.integrator_type {
@@ -262,6 +275,7 @@ pub enum DemoType {
     SphereScene,
     CornellScene,
     DebugScene,
+    DebugSphereScene,
 }
 
 impl TryInto<DemoType> for &str {
@@ -272,6 +286,7 @@ impl TryInto<DemoType> for &str {
             "spheres" | "Spheres" | "SPHERES" => Ok(DemoType::SphereScene),
             "cornell" | "Cornell" | "CORNELL" => Ok(DemoType::CornellScene),
             "debug" | "Debug" | "DEBUG" => Ok(DemoType::DebugScene),
+            "debugsphere" | "DebugSphere" | "DEBUGSPHERE" => Ok(DemoType::DebugSphereScene),
             _ => Err(self.to_string()),
         }
     }

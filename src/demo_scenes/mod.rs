@@ -1,5 +1,6 @@
 mod cornell;
 mod debug;
+mod debug_sphere;
 mod spheres;
 
 use crate::scene::Scene;
@@ -8,6 +9,7 @@ use ultraviolet::UVec2;
 use crate::camera::Camera;
 pub use cornell::CornellScene;
 pub use debug::DebugScene;
+pub use debug_sphere::DebugSphereScene;
 pub use spheres::SphereScene;
 use std::sync::Arc;
 

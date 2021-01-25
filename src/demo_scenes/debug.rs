@@ -20,11 +20,8 @@ impl DemoScene for DebugScene {
     fn create(resolution: UVec2) -> (Scene, Arc<dyn Camera>) {
         let mut scene = Scene::default();
 
-        scene
-            .add(ground())
-            .add(sphere())
-            .add(sphere_emitter())
-            .add(create_emitter());
+        scene.add(ground()).add(sphere()).add(sphere_emitter());
+        // .add(create_emitter());
 
         let camera = create_camera(resolution);
 
@@ -63,7 +60,7 @@ fn sphere_emitter() -> SceneObject {
 
     let bsdf = BSDF::empty();
 
-    let emitter = Emitter::new(sphere, bsdf, Spectrum::new_const(2.0));
+    let emitter = Emitter::new(sphere, bsdf, Spectrum::new_const(50.0));
     SceneObject::new_emitter(emitter)
 }
 

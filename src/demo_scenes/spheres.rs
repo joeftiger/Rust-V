@@ -17,7 +17,7 @@ use std::sync::Arc;
 use ultraviolet::{UVec2, Vec3};
 
 const FLOOR: f32 = 0.0;
-const SKY_RADIUS: f32 = 50.0;
+const SKY_RADIUS: f32 = 500.0;
 const RADIUS: f32 = 0.5;
 
 const DISTRIBUTION: f32 = 10.0;
@@ -138,7 +138,7 @@ fn create_scene() -> Scene {
             let (emitting, bsdf) = random_bsdf(color);
 
             let obj = if emitting {
-                let emitter = Emitter::new(sphere, bsdf, color);
+                let emitter = Emitter::new(sphere, bsdf, color * 5.0);
                 SceneObject::new_emitter(emitter)
             } else {
                 let receiver = Receiver::new(sphere, bsdf);
