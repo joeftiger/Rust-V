@@ -1,11 +1,14 @@
 use crate::bxdf::bxdf_to_world;
 use crate::debug_utils::{is_finite, within_01};
-use crate::mc::{sample_unit_disk, sample_unit_sphere, uniform_cone_pdf, sample_unit_disk_concentric};
+use crate::mc::{
+    sample_cone, sample_unit_disk, sample_unit_disk_concentric, sample_unit_sphere,
+    sample_vector_from_angle, uniform_cone_pdf, uniform_sample_cone_frame,
+};
 use crate::objects::emitter::SurfaceSample;
 use crate::objects::Sampleable;
-use geometry::{Intersectable, Ray, Sphere};
-use std::f32::consts::TAU;
-use ultraviolet::{Vec2, Vec3};
+use geometry::{spherical_to_cartesian_frame_trig, CoordinateSystem, Intersectable, Ray, Sphere};
+use std::f32::consts::{PI, TAU};
+use ultraviolet::{Lerp, Vec2, Vec3};
 
 fn sample_surface_inside(sphere: &Sphere, sample: &Vec2) -> SurfaceSample {
     let normal = sample_unit_sphere(sample);
@@ -36,24 +39,25 @@ impl Sampleable for Sphere {
             sample_surface_inside(&self, sample)
         } else {
             let distance = dist_sq.sqrt();
-            let axis = point_to_center / -distance;
+            let axis = point_to_center / distance;
+            let frame = CoordinateSystem::from_y(axis);
 
             // correct
-            let cos_theta_max = f32::sqrt(1.0 - r2 / dist_sq);
-            debug_assert!(cos_theta_max > 0.0);
+            let cos_theta_max = f32::sqrt(1.0 - r2 / dist_sq) / 2.0;
+            // debug_assert!(cos_theta_max > 0.0);
 
-            // FIXME: multiplying with it makes everything go dark, sicne the radius get small.
-            // let disk_radius = self.radius * cos_theta_max;
+            // FIXME: multiplying with it makes everything go dark, since the radius get small.
+            let disk_radius = self.radius * cos_theta_max;
 
-            let disk = sample_unit_disk_concentric(sample); // * disk_radius
+            let disk = sample_unit_disk_concentric(sample) * disk_radius;
             let target = bxdf_to_world(axis) * Vec3::new(disk.x, 0.0, disk.y);
             let direction = (target - *origin).normalized();
 
             /* TRY 1 */
-            // let direction = rotation.reversed() * uniform_sample_cone(sample, cos_theta_max);
+            // let direction = bxdf_to_world(axis) * sample_cone(sample, cos_theta_max);
 
             /* TRY 2 */
-            // let direction = uniform_sample_cone_frame(sample, cos_theta_max, &frame);
+            let direction = uniform_sample_cone_frame(sample, cos_theta_max, &frame);
 
             /* PBR code */
             // let sin_theta_max = f32::sqrt(r2 / dist_sq);
@@ -72,25 +76,40 @@ impl Sampleable for Sphere {
             // let direction = spherical_to_cartesian_frame_trig(sin_alpha, cos_alpha, sin_phi, cos_phi, &frame);
             /* end PBR code */
 
+            /* TRY 3 */
+            // let sin_theta_max = f32::sqrt(r2 / dist_sq);
+            // let direction = sample_vector_from_angle(axis, sin_theta_max, sample);
+            let theta = direction.dot(axis).acos();
+
+            // sine rule
+            let phi = PI - theta * (1.0 + distance / self.radius);
+            let t = phi / theta * self.radius;
+
+            let point = direction * t;
+            let normal = (point - self.center).normalized();
+            /* END TRY 3 */
+
             let pdf = uniform_cone_pdf(cos_theta_max);
 
-            let ray = Ray::new_fast(*origin, direction);
-            match self.intersect(&ray) {
-                None => {
-                    let t = dist_sq - r2;
-                    // let t = direction.dot(-*origin);
-                    debug_assert!(t >= 0.0);
+            SurfaceSample::new(point, normal, pdf)
 
-                    let point = ray.at(t);
-                    debug_assert!(point != self.center);
-
-                    let normal = (point - self.center).normalized();
-
-                    // SurfaceSample::new(self.center, -point_to_center.normalized(), pdf)
-                    SurfaceSample::new(point, normal, pdf)
-                }
-                Some(i) => SurfaceSample::new(i.point, i.normal, pdf),
-            }
+            // let ray = Ray::new_fast(*origin, direction);
+            // match self.intersect(&ray) {
+            //     None => {
+            //         let t = dist_sq - r2;
+            //         // let t = direction.dot(-*origin);
+            //         debug_assert!(t >= 0.0);
+            //
+            //         let point = ray.at(t);
+            //         debug_assert!(point != self.center);
+            //
+            //         let normal = (point - self.center).normalized();
+            //
+            //         // SurfaceSample::new(self.center, -point_to_center.normalized(), pdf)
+            //         SurfaceSample::new(point, normal, pdf)
+            //     }
+            //     Some(i) => SurfaceSample::new(i.point, i.normal, pdf),
+            // }
         }
     }
 }
