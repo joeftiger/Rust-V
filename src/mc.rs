@@ -3,6 +3,19 @@ use geometry::{spherical_to_cartesian_frame_trig, spherical_to_cartesian_trig, C
 use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, TAU};
 use ultraviolet::{Lerp, Vec2, Vec3};
 
+pub fn sample_vector_from_angle(direction: Vec3, sin_theta_max: f32, sample: &Vec2) -> Vec3 {
+    debug_assert!(within_01(sample));
+
+    let frame = CoordinateSystem::from_y(direction);
+
+    let sample = sample_unit_disk_concentric(sample) * sin_theta_max;
+
+    let right = frame.x_axis * sample.x;
+    let forward = frame.z_axis * sample.y;
+
+    (direction + right + forward).normalized()
+}
+
 /// # Summary
 /// Samples a non-concentric mapped point from the given random sample.
 ///
@@ -18,10 +31,10 @@ use ultraviolet::{Lerp, Vec2, Vec3};
 pub fn sample_unit_disk(sample: &Vec2) -> Vec2 {
     debug_assert!(within_01(sample));
 
-    let theta = sample.y * TAU;
+    let theta = sample.x * TAU;
     let (sin, cos) = theta.sin_cos();
 
-    sample.x * Vec2::new(cos, sin)
+    sample.y * Vec2::new(cos, sin)
 }
 
 /// # Summary
