@@ -25,6 +25,15 @@ impl<T> BottomUpBVH<T> {
     }
 }
 
+impl<T> PartialEq for BottomUpBVH<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.aabb == other.aabb && self.children == other.children && self.objects == other.objects
+    }
+}
+
 impl<T> BottomUpBVH<T>
 where
     T: Boundable,

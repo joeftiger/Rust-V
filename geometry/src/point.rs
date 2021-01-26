@@ -3,6 +3,7 @@ use ultraviolet::Vec3;
 
 /// # Summary
 /// Represents a point in space.
+#[derive(Copy, Clone, PartialEq)]
 pub struct Point(pub Vec3);
 
 impl Boundable for Point {

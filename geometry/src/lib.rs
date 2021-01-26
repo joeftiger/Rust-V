@@ -2,6 +2,7 @@ mod aabb;
 pub mod bvh;
 mod cube;
 mod debug_util;
+mod mesh;
 mod point;
 pub mod ray;
 pub mod sphere;
@@ -166,7 +167,7 @@ pub fn spherical_to_cartesian_frame(theta: f32, phi: f32, frame: &CoordinateSyst
 ///
 /// To make below descriptions easier, we define the following:
 /// * `theta` - The angle between the `z`-axis and the spherical direction in the `zx` plane.
-/// * `phi` - The angle between the  `y`-axis and the spherical direction .
+/// * `phi` - The angle between the  `y`-axis and the spherical direction.
 ///
 /// # Constraints
 /// * `sin_theta` - Should be within `[-1, 1]`
@@ -195,11 +196,11 @@ pub fn spherical_to_cartesian_frame_trig(
     debug_assert!(in_range_incl(sin_phi, -1.0, 1.0));
     debug_assert!(in_range_incl(cos_phi, -1.0, 1.0));
 
-    let x = frame.x_axis * sin_theta * sin_phi;
+    let x = frame.x_axis * sin_phi * sin_theta;
     let y = frame.y_axis * cos_phi;
-    let z = frame.z_axis * sin_theta * cos_phi;
+    let z = frame.z_axis * sin_phi * cos_theta;
 
-    (x + y + z).normalized()
+    x + y + z
 }
 
 /// Converts spherical coordinates to cartesian coordinates in the following describe frame:
@@ -262,9 +263,9 @@ pub fn spherical_to_cartesian_trig(
     debug_assert!(in_range_incl(sin_phi, -1.0, 1.0));
     debug_assert!(in_range_incl(cos_phi, -1.0, 1.0));
 
-    let x = sin_theta * sin_phi;
-    let y = cos_theta;
-    let z = sin_theta * cos_phi;
+    let x = sin_phi * sin_theta;
+    let y = cos_phi;
+    let z = sin_phi * cos_theta;
 
     Vec3::new(x, y, z)
 }
@@ -399,14 +400,23 @@ impl CoordinateSystem {
         debug_assert!(is_finite(&y_axis));
         debug_assert!(is_normalized(&y_axis));
 
-        if y_axis == Vec3::unit_y() {
-            Self::new(Vec3::unit_x(), Vec3::unit_y(), Vec3::unit_z())
+        let s = if y_axis.x.abs() > y_axis.y.abs() {
+            let l = (y_axis.x * y_axis.x + y_axis.z * y_axis.z).sqrt();
+            Vec3::new(-y_axis.z / l, 0.0, y_axis.x / l)
         } else {
-            let x = y_axis.cross(Vec3::unit_y()).normalized();
-            let z = x.cross(y_axis).normalized();
+            let l = (y_axis.y * y_axis.y + y_axis.z * y_axis.z).sqrt();
+            Vec3::new(0.0, y_axis.z / l, -y_axis.y / l)
+        };
+        Self::new(s, y_axis, y_axis.cross(s))
 
-            Self::new(x, y_axis, z)
-        }
+        // if y_axis == Vec3::unit_y() {
+        //     Self::new(Vec3::unit_x(), Vec3::unit_y(), Vec3::unit_z())
+        // } else {
+        //     let x = y_axis.cross(Vec3::unit_y()).normalized();
+        //     let z = x.cross(y_axis).normalized();
+        //
+        //     Self::new(x, y_axis, z)
+        // }
     }
 
     /// # Summary

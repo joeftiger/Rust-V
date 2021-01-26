@@ -8,7 +8,7 @@ use utility::math::solve_quadratic;
 
 /// # Summary
 /// A sphere consists of a center and a radius.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
