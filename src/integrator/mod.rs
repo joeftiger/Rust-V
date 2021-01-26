@@ -209,6 +209,8 @@ fn direct_illumination(
         return illumination;
     }
 
+    let outgoing_world = -intersection.ray.direction;
+
     for light in &scene.lights {
         let emitter_sample = light.sample(&intersection.point, &sampler.get_2d());
 
@@ -219,7 +221,7 @@ fn direct_illumination(
             let bsdf_spectrum = bsdf.evaluate(
                 &intersection.normal,
                 &emitter_sample.incident,
-                &-intersection.ray.direction,
+                &outgoing_world,
                 BxDFType::ALL,
             );
 
