@@ -56,12 +56,6 @@ fn create_sphere() -> SceneObject {
     let center = Vec3::new(X_CENTER + 2.0 * RADIUS, Y_CENTER, Z_CENTER);
     let sphere = Sphere::new(center, RADIUS * 0.75);
 
-    // let transmission = SpecularTransmission::new(
-    //     Spectrum::new_const(1.0),
-    //     AIR,
-    //     GLASS,
-    //     TransportMode::Radiance
-    // );
     let reflection = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
     let bsdf = BSDF::new(vec![Box::new(reflection)]);
 
@@ -89,9 +83,9 @@ fn create_wall(wall: &Wall) -> SceneObject {
     let cube = Cube::new(min, max);
 
     let spectrum = match wall {
-        Wall::Top | Wall::Back | Wall::Bottom => Spectrum::white(),
-        Wall::Left => Spectrum::red(),
-        Wall::Right => Spectrum::green(),
+        Wall::Top | Wall::Back | Wall::Bottom => Spectrum::white() * 0.75,
+        Wall::Left => Spectrum::red() * 0.75,
+        Wall::Right => Spectrum::green() * 0.75,
     };
 
     let lambertian = Box::new(LambertianReflection::new(spectrum));
@@ -107,7 +101,7 @@ fn create_emitter() -> SceneObject {
 
     let bsdf = BSDF::empty();
 
-    let emission = Spectrum::white();
+    let emission = Spectrum::white() * 15.0;
     let emitter = Emitter::new(sphere, bsdf, emission);
     SceneObject::new_emitter(emitter)
 }

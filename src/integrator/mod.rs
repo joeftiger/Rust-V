@@ -24,7 +24,7 @@ pub use debug_normals::DebugNormals;
 pub use path::Path;
 pub use whitted::Whitted;
 
-use crate::bxdf::BxDFType;
+use crate::bxdf::{BxDFType, BSDF};
 use crate::objects::ReceiverExt;
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
@@ -195,4 +195,44 @@ pub trait Integrator: Send + Sync {
 
         transmission
     }
+}
+
+fn direct_illumination(
+    scene: &Scene,
+    sampler: &dyn Sampler,
+    intersection: &SceneIntersection,
+    bsdf: &BSDF,
+) -> Spectrum {
+    let mut illumination = Spectrum::black();
+
+    if bsdf.is_empty() {
+        return illumination;
+    }
+
+    for light in &scene.lights {
+        let emitter_sample = light.sample(&intersection.point, &sampler.get_2d());
+
+        if emitter_sample.pdf > 0.0
+            && !emitter_sample.radiance.is_black()
+            && emitter_sample.occlusion_tester.unoccluded(scene)
+        {
+            let bsdf_spectrum = bsdf.evaluate(
+                &intersection.normal,
+                &emitter_sample.incident,
+                &-intersection.ray.direction,
+                BxDFType::ALL,
+            );
+
+            if !bsdf_spectrum.is_black() {
+                let cos = emitter_sample.incident.dot(intersection.normal);
+
+                if cos != 0.0 {
+                    illumination +=
+                        bsdf_spectrum * emitter_sample.radiance * (cos.abs() / emitter_sample.pdf)
+                }
+            }
+        }
+    }
+
+    illumination
 }

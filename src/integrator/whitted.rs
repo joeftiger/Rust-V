@@ -1,5 +1,4 @@
-use crate::bxdf::BxDFType;
-use crate::integrator::Integrator;
+use crate::integrator::{direct_illumination, Integrator};
 use crate::objects::{ReceiverExt, SceneObject};
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
@@ -39,28 +38,30 @@ impl Integrator for Whitted {
         sampler: &dyn Sampler,
         depth: u32,
     ) -> Spectrum {
-        let outgoing = -intersection.ray.direction;
-        let point = intersection.point;
-        let normal = intersection.normal;
         let object = &intersection.object;
-
         let bsdf = object.bsdf();
 
         let mut illumination = Spectrum::black();
 
         if let SceneObject::Emitter(e) = object {
-            illumination += e.radiance(&outgoing, &normal);
+            illumination += e.emission(); //e.radiance(&outgoing, &normal);
         }
 
-        for light in &scene.lights {
+        illumination += direct_illumination(scene, sampler, intersection, bsdf);
+
+        /*for light in &scene.lights {
             let emitter_sample = light.sample(&point, &sampler.get_2d());
 
             if emitter_sample.pdf > 0.0
                 && !emitter_sample.radiance.is_black()
                 && emitter_sample.occlusion_tester.unoccluded(scene)
             {
-                let bsdf_spectrum =
-                    bsdf.evaluate(&normal, &emitter_sample.incident, &outgoing, BxDFType::ALL);
+                let bsdf_spectrum = bsdf.evaluate(
+                    &normal,
+                    &emitter_sample.incident,
+                    &outgoing,
+                    BxDFType::ALL
+                );
 
                 if !bsdf_spectrum.is_black() {
                     let cos = emitter_sample.incident.dot(normal);
@@ -72,7 +73,7 @@ impl Integrator for Whitted {
                     }
                 }
             }
-        }
+        }*/
 
         let new_depth = depth + 1;
         if new_depth < self.max_depth {

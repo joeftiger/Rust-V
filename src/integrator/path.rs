@@ -1,5 +1,5 @@
 use crate::bxdf::BxDFType;
-use crate::integrator::Integrator;
+use crate::integrator::{direct_illumination, Integrator};
 use crate::objects::{ReceiverExt, SceneObject};
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
@@ -44,32 +44,11 @@ impl Integrator for Path {
 
             if bounce == 0 || specular {
                 if let SceneObject::Emitter(e) = &hit.object {
-                    bounce_illum += throughput * e.radiance(&outgoing, &normal);
+                    bounce_illum += e.emission(); //e.radiance(&outgoing, &normal);
                 }
             }
 
-            for light in &scene.lights {
-                let emitter_sample = light.sample(&hit.point, &sampler.get_2d());
-
-                if emitter_sample.pdf > 0.0
-                    && !emitter_sample.radiance.is_black()
-                    && emitter_sample.occlusion_tester.unoccluded(scene)
-                {
-                    let c =
-                        bsdf.evaluate(&normal, &emitter_sample.incident, &outgoing, BxDFType::ALL);
-
-                    if !c.is_black() {
-                        let cos = emitter_sample.incident.dot(normal);
-
-                        if cos != 0.0 {
-                            bounce_illum += light.emission()
-                                * c
-                                * emitter_sample.radiance
-                                * (cos.abs() / emitter_sample.pdf)
-                        }
-                    }
-                }
-            }
+            bounce_illum += direct_illumination(scene, sampler, intersection, bsdf);
 
             illumination += throughput * bounce_illum;
 
@@ -82,13 +61,11 @@ impl Integrator for Path {
                 specular = bxdf_sample.typ.is_specular();
                 let cos = bxdf_sample.incident.dot(normal);
 
-                throughput *= bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
+                if !specular && !bxdf_sample.typ.is_reflection() {
+                    throughput *= bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
+                }
 
-                let ray = offset_ray_towards(
-                    intersection.point,
-                    intersection.normal,
-                    bxdf_sample.incident,
-                );
+                let ray = offset_ray_towards(hit.point, hit.normal, bxdf_sample.incident);
                 match scene.intersect(&ray) {
                     Some(i) => hit = i,
                     None => break,

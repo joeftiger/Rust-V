@@ -125,7 +125,7 @@ where
         let occlusion_tester = OcclusionTester::between(*point, surface_sample.point);
         let incident = occlusion_tester.ray.direction;
 
-        let radiance = self.radiance(&incident, &surface_sample.normal);
+        let radiance = self.radiance(&-incident, &surface_sample.normal);
 
         EmitterSample::new(radiance, incident, surface_sample.pdf, occlusion_tester)
     }

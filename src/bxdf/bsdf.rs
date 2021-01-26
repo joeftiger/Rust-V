@@ -27,6 +27,10 @@ impl BSDF {
         self.bxdfs.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.size() == 0
+    }
+
     pub fn num_types(&self, t: BxDFType) -> usize {
         self.bxdfs.iter().filter(|bxdf| bxdf.is_type(t)).count()
     }

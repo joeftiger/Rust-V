@@ -118,11 +118,10 @@ fn create_emitter() -> SceneObject {
     let point = Point(position);
 
     let bsdf = BSDF::empty();
-    let emitter = Emitter::new(
-        point,
-        bsdf,
-        Spectrum::white() + Spectrum::green() + Spectrum::red(),
-    );
+    let mut emission = Spectrum::white() + Spectrum::green() + Spectrum::red();
+    emission /= 2.0;
+
+    let emitter = Emitter::new(point, bsdf, emission);
     SceneObject::new_emitter(emitter)
 }
 
@@ -138,7 +137,7 @@ fn create_scene() -> Scene {
             let (emitting, bsdf) = random_bsdf(color);
 
             let obj = if emitting {
-                let emitter = Emitter::new(sphere, bsdf, color * 5.0);
+                let emitter = Emitter::new(sphere, bsdf, color * 2.0);
                 SceneObject::new_emitter(emitter)
             } else {
                 let receiver = Receiver::new(sphere, bsdf);
@@ -151,7 +150,7 @@ fn create_scene() -> Scene {
 
     scene.add(ground());
     scene.add(sky());
-    scene.add(create_emitter());
+    // scene.add(create_emitter());
 
     scene
 }

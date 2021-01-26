@@ -27,6 +27,6 @@ impl Sampleable for Point {
     fn sample_surface(&self, point: &Vec3, _: &Vec2) -> SurfaceSample {
         let normal = self.0 - *point;
 
-        SurfaceSample::new(self.0, normal.normalized(), 1.0)
+        SurfaceSample::new(self.0, -normal.normalized(), 1.0)
     }
 }
