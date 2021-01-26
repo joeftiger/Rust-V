@@ -48,19 +48,19 @@ impl Color for Srgb {
     }
 
     fn white() -> Self {
-        Self::new([1.0, 1.0, 1.0])
+        Self::new([0.95, 0.95, 0.95])
     }
 
     fn red() -> Self {
-        Self::new([1.0, 0.0, 0.0])
+        Self::new([0.9, 0.0, 0.0])
     }
 
     fn green() -> Self {
-        Self::new([0.0, 1.0, 0.0])
+        Self::new([0.0, 0.9, 0.0])
     }
 
     fn blue() -> Self {
-        Self::new([0.0, 0.0, 1.0])
+        Self::new([0.0, 0.0, 0.9])
     }
 }
 
