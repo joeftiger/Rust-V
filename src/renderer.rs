@@ -256,10 +256,6 @@ impl Renderer {
         let sample = self.sampler.get_2d();
         let ray = self.camera.primary_ray(&pixel, &sample);
 
-        // if pixel.x == self.config.resolution.x / 2 && pixel.y == self.config.resolution.y / 2 {
-        //     println!("hi");
-        // }
-
         self.integrator.integrate(&self.scene, &ray, &*self.sampler)
     }
 
