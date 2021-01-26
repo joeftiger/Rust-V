@@ -48,7 +48,7 @@ impl Integrator for Path {
                 }
             }
 
-            bounce_illum += direct_illumination(scene, sampler, intersection, bsdf);
+            bounce_illum += direct_illumination(scene, sampler, &hit, bsdf);
 
             illumination += throughput * bounce_illum;
 
@@ -59,11 +59,14 @@ impl Integrator for Path {
                 }
 
                 specular = bxdf_sample.typ.is_specular();
-                let cos = bxdf_sample.incident.dot(normal);
+                let cos_abs = if specular {
+                    // division of cosine omitted in specular bxdfs
+                    1.0
+                } else {
+                    bxdf_sample.incident.dot(normal).abs()
+                };
 
-                if !specular && !bxdf_sample.typ.is_reflection() {
-                    throughput *= bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
-                }
+                throughput *= bxdf_sample.spectrum * (cos_abs / bxdf_sample.pdf);
 
                 let ray = offset_ray_towards(hit.point, hit.normal, bxdf_sample.incident);
                 match scene.intersect(&ray) {

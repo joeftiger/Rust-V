@@ -49,32 +49,6 @@ impl Integrator for Whitted {
 
         illumination += direct_illumination(scene, sampler, intersection, bsdf);
 
-        /*for light in &scene.lights {
-            let emitter_sample = light.sample(&point, &sampler.get_2d());
-
-            if emitter_sample.pdf > 0.0
-                && !emitter_sample.radiance.is_black()
-                && emitter_sample.occlusion_tester.unoccluded(scene)
-            {
-                let bsdf_spectrum = bsdf.evaluate(
-                    &normal,
-                    &emitter_sample.incident,
-                    &outgoing,
-                    BxDFType::ALL
-                );
-
-                if !bsdf_spectrum.is_black() {
-                    let cos = emitter_sample.incident.dot(normal);
-
-                    if cos != 0.0 {
-                        illumination += bsdf_spectrum
-                            * emitter_sample.radiance
-                            * (cos.abs() / emitter_sample.pdf)
-                    }
-                }
-            }
-        }*/
-
         let new_depth = depth + 1;
         if new_depth < self.max_depth {
             illumination += self.specular_reflection(scene, intersection, sampler, new_depth);

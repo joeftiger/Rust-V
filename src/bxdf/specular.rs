@@ -54,7 +54,7 @@ impl BxDF for SpecularReflection {
         let incident = bxdf_incident_to(outgoing);
 
         let cos_i = cos_theta(&incident);
-        let spectrum = self.fresnel.evaluate(cos_i) * self.r / cos_i.abs();
+        let spectrum = self.fresnel.evaluate(cos_i) * self.r;
 
         Some(BxDFSample::new(spectrum, incident, 1.0, self.get_type()))
     }
@@ -137,8 +137,7 @@ impl BxDF for SpecularTransmission {
             incident.normalize();
 
             let cos_i = cos_theta(&incident);
-            let mut spectrum =
-                self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i)) / cos_i.abs();
+            let mut spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
             if self.mode == TransportMode::Radiance {
                 spectrum *= (eta_i * eta_i) / (eta_t * eta_t);
             }
