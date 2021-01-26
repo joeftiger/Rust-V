@@ -48,7 +48,7 @@ impl Integrator for Path {
                 }
             }
 
-            bounce_illum += direct_illumination(scene, sampler, intersection, bsdf);
+            bounce_illum += direct_illumination(scene, sampler, &hit, bsdf);
 
             illumination += throughput * bounce_illum;
 
