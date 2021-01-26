@@ -2,7 +2,7 @@ use crate::{Boundable, Container, Cube, Intersectable, Intersection, Ray};
 use ultraviolet::Vec3;
 use utility::floats::BIG_EPSILON;
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone)]
 pub struct Aabb {
     pub min: Vec3,
     pub max: Vec3,
