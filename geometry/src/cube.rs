@@ -8,7 +8,7 @@ use utility::floats::BIG_EPSILON;
 /// # Summary
 /// A cube represents an axis-aligned bounding box in 3 dimension. It is very efficient using only
 /// 2 coordinates to represent such a box.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct Cube {
     pub min: Vec3,
     pub max: Vec3,
