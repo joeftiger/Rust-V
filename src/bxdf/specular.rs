@@ -3,7 +3,7 @@
 use crate::bxdf::fresnel::fresnel_dielectric;
 use crate::bxdf::{
     bxdf_incident_to, bxdf_normal, cos_theta, refract, BxDF, BxDFSample, BxDFType, Fresnel,
-    FresnelDielectric, TransportMode,
+    FresnelDielectric,
 };
 use crate::debug_utils::{is_normalized, within_01};
 use crate::Spectrum;
@@ -79,7 +79,6 @@ pub struct SpecularTransmission {
     eta_a: f32,
     eta_b: f32,
     fresnel: FresnelDielectric,
-    mode: TransportMode,
 }
 
 impl SpecularTransmission {
@@ -94,14 +93,13 @@ impl SpecularTransmission {
     ///
     /// # Returns
     /// * Self
-    pub fn new(t: Spectrum, eta_a: f32, eta_b: f32, mode: TransportMode) -> Self {
+    pub fn new(t: Spectrum, eta_a: f32, eta_b: f32) -> Self {
         let fresnel = FresnelDielectric::new(eta_a, eta_b);
         Self {
             t,
             eta_a,
             eta_b,
             fresnel,
-            mode,
         }
     }
 }
@@ -137,10 +135,7 @@ impl BxDF for SpecularTransmission {
             incident.normalize();
 
             let cos_i = cos_theta(&incident);
-            let mut spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
-            if self.mode == TransportMode::Radiance {
-                spectrum *= (eta_i * eta_i) / (eta_t * eta_t);
-            }
+            let spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
 
             Some(BxDFSample::new(spectrum, incident, 1.0, self.get_type()))
         } else {
@@ -169,7 +164,6 @@ pub struct FresnelSpecular {
     eta_a: f32,
     eta_b: f32,
     fresnel: FresnelDielectric,
-    mode: TransportMode,
 }
 
 impl FresnelSpecular {
@@ -185,7 +179,7 @@ impl FresnelSpecular {
     ///
     /// # Returns
     /// * Self
-    pub fn new(r: Spectrum, t: Spectrum, eta_a: f32, eta_b: f32, mode: TransportMode) -> Self {
+    pub fn new(r: Spectrum, t: Spectrum, eta_a: f32, eta_b: f32) -> Self {
         let fresnel = FresnelDielectric::new(eta_a, eta_b);
         Self {
             r,
@@ -193,7 +187,6 @@ impl FresnelSpecular {
             eta_a,
             eta_b,
             fresnel,
-            mode,
         }
     }
 }
@@ -240,11 +233,7 @@ impl BxDF for FresnelSpecular {
                 incident.normalize();
 
                 let cos_i = cos_theta(&incident);
-                let mut spectrum =
-                    self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
-                if self.mode == TransportMode::Radiance {
-                    spectrum *= (eta_i * eta_i) / (eta_t * eta_t);
-                }
+                let spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
 
                 let typ = BxDFType::SPECULAR | BxDFType::TRANSMISSION;
 
