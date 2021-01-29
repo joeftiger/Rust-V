@@ -12,16 +12,6 @@ use utility::floats::BIG_EPSILON;
 /// An emitter is a receiver that also emits light.
 pub trait EmitterExt: ReceiverExt {
     /// # Summary
-    /// Reinterprets this emitter as a receiver.
-    ///
-    /// # Safety
-    /// This should theoretically be safe, as the emitter is of type receiver anyway!
-    ///
-    /// # Returns
-    /// * self as a receiver
-    unsafe fn as_receiver(&self) -> &dyn ReceiverExt;
-
-    /// # Summary
     /// Returns the emission of this emitter.
     ///
     /// # Returns
@@ -108,10 +98,6 @@ impl<T> EmitterExt for Emitter<T>
 where
     T: Sampleable,
 {
-    unsafe fn as_receiver(&self) -> &dyn ReceiverExt {
-        self
-    }
-
     fn emission(&self) -> Spectrum {
         self.emission
     }
