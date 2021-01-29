@@ -163,7 +163,7 @@ pub fn cos_d_phi(a: &Vec3, b: &Vec3) -> f32 {
 #[inline]
 pub fn refract(v: Vec3, n: Vec3, eta: f32) -> Option<Vec3> {
     let cos_i = n.dot(v);
-    let k = 1.0 - eta * eta * (1.0 - cos_i * cos_i).max(0.0);
+    let k = 1.0 - eta * eta * (1.0 - cos_i * cos_i);
     if k < 0.0 {
         None
     } else {
