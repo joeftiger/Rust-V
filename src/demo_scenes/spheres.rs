@@ -3,8 +3,7 @@
 
 use crate::bxdf::refraction_index::{AIR, GLASS};
 use crate::bxdf::{
-    FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, TransportMode,
-    BSDF,
+    FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
 };
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY};
@@ -92,12 +91,7 @@ fn random_bsdf(color: Spectrum) -> (bool, BSDF) {
             let specular = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
             BSDF::new(vec![Box::new(specular)])
         } else {
-            let transmission = SpecularTransmission::new(
-                Spectrum::new_const(1.0),
-                AIR,
-                GLASS,
-                TransportMode::Importance,
-            );
+            let transmission = SpecularTransmission::new(Spectrum::new_const(1.0), AIR, GLASS);
             let reflection =
                 SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
             BSDF::new(vec![

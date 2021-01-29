@@ -2,7 +2,6 @@
 #![allow(unused_variables)]
 
 use crate::bxdf::refraction_index::{AIR, GLASS};
-use crate::bxdf::TransportMode::Radiance;
 use crate::bxdf::{
     FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
 };
@@ -56,7 +55,6 @@ fn sphere() -> SceneObject {
         Spectrum::new_const(1.0),
         AIR,
         GLASS,
-        Radiance,
     ));
     let reflection = Box::new(SpecularReflection::new(
         Spectrum::new_const(1.0),

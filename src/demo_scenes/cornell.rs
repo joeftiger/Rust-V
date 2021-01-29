@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
-use crate::bxdf::refraction_index::AIR;
-use crate::bxdf::TransportMode::Radiance;
+use crate::bxdf::refraction_index::{AIR, ICE};
 use crate::bxdf::{
     FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
 };
@@ -13,7 +12,7 @@ use crate::scene::Scene;
 use crate::Spectrum;
 use bitflags::_core::f32::consts::FRAC_PI_8;
 use color::Color;
-use geometry::{Cube, SimpleMesh, Sphere};
+use geometry::{Cube, Mesh, Sphere};
 use std::sync::Arc;
 use ultraviolet::{Rotor3, UVec2, Vec3};
 
@@ -64,14 +63,14 @@ fn create_bunny() -> SceneObject {
     let center_floor = Vec3::new(X_CENTER, FLOOR, Z_CENTER);
     let rotation = Rotor3::from_rotation_xz(-FRAC_PI_8);
 
-    let bunny = SimpleMesh::load(&model[0].mesh, scale, center_floor, rotation);
+    let bunny = Mesh::load(&model[0].mesh, scale, center_floor, rotation);
 
-    let reflection = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
-    let transmission = SpecularTransmission::new(Spectrum::new_const(1.0), AIR, AIR, Radiance);
+    // let reflection = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
+    let transmission = SpecularTransmission::new(Spectrum::new_const(1.0), AIR, ICE);
     // let specular = FresnelSpecular::new(Spectrum::new_const(1.0), Spectrum::new_const(1.0), 1.0, 1.0, Radiance);
 
     let bsdf = BSDF::new(vec![
-        Box::new(reflection),
+        // Box::new(reflection),
         Box::new(transmission),
         // Box::new(specular),
     ]);
