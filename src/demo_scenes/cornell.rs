@@ -1,16 +1,21 @@
 #![allow(dead_code)]
 
-use crate::bxdf::{FresnelNoOp, LambertianReflection, SpecularReflection, BSDF};
+use crate::bxdf::refraction_index::AIR;
+use crate::bxdf::TransportMode::Radiance;
+use crate::bxdf::{
+    FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
+};
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY};
 use crate::objects::Receiver;
 use crate::objects::{Emitter, SceneObject};
 use crate::scene::Scene;
 use crate::Spectrum;
+use bitflags::_core::f32::consts::FRAC_PI_8;
 use color::Color;
-use geometry::{Cube, Sphere};
+use geometry::{Cube, SimpleMesh, Sphere};
 use std::sync::Arc;
-use ultraviolet::{UVec2, Vec3};
+use ultraviolet::{Rotor3, UVec2, Vec3};
 
 const DIMENSION: f32 = 4.0;
 
@@ -50,6 +55,30 @@ fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
     let camera = PerspectiveCamera::new(position, target, Vec3::unit_y(), FOVY, resolution);
 
     Arc::new(camera)
+}
+
+fn create_bunny() -> SceneObject {
+    let file_name = "./meshes/bunny_simplified.obj";
+    let (model, _) = tobj::load_obj(file_name, true).expect("Could not load bunny file");
+    let scale = Vec3::one() * 15.0;
+    let center_floor = Vec3::new(X_CENTER, FLOOR, Z_CENTER);
+    let rotation = Rotor3::from_rotation_xz(-FRAC_PI_8);
+
+    let bunny = SimpleMesh::load(&model[0].mesh, scale, center_floor, rotation);
+
+    let reflection = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
+    let transmission = SpecularTransmission::new(Spectrum::new_const(1.0), AIR, AIR, Radiance);
+    // let specular = FresnelSpecular::new(Spectrum::new_const(1.0), Spectrum::new_const(1.0), 1.0, 1.0, Radiance);
+
+    let bsdf = BSDF::new(vec![
+        Box::new(reflection),
+        Box::new(transmission),
+        // Box::new(specular),
+    ]);
+
+    let receiver = Receiver::new(bunny, bsdf);
+
+    SceneObject::new_receiver(receiver)
 }
 
 fn create_sphere() -> SceneObject {
@@ -96,7 +125,7 @@ fn create_wall(wall: &Wall) -> SceneObject {
 }
 
 fn create_emitter() -> SceneObject {
-    let center = Vec3::new(X_CENTER, Y_CENTER, Z_CENTER);
+    let center = Vec3::new(X_CENTER, CEILING, Z_CENTER);
     let sphere = Sphere::new(center, RADIUS);
 
     let bsdf = BSDF::empty();
@@ -116,7 +145,8 @@ impl DemoScene for CornellScene {
             scene.add(create_wall(wall));
         });
 
-        scene.add(create_sphere());
+        // scene.add(create_sphere());
+        scene.add(create_bunny());
         scene.add(create_emitter());
 
         (scene, camera)

@@ -12,6 +12,7 @@ use ultraviolet::Vec3;
 use crate::debug_util::{in_range_incl, is_finite, is_normalized};
 pub use aabb::Aabb;
 pub use cube::Cube;
+pub use mesh::{Mesh, SimpleMesh, Triangle};
 pub use point::Point;
 pub use ray::Ray;
 pub use sphere::Sphere;
