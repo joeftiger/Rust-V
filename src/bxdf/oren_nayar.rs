@@ -4,7 +4,7 @@ use crate::Spectrum;
 use std::f32::consts::FRAC_1_PI;
 use ultraviolet::Vec3;
 use util::floats;
-use utility::floats::EPSILON;
+use utility::floats::{EPSILON, in_range_incl_left};
 
 /// # Summary
 /// The Oren-Nayar reflectance model describes rough opaque diffuse surfaces where each facet is lambertian (diffuse).
@@ -29,6 +29,8 @@ impl OrenNayar {
     /// # Returns
     /// * Self
     pub fn new(r: Spectrum, sigma: f32) -> Self {
+        debug_assert!(in_range_incl_left(sigma, 0.0, f32::INFINITY));
+
         let sigma = sigma.to_radians();
         let sigma2 = sigma * sigma;
         let a = 1.0 - (sigma2 / (2.0 * (sigma2 + 0.33)));
