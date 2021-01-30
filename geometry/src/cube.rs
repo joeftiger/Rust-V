@@ -120,9 +120,7 @@ impl Intersectable for Cube {
         let bias = 1.0 + BIG_EPSILON;
 
         let mut normal = direction * bias / half_size;
-        normal.x = (normal.x as i32) as f32;
-        normal.y = (normal.y as i32) as f32;
-        normal.z = (normal.z as i32) as f32;
+        normal.apply(|f| f as i32 as f32);
         normal.normalize();
 
         Some(Intersection::new(point, normal, t, *ray))
@@ -135,8 +133,8 @@ impl Intersectable for Cube {
         let vec_min = t1.min_by_component(t2);
         let vec_max = t1.max_by_component(t2);
 
-        let t_min = vec_min.x.max(vec_min.y).max(vec_min.z);
-        let t_max = vec_max.x.max(vec_max.y).max(vec_max.z);
+        let t_min = vec_min.component_max();
+        let t_max = vec_max.component_min();
 
         t_min <= t_max && (ray.contains(t_min) || ray.contains(t_max))
     }
