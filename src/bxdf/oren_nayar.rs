@@ -1,10 +1,8 @@
-use crate::bxdf;
 use crate::bxdf::{cos_phi, cos_theta, sin_phi, sin_theta, BxDF, BxDFType};
 use crate::Spectrum;
 use std::f32::consts::FRAC_1_PI;
 use ultraviolet::Vec3;
-use util::floats;
-use utility::floats::{EPSILON, in_range_incl_left};
+use utility::floats::{in_range_incl_left, EPSILON};
 
 /// # Summary
 /// The Oren-Nayar reflectance model describes rough opaque diffuse surfaces where each facet is lambertian (diffuse).
