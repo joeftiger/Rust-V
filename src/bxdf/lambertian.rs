@@ -11,7 +11,7 @@ pub struct LambertianReflection {
 
 impl LambertianReflection {
     /// # Summmary
-    /// Creates a new lambertian reflection
+    /// Creates a new lambertian reflection.
     ///
     /// # Arguments
     /// * `r` - The reflection spectrum
