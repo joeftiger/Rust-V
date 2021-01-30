@@ -25,8 +25,8 @@ impl Sampleable for Point {
     /// # Returns
     /// * An emitter sample with normal towards the `point`
     fn sample_surface(&self, point: &Vec3, _: &Vec2) -> SurfaceSample {
-        let normal = self.0 - *point;
+        let normal = *point - self.0;
 
-        SurfaceSample::new(self.0, -normal.normalized(), 1.0)
+        SurfaceSample::new(self.0, normal.normalized(), 1.0)
     }
 }
