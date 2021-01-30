@@ -1,17 +1,19 @@
 mod aabb;
 pub mod bvh;
 mod cube;
+mod cylinder;
 mod debug_util;
 mod mesh;
 mod point;
 pub mod ray;
-pub mod sphere;
+mod sphere;
 
 use ultraviolet::Vec3;
 
 use crate::debug_util::{in_range_incl, is_finite, is_normalized};
 pub use aabb::Aabb;
 pub use cube::Cube;
+pub use cylinder::Cylinder;
 pub use mesh::{Mesh, SimpleMesh, Triangle};
 pub use point::Point;
 pub use ray::Ray;
