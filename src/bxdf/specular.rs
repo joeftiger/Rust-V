@@ -76,8 +76,8 @@ impl BxDF for SpecularReflection {
 /// Describes a specular transmission.
 pub struct SpecularTransmission {
     t: Spectrum,
-    eta_a: f32,
-    eta_b: f32,
+    eta_i: f32,
+    eta_t: f32,
     fresnel: FresnelDielectric,
 }
 
@@ -93,12 +93,12 @@ impl SpecularTransmission {
     ///
     /// # Returns
     /// * Self
-    pub fn new(t: Spectrum, eta_a: f32, eta_b: f32) -> Self {
-        let fresnel = FresnelDielectric::new(eta_a, eta_b);
+    pub fn new(t: Spectrum, eta_i: f32, eta_t: f32) -> Self {
+        let fresnel = FresnelDielectric::new(eta_i, eta_t);
         Self {
             t,
-            eta_a,
-            eta_b,
+            eta_i,
+            eta_t,
             fresnel,
         }
     }
@@ -126,16 +126,16 @@ impl BxDF for SpecularTransmission {
 
         let entering = cos_theta(outgoing) > 0.0;
         let (eta_i, eta_t, normal) = if entering {
-            (self.eta_a, self.eta_b, bxdf_normal())
+            (self.eta_i, self.eta_t, bxdf_normal())
         } else {
-            (self.eta_b, self.eta_a, -bxdf_normal())
+            (self.eta_t, self.eta_i, -bxdf_normal())
         };
 
         if let Some(mut incident) = refract(*outgoing, normal, eta_i / eta_t) {
             incident.normalize();
 
             let cos_i = cos_theta(&incident);
-            let spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
+            let spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i.abs()));
 
             Some(BxDFSample::new(spectrum, incident, 1.0, self.get_type()))
         } else {
