@@ -25,7 +25,7 @@ impl DemoScene for DebugScene {
 
         // scene.add(ground()).add(sphere()).add(sphere_emitter());
         scene.add(ground());
-        scene.add(cylinder());
+        scene.add(sphere());
         scene.add(sphere_emitter());
         scene.add(create_emitter());
 
@@ -66,6 +66,10 @@ fn cylinder() -> SceneObject {
     SceneObject::new_receiver(receiver)
 }
 
+// fn cube() -> SceneObject {
+//     let min = Vec3::new
+// }
+
 fn sphere() -> SceneObject {
     let center = Vec3::new(-RADIUS * 1.25, RADIUS, 0.0);
     let sphere = Sphere::new(center, RADIUS);
@@ -75,9 +79,10 @@ fn sphere() -> SceneObject {
         AIR,
         GLASS,
     ));
-    let reflection = Box::new(SpecularReflection::new(
+    let reflection = Box::new(SpecularTransmission::new(
         Spectrum::new_const(1.0),
-        Box::new(FresnelNoOp),
+        AIR,
+        GLASS,
     ));
 
     let bsdf = BSDF::new(vec![
