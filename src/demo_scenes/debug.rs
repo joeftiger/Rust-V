@@ -10,7 +10,7 @@ use crate::demo_scenes::{DemoScene, FOVY};
 use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::scene::Scene;
 use crate::Spectrum;
-use geometry::{Cube, Point, Sphere};
+use geometry::{Cube, Cylinder, Point, Sphere};
 use std::sync::Arc;
 use ultraviolet::{UVec2, Vec3};
 
@@ -24,7 +24,9 @@ impl DemoScene for DebugScene {
         let mut scene = Scene::default();
 
         // scene.add(ground()).add(sphere()).add(sphere_emitter());
-        scene.add(ground()).add(sphere_emitter());
+        scene.add(ground());
+        scene.add(cylinder());
+        scene.add(sphere_emitter());
         // .add(create_emitter());
 
         let camera = create_camera(resolution);
@@ -44,6 +46,23 @@ fn ground() -> SceneObject {
 
     let receiver = Receiver::new(cube, bsdf);
 
+    SceneObject::new_receiver(receiver)
+}
+
+fn cylinder() -> SceneObject {
+    let bot = Vec3::new(-RADIUS * 1.25, 0.0, 0.0);
+    let top = bot + Vec3::unit_y() * RADIUS;
+
+    let cylinder = Cylinder::new((bot, top), RADIUS);
+
+    let reflection = Box::new(SpecularReflection::new(
+        Spectrum::new_const(1.0),
+        Box::new(FresnelNoOp),
+    ));
+
+    let bsdf = BSDF::new(vec![reflection]);
+
+    let receiver = Receiver::new(cylinder, bsdf);
     SceneObject::new_receiver(receiver)
 }
 
@@ -71,8 +90,8 @@ fn sphere() -> SceneObject {
 }
 
 fn sphere_emitter() -> SceneObject {
-    // let center = Vec3::new(RADIUS * 1.25, RADIUS, 0.0);
-    let center = Vec3::new(0.0, RADIUS, 0.0);
+    let center = Vec3::new(RADIUS * 1.25, RADIUS, 0.0);
+    // let center = Vec3::new(0.0, RADIUS, 0.0);
     let sphere = Sphere::new(center, RADIUS);
 
     let bsdf = BSDF::empty();

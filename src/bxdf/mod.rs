@@ -1,6 +1,7 @@
 mod bsdf;
 mod fresnel;
 mod lambertian;
+mod oren_nayar;
 pub mod refraction_index;
 mod specular;
 
@@ -8,6 +9,7 @@ pub use bsdf::BSDF;
 
 pub use fresnel::{Fresnel, FresnelDielectric, FresnelNoOp};
 pub use lambertian::{LambertianReflection, LambertianTransmission};
+pub use oren_nayar::OrenNayar;
 pub use specular::{FresnelSpecular, SpecularReflection, SpecularTransmission};
 
 use crate::debug_utils::{is_finite, is_normalized, within_01};

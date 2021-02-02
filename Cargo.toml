@@ -25,6 +25,8 @@ indicatif = ""
 num_cpus = ""
 # live image of rendering
 show-image = { version = "", features = ["image", "save"], optional = true }
+# .obj files
+tobj = ""
 # linear algebra
 ultraviolet = { version = "", features= ["int"] }
 
