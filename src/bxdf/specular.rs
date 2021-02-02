@@ -233,8 +233,7 @@ impl BxDF for FresnelSpecular {
                 incident.normalize();
 
                 let cos_i = cos_theta(&incident);
-                let spectrum =
-                    self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
+                let spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
 
                 let typ = BxDFType::SPECULAR | BxDFType::TRANSMISSION;
 
