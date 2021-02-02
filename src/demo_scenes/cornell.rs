@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 
 use crate::bxdf::refraction_index::{AIR, ICE};
-use crate::bxdf::{FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF};
+use crate::bxdf::{FresnelNoOp, FresnelSpecular, BSDF, OrenNayar, SpecularReflection, SpecularTransmission};
 use crate::camera::{Camera, PerspectiveCamera};
-use crate::demo_scenes::{DemoScene, FOVY};
+use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
 use crate::objects::Receiver;
 use crate::objects::{Emitter, SceneObject};
 use crate::scene::Scene;
@@ -55,7 +55,7 @@ fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
 }
 
 fn create_bunny() -> SceneObject {
-    let file_name = "./meshes/bunny.obj";
+    let file_name = "./meshes/bunny_simplified.obj";
     let (model, _) = tobj::load_obj(file_name, true).expect("Could not load bunny file");
     let scale = Vec3::one() * 15.0;
     let center_floor = Vec3::new(X_CENTER, FLOOR, Z_CENTER);
@@ -66,13 +66,13 @@ fn create_bunny() -> SceneObject {
     let reflection = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
     let transmission = SpecularTransmission::new(Spectrum::new_const(1.0), AIR, ICE);
     // let specular = FresnelSpecular::new(Spectrum::new_const(1.0), Spectrum::new_const(1.0), AIR, ICE);
-    let diffuse = LambertianReflection::new(Spectrum::new_const(0.5));
+    // let diffuse = LambertianReflection::new(Spectrum::new_const(0.5));
 
     let bsdf = BSDF::new(vec![
         Box::new(reflection),
         Box::new(transmission),
         // Box::new(specular),
-        Box::new(diffuse),
+        // Box::new(diffuse),
     ]);
 
     let receiver = Receiver::new(bunny, bsdf);
@@ -116,7 +116,7 @@ fn create_wall(wall: &Wall) -> SceneObject {
         Wall::Right => Spectrum::green() * 0.75,
     };
 
-    let lambertian = Box::new(LambertianReflection::new(spectrum));
+    let lambertian = Box::new(OrenNayar::new(spectrum, SIGMA));
     let bsdf = BSDF::new(vec![lambertian]);
 
     let receiver = Receiver::new(cube, bsdf);

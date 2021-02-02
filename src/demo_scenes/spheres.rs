@@ -144,7 +144,7 @@ fn create_scene() -> Scene {
 
     scene.add(ground());
     scene.add(sky());
-    // scene.add(create_emitter());
+    scene.add(create_emitter());
 
     scene
 }

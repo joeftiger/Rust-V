@@ -27,7 +27,7 @@ impl DemoScene for DebugScene {
         scene.add(ground());
         scene.add(cylinder());
         scene.add(sphere_emitter());
-        // .add(create_emitter());
+        scene.add(create_emitter());
 
         let camera = create_camera(resolution);
 
@@ -101,7 +101,7 @@ fn sphere_emitter() -> SceneObject {
 }
 
 fn create_emitter() -> SceneObject {
-    let position = Vec3::new(0.0, 10.0, 0.0);
+    let position = Vec3::new(0.0, 200.0, 0.0);
     let point = Point(position);
 
     let bsdf = BSDF::empty();
