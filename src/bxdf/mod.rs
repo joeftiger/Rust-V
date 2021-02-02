@@ -164,12 +164,14 @@ pub fn cos_d_phi(a: &Vec3, b: &Vec3) -> f32 {
 
 #[inline]
 pub fn refract(v: Vec3, n: Vec3, eta: f32) -> Option<Vec3> {
-    let cos_i = n.dot(v);
-    let k = 1.0 - eta * eta * (1.0 - cos_i * cos_i);
-    if k < 0.0 {
+    let cos_i = -n.dot(v);
+    let sin_t2 = eta * eta * (1.0 - cos_i * cos_i);
+    if sin_t2 > 1.0 {
         None
     } else {
-        Some(v * eta - (eta * cos_i * k.sqrt()) * n)
+        let cos_t = f32::sqrt(1.0 - sin_t2);
+
+        Some(v * eta + (eta * cos_i - cos_t) * n)
     }
 }
 
