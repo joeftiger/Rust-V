@@ -212,36 +212,34 @@ impl BxDF for FresnelSpecular {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
 
-        let cos_i = cos_theta(outgoing);
-        let f = fresnel_dielectric(cos_i, self.eta_i, self.eta_t);
+        let cos_outgoing = cos_theta(outgoing);
+        let f = fresnel_dielectric(cos_outgoing, self.eta_i, self.eta_t);
 
-        if f < sample.x {
-            let incident = bxdf_incident_to(outgoing);
-            let typ = BxDFType::REFLECTION | BxDFType::SPECULAR;
-            let spectrum = self.r * (f / cos_i.abs());
-
-            Some(BxDFSample::new(spectrum, incident, f, typ))
+        let entering = cos_theta(outgoing) > 0.0;
+        let (eta_i, eta_t, normal) = if entering {
+            (self.eta_i, self.eta_t, bxdf_normal())
         } else {
-            let entering = cos_theta(outgoing) > 0.0;
-            let (eta_i, eta_t, normal) = if entering {
-                (self.eta_i, self.eta_t, bxdf_normal())
-            } else {
-                (self.eta_t, self.eta_i, -bxdf_normal())
-            };
+            (self.eta_t, self.eta_i, -bxdf_normal())
+        };
 
-            if let Some(mut incident) = refract(*outgoing, normal, eta_i / eta_t) {
-                incident.normalize();
+        if let Some(incident) = refract(*outgoing, normal, eta_i / eta_t) {
+            if f < sample.x {
+                // let incident = incident.normalized();
 
                 let cos_i = cos_theta(&incident);
                 let spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
 
                 let typ = BxDFType::SPECULAR | BxDFType::TRANSMISSION;
 
-                Some(BxDFSample::new(spectrum, incident, 1.0 - f, typ))
-            } else {
-                None
+                return Some(BxDFSample::new(spectrum, incident, 1.0 - f, typ));
             }
         }
+
+        let incident = bxdf_incident_to(outgoing);
+        let typ = BxDFType::REFLECTION | BxDFType::SPECULAR;
+        let spectrum = self.r * f;
+
+        Some(BxDFSample::new(spectrum, incident, f, typ))
     }
 
     /// # Summary
