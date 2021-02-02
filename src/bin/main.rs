@@ -38,15 +38,6 @@ fn create_config() -> MainConfig {
     let yaml = load_yaml!("cli-live.yml");
 
     let app_matches = App::from_yaml(yaml).get_matches();
-    // let demo = if let Some(spheres) = app_matches.subcommand_matches(SPHERE_SCENE) {
-    //     (spheres, DemoType::SphereScene)
-    // } else if let Some(cornell) = app_matches.subcommand_matches(CORNELL_SCENE) {
-    //     (cornell, DemoType::CornellScene)
-    // } else if let Some(debug) = app_matches.subcommand_matches(DEBUG_SCENE) {
-    //     (debug, DemoType::DebugScene)
-    // } else {
-    //     panic!("Currently we only support the subcommands (spheres, cornell, debug)!");
-    // };
 
     let (demo_type, matches) = match app_matches.subcommand() {
         (name, Some(m)) => {
@@ -59,11 +50,6 @@ fn create_config() -> MainConfig {
         }
         (_, None) => panic!("No subcommand given"),
     };
-    // let (demo_type_name, Some(matches)) = app_matches.subcommand();
-    // let demo_type: DemoType = match demo_type_name.try_into() {
-    //     Ok(typ) => typ,
-    //     Err(err) => panic!("Cannot parse demo type: {}", err),
-    // };
 
     let verbose = matches.is_present(VERBOSE);
 
