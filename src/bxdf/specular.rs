@@ -161,8 +161,8 @@ impl BxDF for SpecularTransmission {
 pub struct FresnelSpecular {
     r: Spectrum,
     t: Spectrum,
-    eta_a: f32,
-    eta_b: f32,
+    eta_i: f32,
+    eta_t: f32,
     fresnel: FresnelDielectric,
 }
 
@@ -179,13 +179,13 @@ impl FresnelSpecular {
     ///
     /// # Returns
     /// * Self
-    pub fn new(r: Spectrum, t: Spectrum, eta_a: f32, eta_b: f32) -> Self {
-        let fresnel = FresnelDielectric::new(eta_a, eta_b);
+    pub fn new(r: Spectrum, t: Spectrum, eta_i: f32, eta_t: f32) -> Self {
+        let fresnel = FresnelDielectric::new(eta_i, eta_t);
         Self {
             r,
             t,
-            eta_a,
-            eta_b,
+            eta_i,
+            eta_t,
             fresnel,
         }
     }
@@ -213,7 +213,7 @@ impl BxDF for FresnelSpecular {
         debug_assert!(within_01(sample));
 
         let cos_i = cos_theta(outgoing);
-        let f = fresnel_dielectric(cos_i, self.eta_a, self.eta_b);
+        let f = fresnel_dielectric(cos_i, self.eta_i, self.eta_t);
 
         if f < sample.x {
             let incident = bxdf_incident_to(outgoing);
@@ -224,16 +224,17 @@ impl BxDF for FresnelSpecular {
         } else {
             let entering = cos_theta(outgoing) > 0.0;
             let (eta_i, eta_t, normal) = if entering {
-                (self.eta_a, self.eta_b, bxdf_normal())
+                (self.eta_i, self.eta_t, bxdf_normal())
             } else {
-                (self.eta_b, self.eta_a, -bxdf_normal())
+                (self.eta_t, self.eta_i, -bxdf_normal())
             };
 
             if let Some(mut incident) = refract(*outgoing, normal, eta_i / eta_t) {
                 incident.normalize();
 
                 let cos_i = cos_theta(&incident);
-                let spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
+                let spectrum =
+                    self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i.abs()));
 
                 let typ = BxDFType::SPECULAR | BxDFType::TRANSMISSION;
 
