@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use crate::Spectrum;
+use color::Color;
 use std::mem::swap;
 use utility::floats::fast_clamp;
 

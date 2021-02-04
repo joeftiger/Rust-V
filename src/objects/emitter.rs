@@ -4,6 +4,7 @@ use crate::debug_utils::{is_finite, is_normalized, within_01};
 use crate::objects::receiver::ReceiverExt;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
+use color::Color;
 use geometry::{Boundable, Cube, Geometry, Intersectable, Intersection, Ray};
 use ultraviolet::{Vec2, Vec3};
 use utility::floats::BIG_EPSILON;

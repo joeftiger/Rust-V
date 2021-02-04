@@ -9,7 +9,7 @@ use crate::objects::{Emitter, SceneObject};
 use crate::scene::Scene;
 use crate::Spectrum;
 use bitflags::_core::f32::consts::FRAC_PI_8;
-use color::Color;
+use color::{Color, Colors};
 use geometry::{Cube, Mesh, Sphere};
 use std::sync::Arc;
 use ultraviolet::{Rotor3, UVec2, Vec3};
@@ -62,23 +62,14 @@ fn create_bunny() -> SceneObject {
     let rotation = Rotor3::from_rotation_xz(-FRAC_PI_8);
 
     let bunny = Mesh::load(&model[0].mesh, scale, center_floor, rotation);
-
-    // let reflection = SpecularReflection::new(Spectrum::new_const(2.0), Box::new(FresnelNoOp));
-    // let transmission = SpecularTransmission::new(Spectrum::new_const(1.0), AIR, GLASS);
     let specular = FresnelSpecular::new(
         Spectrum::new_const(1.0),
         Spectrum::new_const(1.0),
         AIR,
         GLASS,
     );
-    // let diffuse = LambertianReflection::new(Spectrum::new_const(0.5));
 
-    let bsdf = BSDF::new(vec![
-        // Box::new(reflection),
-        // Box::new(transmission),
-        Box::new(specular),
-        // Box::new(diffuse),
-    ]);
+    let bsdf = BSDF::new(vec![Box::new(specular)]);
 
     let receiver = Receiver::new(bunny, bsdf);
 
@@ -155,8 +146,8 @@ impl DemoScene for CornellScene {
             scene.add(create_wall(wall));
         });
 
-        // scene.add(create_sphere());
-        scene.add(create_bunny());
+        scene.add(create_sphere());
+        // scene.add(create_bunny());
         scene.add(create_emitter());
 
         (scene, camera)

@@ -1,7 +1,6 @@
 use crate::*;
 use image::Rgb;
 use ultraviolet::Vec3;
-use utility::floats;
 
 color!(
     Srgb => f32, f32, 3
@@ -16,51 +15,47 @@ impl Srgb {
     pub fn to_vec3(&self) -> Vec3 {
         Vec3::from(self.data)
     }
+
+    pub fn to_xyz(&self) -> Xyz {
+        Xyz::from(srgbs_to_linear(srgb_to_xyz_mat() * self.to_vec3()))
+    }
 }
 
-impl Color for Srgb {
-    fn is_black(&self) -> bool {
-        floats::approx_zero_ar(&self.data)
-    }
-
-    fn clamp(&self, min: f32, max: f32) -> Self {
-        self.clamp(min, max)
-    }
-
-    fn has_nans(&self) -> bool {
-        self.data.iter().all(|value| !value.is_nan())
-    }
-
-    fn sqrt(&self) -> Self {
-        Self::sqrt(self)
-    }
-
-    fn to_rgb(&self) -> Srgb {
-        *self
-    }
-
-    fn to_xyz(&self) -> Xyz {
-        Xyz::from(srgb_to_xyz_mat() * srgbs_to_linear(self.to_vec3()))
-    }
-
+impl Colors for Srgb {
     fn black() -> Self {
-        Self::new([0.0, 0.0, 0.0])
+        Self::new_const(0.0)
+    }
+
+    fn grey() -> Self {
+        Self::new_const(0.5)
     }
 
     fn white() -> Self {
-        Self::new([0.95, 0.95, 0.95])
+        Self::new_const(1.0)
     }
 
     fn red() -> Self {
-        Self::new([0.9, 0.0, 0.0])
+        Self::new([1.0, 0.0, 0.0])
+    }
+
+    fn yellow() -> Self {
+        Self::new([1.0, 1.0, 0.0])
     }
 
     fn green() -> Self {
-        Self::new([0.0, 0.9, 0.0])
+        Self::new([0.0, 1.0, 0.0])
+    }
+
+    fn cyan() -> Self {
+        Self::new([0.0, 1.0, 1.0])
     }
 
     fn blue() -> Self {
-        Self::new([0.0, 0.0, 0.9])
+        Self::new([0.0, 0.0, 1.0])
+    }
+
+    fn pink() -> Self {
+        Self::new([1.0, 0.0, 1.0])
     }
 }
 

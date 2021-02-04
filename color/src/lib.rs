@@ -1,10 +1,8 @@
 use std::iter::Sum;
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign};
 
-use image::Rgb;
 use std::fmt::Debug;
 use ultraviolet::{Mat3, Vec3};
-use utility::floats;
 
 pub mod cie;
 mod spectrum;
@@ -29,32 +27,63 @@ macro_rules! color {
                     debug_assert!(data.iter().all(|f| !f.is_nan()));
                     Self { data }
                 }
+            }
 
-                pub fn new_const(data: $storage) -> Self {
-                    Self::new([data; $size])
+            impl Color<$storage> for $name {
+                fn new_const(value: $storage) -> Self {
+                    Self::new([value; $size])
                 }
 
-                pub fn len(&self) -> usize {
+                fn len(&self) -> usize {
                     self.data.len()
                 }
 
-                pub fn sqrt(&self) -> Self {
+                fn is_black(&self) -> bool {
+                    self.data.iter().all(|value| *value == 0.0)
+                }
+
+                fn clamp(&self, min: $storage, max: $storage) -> Self {
+                    debug_assert!(min < max);
+
+                    let mut data = self.data;
+                    data.iter_mut().for_each(|v| if *v < min {
+                        *v = min
+                    } else if *v > max {
+                        *v = max
+                    });
+
+                    Self::new(data)
+                }
+
+                fn sqrt(&self) -> Self {
                     let mut data = self.data;
                     data.iter_mut().for_each(|f| *f = f.sqrt());
 
                     Self::new(data)
                 }
 
-                pub fn lerp(&self, other: &Self, t: f32) -> Self {
-                    *self * (1.0 - t) + *other * t
-                }
+                fn lerp(&self, other: &Self, t: $storage) -> Self {
+                    let mut data = [Default::default(); $size];
 
-                /// Clamps the color values between min and max.
-                pub fn clamp(&self, min: f32, max: f32) -> Self {
-                    let mut data = self.data;
-                    floats::fast_clamp_ar(&mut data, min, max);
+                    for i in 0..$size {
+                        data[i] = self.data[i] * (1.0 - t) + other.data[i] * t;
+                    }
 
                     Self::new(data)
+                }
+
+                fn component_min(&self) -> $storage {
+                    let mut max = $storage::MAX;
+                    self.data.iter().for_each(|c| if *c < max { max = *c; });
+
+                    max
+                }
+
+                fn component_max(&self) -> $storage {
+                    let mut max = $storage::MIN;
+                    self.data.iter().for_each(|c| if *c > max { max = *c; });
+
+                    max
                 }
             }
 
@@ -218,40 +247,52 @@ macro_rules! color {
                     iter.fold($name::default(), |a, b| a + b)
                 }
             }
-
-            impl Into<$name> for f32 {
-                fn into(self) -> $name {
-                    $name::new_const(self)
-                }
-            }
         )+
     }
 }
 
 /// # Summary
 /// A trait for colors. Allows arithmetic operations to be performed and gives utility functions
-/// like `is_black()` or `white()`.
-pub trait Color:
+/// like `is_black()`.
+#[allow(clippy::len_without_is_empty)]
+pub trait Color<T = f32>:
     Add
     + AddAssign
     + Sub
     + SubAssign
     + Mul
     + MulAssign
-    + Mul<f32>
-    + MulAssign<f32>
+    + Mul<T>
+    + MulAssign<T>
     + Div
     + DivAssign
-    + Div<f32>
-    + DivAssign<f32>
+    + Div<T>
+    + DivAssign<T>
     + PartialEq
+    + Eq
     + Index<usize>
     + IndexMut<usize>
+    + Default
     + Debug
-    + Into<Rgb<u8>>
-    + Into<Rgb<u16>>
     + Sum
 {
+    /// # Summary
+    /// Creates a new color with the given value assigned on the whole color spectrum.
+    ///
+    /// # Argumetns
+    /// * `value` - The value to assign
+    ///
+    /// # Returns
+    /// * Self
+    fn new_const(value: T) -> Self;
+
+    /// # Summary
+    /// Returns the length (number of entries) of this color.
+    ///
+    /// # Returns
+    /// * The length
+    fn len(&self) -> usize;
+
     /// # Summary
     /// Returns whether this color is black.
     ///
@@ -274,14 +315,7 @@ pub trait Color:
     ///
     /// # Returns
     /// * Clamped self
-    fn clamp(&self, min: f32, max: f32) -> Self;
-
-    /// # Summary
-    /// Returns whether any value in this color is `NaN`.
-    ///
-    /// # Returns
-    /// * Whether this color has `NaN`s
-    fn has_nans(&self) -> bool;
+    fn clamp(&self, min: T, max: T) -> Self;
 
     /// # Summary
     /// Returns the square-root of this color.
@@ -291,55 +325,63 @@ pub trait Color:
     fn sqrt(&self) -> Self;
 
     /// # Summary
-    /// Converts this color to `Srgb` space.
+    /// Linearly interpolates this color with the other one by parameter `t`.
+    ///
+    /// # Constraints
+    /// * `t` - Should be in range `[0, 1]`.
+    ///
+    /// # Arguments
+    /// * `other` - The other other to lerp to
+    /// * `t` - The interpolation parameter
     ///
     /// # Returns
-    /// * Self as `Srgb`
-    fn to_rgb(&self) -> Srgb;
+    /// * Lerped Self
+    fn lerp(&self, other: &Self, t: T) -> Self;
 
     /// # Summary
-    /// Converts this color to `Srgb` space.
+    /// Returns the minimum component value.
     ///
     /// # Returns
-    /// * Self as `Srgb`
-    fn to_xyz(&self) -> Xyz {
-        self.to_rgb().to_xyz()
-    }
+    /// * Component minimum
+    fn component_min(&self) -> T;
 
     /// # Summary
-    /// Returns black of this color space.
+    /// Returns the maximum component value.
     ///
     /// # Returns
-    /// * Black
+    /// * Component maximum
+    fn component_max(&self) -> T;
+}
+
+/// # Summary
+/// A trait allowing colors to return known colors:
+///  * black
+///  * grey
+///  * white
+///  * red
+///  * yellow
+///  * green
+///  * cyan
+///  * blue
+///  * pink
+pub trait Colors<T = f32>: Color<T> {
     fn black() -> Self;
 
-    /// # Summary
-    /// Returns white of this color space.
-    ///
-    /// # Returns
-    /// * White
+    fn grey() -> Self;
+
     fn white() -> Self;
 
-    /// # Summary
-    /// Returns red of this color space.
-    ///
-    /// # Returns
-    /// * Red
     fn red() -> Self;
 
-    /// # Summary
-    /// Returns greeen of this color space.
-    ///
-    /// # Returns
-    /// * Green
+    fn yellow() -> Self;
+
     fn green() -> Self;
 
-    /// # Summary
-    /// Returns blue of this color space.
-    ///
-    /// # Returns
-    /// * Blue
+    fn cyan() -> Self;
+
     fn blue() -> Self;
+
+    fn pink() -> Self;
 }
 
 /// # Summary
@@ -348,6 +390,7 @@ pub trait Color:
 /// # Returns
 /// * Conversion matrix
 #[allow(clippy::excessive_precision)]
+#[inline(always)]
 pub fn xyz_to_srgb_mat() -> Mat3 {
     // https://en.wikipedia.org/wiki/SRGB#The_forward_transformation_(CIE_XYZ_to_sRGB)
     Mat3::new(
@@ -363,6 +406,7 @@ pub fn xyz_to_srgb_mat() -> Mat3 {
 /// # Returns
 /// * Conversion matrix
 #[allow(clippy::excessive_precision)]
+#[inline(always)]
 pub fn srgb_to_xyz_mat() -> Mat3 {
     // https://en.wikipedia.org/wiki/SRGB#The_reverse_transformation
     Mat3::new(
@@ -384,6 +428,7 @@ pub fn srgb_to_xyz_mat() -> Mat3 {
 /// # Returns
 /// * Linear `Srgb` value
 #[allow(clippy::excessive_precision)]
+#[inline(always)]
 pub fn srgb_to_linear(val: f32) -> f32 {
     assert!(val >= 0.0);
     assert!(val <= 1.0);
@@ -406,6 +451,7 @@ pub fn srgb_to_linear(val: f32) -> f32 {
 ///
 /// # Returns
 /// * Linear `Srgb` vector
+#[inline(always)]
 pub fn srgbs_to_linear(val: Vec3) -> Vec3 {
     val.map(srgb_to_linear)
 }
@@ -422,6 +468,7 @@ pub fn srgbs_to_linear(val: Vec3) -> Vec3 {
 /// # Returns
 /// * `Srgb` value
 #[allow(clippy::excessive_precision)]
+#[inline(always)]
 pub fn linear_to_srgb(val: f32) -> f32 {
     assert!(val >= 0.0);
     assert!(val <= 1.0);
@@ -444,6 +491,7 @@ pub fn linear_to_srgb(val: f32) -> f32 {
 ///
 /// # Returns
 /// * `Srgb` vector
+#[inline(always)]
 pub fn linears_to_srgb(val: Vec3) -> Vec3 {
     val.map(linear_to_srgb)
 }

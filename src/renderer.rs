@@ -5,6 +5,7 @@ use crate::integrator::Integrator;
 use crate::sampler::Sampler;
 use crate::scene::Scene;
 use crate::Spectrum;
+use color::Color;
 use image::{ImageBuffer, Rgb};
 use indicatif::ProgressBar;
 use indicatif::ProgressStyle;

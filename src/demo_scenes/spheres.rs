@@ -10,7 +10,7 @@ use crate::demo_scenes::{DemoScene, FOVY};
 use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::scene::Scene;
 use crate::Spectrum;
-use color::Color;
+use color::{Color, Colors};
 use geometry::{Cube, Point, Sphere};
 use std::sync::Arc;
 use ultraviolet::{UVec2, Vec3};

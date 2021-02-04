@@ -7,6 +7,7 @@ use crate::bxdf::{
 };
 use crate::debug_utils::{is_normalized, within_01};
 use crate::Spectrum;
+use color::Color;
 use ultraviolet::{Vec2, Vec3};
 
 /// # Summary

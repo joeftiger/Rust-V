@@ -4,7 +4,7 @@ use crate::objects::{ReceiverExt, SceneObject};
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
-use color::Color;
+use color::{Color, Colors};
 use geometry::offset_ray_towards;
 
 pub struct Path {

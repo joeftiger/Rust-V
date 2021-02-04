@@ -3,7 +3,7 @@ use crate::objects::{ReceiverExt, SceneObject};
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
-use color::Color;
+use color::Colors;
 
 /// # Summary
 /// The Whitted integrator is a common integrator following specular reflection/transmission recursively.

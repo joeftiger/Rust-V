@@ -29,7 +29,7 @@ use crate::objects::ReceiverExt;
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
-use color::Color;
+use color::{Color, Colors};
 use geometry::{offset_ray_towards, Ray};
 
 /// # Summary
