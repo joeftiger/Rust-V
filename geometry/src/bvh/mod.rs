@@ -11,7 +11,6 @@ use crate::Geometry;
 pub use bottom_up_bvh::BottomUpBVH;
 use ultraviolet::Vec3;
 
-/// # Summary
 /// Inverse linear interpolation.
 ///
 /// # Arguments
@@ -25,7 +24,6 @@ fn inv_lerp(min: Vec3, max: Vec3, val: Vec3) -> Vec3 {
     (val - min) / (max - min)
 }
 
-/// # Summary
 /// Expands a 10-bit integer into 30 bits by inserting 2 zeros after each bit.
 ///
 /// # Constraints
@@ -46,7 +44,6 @@ fn expand_bits(mut bits: u32) -> u32 {
     bits
 }
 
-/// # Summary
 /// Calculates a 30-bit morton code for the given point located within the unit cube `0[0, 1]`.
 ///
 /// # Constraints
@@ -73,7 +70,6 @@ fn morton_3d(v: Vec3) -> u32 {
     (x << 2) + (y << 1) + z
 }
 
-/// # Summary
 /// Computes the morton codes for the centers of the given boundables.
 ///
 /// # Arguments

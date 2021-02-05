@@ -3,7 +3,6 @@ use crate::Spectrum;
 use std::f32::consts::FRAC_1_PI;
 use ultraviolet::Vec3;
 
-/// # Summary
 /// The lambertian reflection reflects equally into all directions of the hemisphere.
 pub struct LambertianReflection {
     r: Spectrum,
@@ -33,14 +32,12 @@ impl BxDF for LambertianReflection {
     }
 }
 
-/// # Summary
 /// The lambertian transmission transmits equally into all directions of the hemisphere.
 pub struct LambertianTransmission {
     t: Spectrum,
 }
 
 impl LambertianTransmission {
-    /// # Summary
     /// Creates a new lambertian transmission.
     ///
     /// # Arguments

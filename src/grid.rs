@@ -1,7 +1,6 @@
 use std::ops::Range;
 use ultraviolet::UVec2;
 
-/// # Summary
 /// A block structure in 2D describing ranges of `u32`.
 pub struct GridBlock {
     pub x: Range<u32>,
@@ -9,7 +8,6 @@ pub struct GridBlock {
 }
 
 impl GridBlock {
-    /// # Summary
     /// Creates a new block.
     ///
     /// # Arguments
@@ -22,7 +20,6 @@ impl GridBlock {
         Self { x, y }
     }
 
-    /// # Summary
     /// Applies the `prod` function to this block, merging `x` and `y` ranges into all possible
     /// `UVec2` vectors.
     ///
@@ -36,7 +33,6 @@ impl GridBlock {
     }
 }
 
-/// # Summary
 /// A grid contains blocks with ranges in 2D.
 /// The blocks are sorted the following way:
 /// * left to right
@@ -49,7 +45,6 @@ pub struct Grid {
 }
 
 impl Grid {
-    /// # Summary
     /// Creates a new grid.
     ///
     /// # Arguments

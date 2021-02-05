@@ -7,7 +7,6 @@ color!(
 );
 
 impl Xyz {
-    /// # Summary
     /// Converts itself to a vector.
     ///
     /// # Returns

@@ -1,17 +1,14 @@
 use crate::bxdf::BSDF;
 use geometry::{Boundable, Cube, Geometry, Intersectable, Intersection, Ray};
 
-/// # Summary
 /// A receiver is a geometry that also has a bsdf.
 pub trait ReceiverExt: Geometry + Send + Sync {
-    /// # Summary
     /// Returns the geometry of this receiver.
     ///
     /// # Returns
     /// * A geometry
     fn geometry(&self) -> &dyn Geometry;
 
-    /// # Summary
     /// Returns the BSDF of this receiver.
     ///
     /// # Returns
@@ -19,7 +16,6 @@ pub trait ReceiverExt: Geometry + Send + Sync {
     fn bsdf(&self) -> &BSDF;
 }
 
-/// # Summary
 /// A receiver consists of a geometry and a BSDF.
 pub struct Receiver<T> {
     geometry: T,
@@ -27,7 +23,6 @@ pub struct Receiver<T> {
 }
 
 impl<T> Receiver<T> {
-    /// # Summary
     /// Creates a new receiver.
     ///
     /// # Arguments

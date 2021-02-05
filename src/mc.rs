@@ -16,7 +16,6 @@ pub fn sample_vector_from_angle(direction: Vec3, sin_theta_max: f32, sample: &Ve
     (direction + right + forward).normalized()
 }
 
-/// # Summary
 /// Samples a non-concentric mapped point from the given random sample.
 ///
 /// # Constraints
@@ -37,7 +36,6 @@ pub fn sample_unit_disk(sample: &Vec2) -> Vec2 {
     sample.y * Vec2::new(cos, sin)
 }
 
-/// # Summary
 /// Samples a concentric mapped point from the given random sample.
 ///
 /// # Constraints
@@ -72,7 +70,6 @@ pub fn sample_unit_disk_concentric(sample: &Vec2) -> Vec2 {
     Vec2::new(r * cos, r * sin)
 }
 
-/// # Summary
 /// Samples a hemisphere with a cosine distribution described by the sample.
 ///
 /// # Constraints
@@ -92,7 +89,6 @@ pub fn sample_unit_hemisphere(sample: &Vec2) -> Vec3 {
     Vec3::new(d.x, y, d.y)
 }
 
-/// # Summary
 /// Samples a sphere with a uniform distribution described by the sample.
 ///
 /// # Constraints
@@ -117,7 +113,6 @@ pub fn sample_unit_sphere(sample: &Vec2) -> Vec3 {
     Vec3::new(x, y, z)
 }
 
-/// # Summary
 /// Samples a cone around the `(0, 1, 0)` axis with a uniform distribution described by the sample.
 ///
 /// # Constraints
@@ -139,7 +134,6 @@ pub fn sample_cone(sample: &Vec2, cos_theta_max: f32) -> Vec3 {
     spherical_to_cartesian_trig(sin_theta, cos_theta, sin_phi, cos_phi)
 }
 
-/// # Summary
 /// Samples a cone around the `frame.e2` axis with a uniform distribution described by the sample.
 ///
 /// # Constraints
@@ -166,7 +160,6 @@ pub fn uniform_sample_cone_frame(
     spherical_to_cartesian_frame_trig(sin_theta, cos_theta, sin_phi, cos_phi, frame)
 }
 
-/// # Summary
 /// Computes the pdf for uniformly sampling a code.
 ///
 /// # Arguments

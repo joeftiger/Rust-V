@@ -2,7 +2,6 @@ use crate::sampler::Sampler;
 
 use crate::debug_utils::in_range_incl_left;
 
-/// # Summary
 /// A simple random sampler using `fastrand` to generate random valuates.
 ///
 /// Using `RandomSampler::default()` initializes the seed with value `0`.

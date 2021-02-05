@@ -1,6 +1,5 @@
 use crate::floats::BIG_EPSILON;
 
-/// # Summary
 /// Solves a quadratic equation, handling generics.
 ///
 /// # Arguments

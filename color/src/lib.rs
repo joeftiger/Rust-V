@@ -251,7 +251,6 @@ macro_rules! color {
     }
 }
 
-/// # Summary
 /// A trait for colors. Allows arithmetic operations to be performed and gives utility functions
 /// like `is_black()`.
 #[allow(clippy::len_without_is_empty)]
@@ -276,7 +275,6 @@ pub trait Color<T = f32>:
     + Debug
     + Sum
 {
-    /// # Summary
     /// Creates a new color with the given value assigned on the whole color spectrum.
     ///
     /// # Argumetns
@@ -286,14 +284,12 @@ pub trait Color<T = f32>:
     /// * Self
     fn new_const(value: T) -> Self;
 
-    /// # Summary
     /// Returns the length (number of entries) of this color.
     ///
     /// # Returns
     /// * The length
     fn len(&self) -> usize;
 
-    /// # Summary
     /// Returns whether this color is black.
     ///
     /// # Returns
@@ -301,7 +297,7 @@ pub trait Color<T = f32>:
     fn is_black(&self) -> bool;
 
     /// Clamps the color values between min and max.
-    /// # Summary
+
     /// Clamps the color values between min and max.
     ///
     /// # Constraints
@@ -317,14 +313,12 @@ pub trait Color<T = f32>:
     /// * Clamped self
     fn clamp(&self, min: T, max: T) -> Self;
 
-    /// # Summary
     /// Returns the square-root of this color.
     ///
     /// # Returns
     /// * Square-rooted self
     fn sqrt(&self) -> Self;
 
-    /// # Summary
     /// Linearly interpolates this color with the other one by parameter `t`.
     ///
     /// # Constraints
@@ -338,14 +332,12 @@ pub trait Color<T = f32>:
     /// * Lerped Self
     fn lerp(&self, other: &Self, t: T) -> Self;
 
-    /// # Summary
     /// Returns the minimum component value.
     ///
     /// # Returns
     /// * Component minimum
     fn component_min(&self) -> T;
 
-    /// # Summary
     /// Returns the maximum component value.
     ///
     /// # Returns
@@ -353,7 +345,6 @@ pub trait Color<T = f32>:
     fn component_max(&self) -> T;
 }
 
-/// # Summary
 /// A trait allowing colors to return known colors:
 ///  * black
 ///  * grey
@@ -384,7 +375,6 @@ pub trait Colors<T = f32>: Color<T> {
     fn pink() -> Self;
 }
 
-/// # Summary
 /// Returns the matrix to convert `Xyz` to `Srgb`.
 ///
 /// # Returns
@@ -400,7 +390,6 @@ pub fn xyz_to_srgb_mat() -> Mat3 {
     )
 }
 
-/// # Summary
 /// Returns the matrix to convert `Srgb` to `Xyz`.
 ///
 /// # Returns
@@ -416,7 +405,6 @@ pub fn srgb_to_xyz_mat() -> Mat3 {
     )
 }
 
-/// # Summary
 /// Converts an `Srgb` value to linear `Srgb`.
 ///
 /// # Constraints
@@ -440,7 +428,6 @@ pub fn srgb_to_linear(val: f32) -> f32 {
     }
 }
 
-/// # Summary
 /// Converts an `Srgb` vector to linear `Srgb`.
 ///
 /// # Constraints
@@ -456,7 +443,6 @@ pub fn srgbs_to_linear(val: Vec3) -> Vec3 {
     val.map(srgb_to_linear)
 }
 
-/// # Summary
 /// Converts a linear `Srgb` value to `Srgb`.
 ///
 /// # Constraints
@@ -480,7 +466,6 @@ pub fn linear_to_srgb(val: f32) -> f32 {
     }
 }
 
-/// # Summary
 /// Converts a linear `Srgb` vector to `Srgb`.
 ///
 /// # Constraints

@@ -4,7 +4,6 @@ use geometry::Ray;
 use ultraviolet::{UVec2, Vec2, Vec3};
 use utility::floats::in_range;
 
-/// # Summary
 /// A perspective camera with a fov somewhere in space, looking at a target.
 pub struct PerspectiveCamera {
     position: Vec3,
@@ -15,7 +14,6 @@ pub struct PerspectiveCamera {
 }
 
 impl PerspectiveCamera {
-    /// # Summary
     /// Creates a new perspective camera.
     ///
     /// # Constraints

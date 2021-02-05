@@ -1,6 +1,5 @@
 use ultraviolet::UVec2;
 
-/// # Summary
 /// Teh render configuration stores all parameters relevant for the renderer.
 #[derive(Debug, Copy, Clone)]
 pub struct RenderConfig {
@@ -12,7 +11,6 @@ pub struct RenderConfig {
 }
 
 impl RenderConfig {
-    /// # Summary
     /// Creates a new render configuration.
     ///
     /// # Arguments

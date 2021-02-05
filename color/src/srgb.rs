@@ -7,7 +7,6 @@ color!(
 );
 
 impl Srgb {
-    /// # Summary
     /// Converts itself to a vector.
     ///
     /// # Returns

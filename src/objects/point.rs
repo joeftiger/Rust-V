@@ -3,7 +3,6 @@ use geometry::Point;
 use ultraviolet::{Vec2, Vec3};
 
 impl Sampleable for Point {
-    /// # Summary
     /// A point has no surface area
     ///
     /// # Returns
@@ -12,7 +11,6 @@ impl Sampleable for Point {
         0.0
     }
 
-    /// # Summary
     /// A point cannot be sampled plausibly.
     ///
     /// # Constraints

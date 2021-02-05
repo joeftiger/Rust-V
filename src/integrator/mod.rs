@@ -32,14 +32,12 @@ use crate::Spectrum;
 use color::{Color, Colors};
 use geometry::{offset_ray_towards, Ray};
 
-/// # Summary
 /// An integrator to calculate the color of a pixel / ray.
 ///
 /// This trait provides generic methods like `specular_reflection` and `specular_transmission`.
 pub trait Integrator: Send + Sync {
     fn max_depth(&self) -> u32;
 
-    /// # Summary
     /// Integrates the given scene with the primary ray and the sampler
     ///
     /// # Arguments
@@ -57,7 +55,6 @@ pub trait Integrator: Send + Sync {
         }
     }
 
-    /// # Summary
     /// Calculates the illumination (recursively if needed) at the given intersection.
     ///
     /// # Arguments
@@ -76,7 +73,6 @@ pub trait Integrator: Send + Sync {
         depth: u32,
     ) -> Spectrum;
 
-    /// # Summary
     /// Computes the specular reflection at the given scene intersection, calling `illumination()`
     /// with a newly generated reflected ray.
     ///
@@ -136,7 +132,6 @@ pub trait Integrator: Send + Sync {
         reflection
     }
 
-    /// # Summary
     /// Computes the specular transmission at the given scene intersection, calling `illumination()`
     /// with a newly generated transmitted ray.
     ///

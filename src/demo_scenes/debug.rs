@@ -26,7 +26,8 @@ impl DemoScene for DebugScene {
 
         // scene.add(ground()).add(sphere()).add(sphere_emitter());
         scene.add(ground());
-        scene.add(sphere());
+        // scene.add(sphere());
+        scene.add(cylinder());
         scene.add(sphere_emitter());
         scene.add(create_emitter());
 
@@ -66,10 +67,6 @@ fn cylinder() -> SceneObject {
     let receiver = Receiver::new(cylinder, bsdf);
     SceneObject::new_receiver(receiver)
 }
-
-// fn cube() -> SceneObject {
-//     let min = Vec3::new
-// }
 
 fn sphere() -> SceneObject {
     let center = Vec3::new(-RADIUS * 1.25, RADIUS, 0.0);

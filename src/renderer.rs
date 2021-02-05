@@ -15,7 +15,6 @@ use std::thread;
 use std::thread::JoinHandle;
 use ultraviolet::UVec2;
 
-/// # Summary
 /// A render job consists of thread handles.
 /// It can be stopped or joined at the end of execution.
 pub struct RenderJob<T> {
@@ -24,7 +23,6 @@ pub struct RenderJob<T> {
 }
 
 impl<T> RenderJob<T> {
-    /// # Summary
     /// Creates a new render job.
     ///
     /// # Arguments
@@ -41,7 +39,6 @@ impl<T> RenderJob<T> {
         }
     }
 
-    /// # Summary
     /// Sets a flag to stop thread executions and joins the threads afterwards.
     ///
     /// # Returns
@@ -51,7 +48,6 @@ impl<T> RenderJob<T> {
         self.join()
     }
 
-    /// # Summary
     /// Waits for the thread handles to join.
     ///
     /// # Returns
@@ -65,7 +61,6 @@ impl<T> RenderJob<T> {
     }
 }
 
-/// # Summary
 /// This struct is responsible to keep track of a pixel's color.
 struct RenderPixel {
     pixel: UVec2,
@@ -74,7 +69,6 @@ struct RenderPixel {
 }
 
 impl RenderPixel {
-    /// # Summary
     /// Adds the given spectrum and increases the sample size by 1.
     ///
     /// # Arguments
@@ -84,7 +78,6 @@ impl RenderPixel {
         self.samples += 1;
     }
 
-    /// # Summary
     /// Computes the average of this pixel.
     ///
     /// # Returns
@@ -98,7 +91,6 @@ impl RenderPixel {
 }
 
 impl From<UVec2> for RenderPixel {
-    /// # Summary
     /// Creates a new render pixel.
     ///
     /// # Arguments
@@ -115,7 +107,6 @@ impl From<UVec2> for RenderPixel {
     }
 }
 
-/// # Summary
 /// A render block contains pixels. It is used to split a rendering into multiple blocks for a
 /// thread to do computations upon.
 struct RenderBlock {
@@ -152,7 +143,6 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    /// # Summary
     /// Creates and initializes a new renderer with the given arguments.
     ///
     /// # Arguments
@@ -204,7 +194,6 @@ impl Renderer {
         }
     }
 
-    /// # Summary
     /// Returns the number of render blocks.
     ///
     /// # Returns
@@ -213,7 +202,6 @@ impl Renderer {
         self.render_blocks.len() as u32
     }
 
-    /// # Summary
     /// Returns the current progress. It will/should be in the range `[0, z]` for
     /// `z = render_blocks * depth`.
     ///
@@ -223,7 +211,6 @@ impl Renderer {
         self.progress.load(Ordering::Relaxed)
     }
 
-    /// # Summary
     /// Returns whether the current progress is at/over the limit of `[0, z]` for
     /// `z = render_blocks * depth`.
     ///
@@ -233,7 +220,6 @@ impl Renderer {
         self.progress_out_of_range(self.get_progress())
     }
 
-    /// # Summary
     /// Returns whether the given progress is at/over the limit of `[0, z]` for
     /// `z = render_blocks * depth`.
     ///
@@ -243,7 +229,6 @@ impl Renderer {
         progress >= self.get_num_blocks() * self.config.passes
     }
 
-    /// # Summary
     /// Renders the given pixel with this renderer's `sampler` and `integrator`.
     ///
     /// # Constraints
@@ -260,7 +245,6 @@ impl Renderer {
         self.integrator.integrate(&self.scene, &ray, &*self.sampler)
     }
 
-    /// # Summary
     /// Fetch-adds-1 the current progress and returns the associated render block.
     /// If the current progress was already at/over the limit of `[0, z]` for
     ///`z = render_blocks * depth`, `None` will be returned.
@@ -277,7 +261,6 @@ impl Renderer {
         }
     }
 
-    /// # Summary
     /// Starts the rendering progress.
     ///
     /// `config.threads` threads will be allocated for this.

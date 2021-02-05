@@ -1,7 +1,6 @@
 use crate::{Boundable, Cube, Intersectable, Intersection, Ray};
 use ultraviolet::Vec3;
 
-/// # Summary
 /// Represents a point in space.
 #[derive(Copy, Clone, PartialEq)]
 pub struct Point(pub Vec3);
@@ -13,7 +12,6 @@ impl Boundable for Point {
 }
 
 impl Intersectable for Point {
-    /// # Summary
     /// A point never intersects.
     ///
     /// # Arguments
@@ -25,7 +23,6 @@ impl Intersectable for Point {
         None
     }
 
-    /// # Summary
     /// A point never intersects.
     ///
     /// # Arguments

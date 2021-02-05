@@ -19,7 +19,6 @@ use color::Color;
 use std::f32::consts::{FRAC_1_PI, PI};
 use ultraviolet::{Rotor3, Vec2, Vec3};
 
-/// # Summary
 /// Allows indicating whether an intersection was found along a path starting from a camera or one
 /// starting from a light source.
 ///
@@ -30,7 +29,6 @@ pub enum TransportMode {
     Importance,
 }
 
-/// # Summary
 /// The BxDF normal is defined in the y-axis of the world space.
 ///
 /// # Returns
@@ -221,7 +219,7 @@ pub fn bxdf_to_world(v: Vec3) -> Rotor3 {
 }
 
 bitflags! {
-    /// # Summary
+
     /// All BxDF have types, for example
     /// * `BRDF` - Bidirectional Reflection Function
     /// * `BTDF` - Bidirectional Transmission Function
@@ -241,7 +239,6 @@ bitflags! {
 }
 
 impl BxDFType {
-    /// # Summary
     /// Returns whether this type is `reflective`.
     ///
     /// # Returns
@@ -250,7 +247,6 @@ impl BxDFType {
         *self & Self::REFLECTION == Self::REFLECTION
     }
 
-    /// # Summary
     /// Returns whether this type is `transmissive`.
     ///
     /// # Returns
@@ -259,7 +255,6 @@ impl BxDFType {
         *self & Self::TRANSMISSION == Self::TRANSMISSION
     }
 
-    /// # Summary
     /// Returns whether this type is `diffuse`.
     ///
     /// # Returns
@@ -268,7 +263,6 @@ impl BxDFType {
         *self & Self::DIFFUSE == Self::DIFFUSE
     }
 
-    /// # Summary
     /// Returns whether this type is `glossy`.
     ///
     /// # Returns
@@ -277,7 +271,6 @@ impl BxDFType {
         *self & Self::GLOSSY == Self::GLOSSY
     }
 
-    /// # Summary
     /// Returns whether this type is `specular`.
     ///
     /// # Returns
@@ -287,7 +280,6 @@ impl BxDFType {
     }
 }
 
-/// # Summary
 /// Contains of
 /// * `spectrum` - An evaluated scaling spectrum
 /// * `incident` - An evaluated incident direction
@@ -301,7 +293,6 @@ pub struct BxDFSample {
 }
 
 impl BxDFSample {
-    /// # Summary
     /// Creates a new sample.
     ///
     /// # Constraints
@@ -326,7 +317,6 @@ impl BxDFSample {
         }
     }
 
-    /// # Summary
     /// Creates an "empty" sample, assigning zeroes to all struct members.
     ///
     /// Strictly speaking, the resulting sample is invalid, as the `incident` is a zero vector,
@@ -352,19 +342,16 @@ impl BxDFSample {
     }
 }
 
-/// # Summary
 /// The common base shared between BRDFs and BTDFs.
 /// Provides methods for evaluating and sampling the distribution function for pairs of directions
 /// at an intersection.
 pub trait BxDF: Send + Sync {
-    /// # Summary
     /// Returns the type of this bxdf.
     ///
     /// # Results
     /// * The type of this BxDF
     fn get_type(&self) -> BxDFType;
 
-    /// # Summary
     /// Allows matching the user-supplied type to this BxDF.
     ///
     /// # Results
@@ -374,7 +361,6 @@ pub trait BxDF: Send + Sync {
         (st & t) == st
     }
 
-    /// # Summary
     /// Evaluates the BxDF for the pair of incident and outgoing light directions and the
     /// intersection normal.
     ///
@@ -392,7 +378,6 @@ pub trait BxDF: Send + Sync {
     /// * A scaling spectrum
     fn evaluate(&self, incident: &Vec3, outgoing: &Vec3) -> Spectrum;
 
-    /// # Summary
     /// Samples an incident light direction for an outgoing light direction from the given sample
     /// space.
     ///
@@ -420,7 +405,6 @@ pub trait BxDF: Send + Sync {
         Some(BxDFSample::new(spectrum, incident, pdf, self.get_type()))
     }
 
-    /// # Summary
     /// Computes the probability density function (`pdf`) for the pair of directions.
     ///
     /// # Constraints
@@ -445,7 +429,6 @@ pub trait BxDF: Send + Sync {
     }
 }
 
-/// # Summary
 /// This special BxDF scales all spectrum outputs of another one, effectively wrapping around
 /// some `BxDF` with a `scale`.
 pub struct ScaledBxDF<'a> {
@@ -454,7 +437,6 @@ pub struct ScaledBxDF<'a> {
 }
 
 impl<'a> ScaledBxDF<'a> {
-    /// # Summary
     /// Creates a new scaled `BxDF`.
     ///
     /// # Arguments

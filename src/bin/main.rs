@@ -212,7 +212,6 @@ impl MainConfig {
     }
 }
 
-/// # Summary
 /// Represents the pixel type to save.
 #[derive(Debug, Clone)]
 pub enum PixelType {
@@ -232,7 +231,6 @@ impl TryInto<PixelType> for &str {
     }
 }
 
-/// # Summary
 /// Represents the scene integrator.
 #[derive(Debug, Clone)]
 pub enum IntegratorType {
@@ -254,7 +252,6 @@ impl TryInto<IntegratorType> for &str {
     }
 }
 
-/// # Summary
 /// Represents a demo scene to load.
 #[derive(Debug, Clone)]
 pub enum DemoType {

@@ -9,7 +9,6 @@ pub struct Cylinder {
 }
 
 impl Cylinder {
-    /// # Summary
     /// Creates a new cylinder.
     ///
     /// # Constraints
@@ -32,7 +31,6 @@ impl Cylinder {
         Self { caps, radius }
     }
 
-    /// # Summary
     /// Returns the center of this cylinder.
     ///
     /// # Returns
@@ -41,7 +39,6 @@ impl Cylinder {
         (self.caps.0 + self.caps.1) / 2.0
     }
 
-    /// # Summary
     /// Returns the axis of `caps.0` to `caps.1`.
     ///
     /// # Returns
@@ -50,7 +47,6 @@ impl Cylinder {
         (self.caps.1 - self.caps.0).normalized()
     }
 
-    /// # Summary
     /// Returns the height of this cylinder.
     ///
     /// # Returns
@@ -86,7 +82,33 @@ impl Intersectable for Cylinder {
 
         let (t_min, t_max) = solve_quadratic(a, b, c)?;
 
-        check_cylinder(self, ray, t_min).or(check_cylinder(self, ray, t_max))
+        let height = self.height();
+        let center = self.center();
+
+        let filter = |t: f32| {
+            if ray.contains(t_min) {
+                let point = ray.at(t_min);
+                let diff = point - center;
+                let z = diff.dot(axis);
+
+                if 2.0 * z.abs() < height {
+                    return Some((t, point, diff));
+                }
+            }
+
+            None
+        };
+
+        let (t, point, diff) = filter(t_min).or_else(|| filter(t_max))?;
+
+        let mut normal = diff / self.radius;
+        normal -= normal.dot(axis) * axis;
+
+        if normal.dot(dir) > 0.0 {
+            normal = -normal;
+        }
+
+        Some(Intersection::new(point, normal, t, *ray))
     }
 
     fn intersects(&self, ray: &Ray) -> bool {
@@ -120,11 +142,13 @@ fn check_cylinder(c: &Cylinder, ray: &Ray, t: f32) -> Option<Intersection> {
         let ax = c.caps.1 - c.caps.0;
         (ax.normalized(), ax.mag())
     };
-    let center = c.caps.0 + height / 2.0 * axis;
+    let center = c.caps.0 + (height / 2.0) * axis;
 
-    let z = 2.0 * axis.dot(point - center);
+    let diff = point - center;
+
+    let z = 2.0 * diff.dot(axis);
     if z.abs() <= height {
-        let mut normal = (point - center) / c.radius;
+        let mut normal = diff / c.radius;
         normal -= normal.dot(axis) * axis;
 
         Some(Intersection::new(point, normal, t, *ray))

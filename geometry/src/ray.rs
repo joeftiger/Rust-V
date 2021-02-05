@@ -2,7 +2,6 @@ use crate::debug_util::{in_range_incl, is_finite, is_normalized};
 
 use ultraviolet::Vec3;
 
-/// # Summary
 /// A ray consists of of an origin and a direction.
 /// Additionally, a ray contains information about the `start` and `end` to contain a range along
 /// the ray's direction.
@@ -15,7 +14,6 @@ pub struct Ray {
 }
 
 impl Ray {
-    /// # Summary
     /// Creates a new ray.
     ///
     /// # Constraints
@@ -46,7 +44,6 @@ impl Ray {
         }
     }
 
-    /// # Summary
     /// Creates a new ray with the `direction` constraints being from `0` to `infinity`.
     ///
     /// # Constraints
@@ -68,7 +65,6 @@ impl Ray {
         Self::new(origin, direction, 0.0, f32::INFINITY)
     }
 
-    /// # Summary
     /// Constructs a ray from the given `origin` to the given `target`, effectively limiting
     /// the `direction` parameters being inside-inclusive both coordinates.
     ///
@@ -91,7 +87,6 @@ impl Ray {
         Self::new(origin, dir.normalized(), 0.0, dir.mag())
     }
 
-    /// # Summary
     /// Returns whether the given `t` parameter is inside-inclusive the ray constraints.
     ///
     /// # Constraints
@@ -102,13 +97,13 @@ impl Ray {
     ///
     /// # Returns
     /// * Whether the ray constraints contain the given `t`.
+    #[inline(always)]
     pub fn contains(&self, t: f32) -> bool {
         debug_assert!(!t.is_nan());
 
         in_range_incl(t, self.t_start, self.t_end)
     }
 
-    /// # Summary
     /// Calculates the position in space after applying the given ray parameter.
     ///
     /// # Constraints

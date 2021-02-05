@@ -7,7 +7,6 @@ use geometry::Ray;
 use ultraviolet::{UVec2, Vec2};
 
 pub trait Camera: Send + Sync {
-    /// # Summary
     /// Creates a new primary ray of the given pixel.
     ///
     /// # Constraints

@@ -4,7 +4,6 @@ use std::f32::consts::FRAC_1_PI;
 use ultraviolet::Vec3;
 use utility::floats::{in_range_incl_left, EPSILON};
 
-/// # Summary
 /// The Oren-Nayar reflectance model describes rough opaque diffuse surfaces where each facet is lambertian (diffuse).
 #[derive(Debug)]
 pub struct OrenNayar {
@@ -14,7 +13,6 @@ pub struct OrenNayar {
 }
 
 impl OrenNayar {
-    /// # Summary
     /// Creates a new oren-nayar reflection.
     ///
     /// # Constraints

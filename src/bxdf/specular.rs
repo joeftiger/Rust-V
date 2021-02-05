@@ -10,7 +10,6 @@ use crate::Spectrum;
 use color::Color;
 use ultraviolet::{Vec2, Vec3};
 
-/// # Summary
 /// Describes a specular reflection
 pub struct SpecularReflection {
     r: Spectrum,
@@ -18,7 +17,6 @@ pub struct SpecularReflection {
 }
 
 impl SpecularReflection {
-    /// # Summary
     /// Creates a new specular reflection.
     ///
     /// # Arguments
@@ -37,7 +35,6 @@ impl BxDF for SpecularReflection {
         BxDFType::REFLECTION | BxDFType::SPECULAR
     }
 
-    /// # Summary
     /// No scattering for specular reflection.
     ///
     /// # Arguments
@@ -60,7 +57,6 @@ impl BxDF for SpecularReflection {
         Some(BxDFSample::new(spectrum, incident, 1.0, self.get_type()))
     }
 
-    /// # Summary
     /// No scattering for specular reflection leads to no pdf.
     ///
     /// # Arguments
@@ -73,7 +69,6 @@ impl BxDF for SpecularReflection {
     }
 }
 
-/// # Summary
 /// Describes a specular transmission.
 pub struct SpecularTransmission {
     t: Spectrum,
@@ -83,7 +78,6 @@ pub struct SpecularTransmission {
 }
 
 impl SpecularTransmission {
-    /// # Summary
     /// Creates a new specular transmission.
     ///
     /// # Arguments
@@ -110,7 +104,6 @@ impl BxDF for SpecularTransmission {
         BxDFType::SPECULAR | BxDFType::TRANSMISSION
     }
 
-    /// # Summary
     /// No scattering for specular transmission.
     ///
     /// # Arguments
@@ -144,7 +137,6 @@ impl BxDF for SpecularTransmission {
         }
     }
 
-    /// # Summary
     /// No scattering for specular transmission leads to no pdf.
     ///
     /// # Arguments
@@ -157,7 +149,6 @@ impl BxDF for SpecularTransmission {
     }
 }
 
-/// # Summary
 /// Combines specular reflection and transmission for better efficiency.
 pub struct FresnelSpecular {
     r: Spectrum,
@@ -168,7 +159,6 @@ pub struct FresnelSpecular {
 }
 
 impl FresnelSpecular {
-    /// # Summary
     /// Creates a new fresnel specular.
     ///
     /// # Arguments
@@ -197,7 +187,6 @@ impl BxDF for FresnelSpecular {
         BxDFType::REFLECTION | BxDFType::SPECULAR | BxDFType::TRANSMISSION
     }
 
-    /// # Summary
     /// No scattering for specular reflection/transmission.
     ///
     /// # Arguments
@@ -243,7 +232,6 @@ impl BxDF for FresnelSpecular {
         Some(BxDFSample::new(spectrum, incident, f, typ))
     }
 
-    /// # Summary
     /// No scattering for specular reflection/transmission leads to no pdf.
     ///
     /// # Arguments

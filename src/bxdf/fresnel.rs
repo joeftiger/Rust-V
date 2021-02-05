@@ -5,7 +5,6 @@ use color::Color;
 use std::mem::swap;
 use utility::floats::fast_clamp;
 
-/// # Summary
 /// Computes the fraction of reflected light for parallel polarized light.
 ///
 /// # Arguments
@@ -24,7 +23,6 @@ pub fn dielectric_parallel(cos_i: f32, cos_t: f32, eta_i: f32, eta_t: f32) -> f3
     (ti - it) / (ti + it)
 }
 
-/// # Summary
 /// Computes the fraction of reflected light for perpendicular polarized light.
 ///
 /// # Arguments
@@ -43,7 +41,6 @@ pub fn dielectric_perpendicular(cos_i: f32, cos_t: f32, eta_i: f32, eta_t: f32) 
     (ii - tt) / (ii + tt)
 }
 
-/// # Summary
 /// Computes the Fresnel reflection for dielectric materials and unpolarized light.
 ///
 /// # Arguments
@@ -78,10 +75,8 @@ pub fn fresnel_dielectric(mut cos_i: f32, mut eta_i: f32, mut eta_t: f32) -> f32
     (r_par * r_par + r_perp * r_perp) / 2.0
 }
 
-/// # Summary
 /// Provides an interface for computing Fresnel reflection coefficients.
 pub trait Fresnel: Send + Sync {
-    /// # Summary
     /// Evaluates the amount of light reflected by the surface.
     ///
     /// # Arguments
@@ -92,7 +87,6 @@ pub trait Fresnel: Send + Sync {
     fn evaluate(&self, cos_i: f32) -> Spectrum;
 }
 
-/// # Summary
 /// An implementation of `Fresnel` for dielectric materials.
 pub struct FresnelDielectric {
     eta_i: f32,
@@ -100,7 +94,6 @@ pub struct FresnelDielectric {
 }
 
 impl FresnelDielectric {
-    /// # Summary
     /// Creates a new dielectric.
     ///
     /// # Arguments
@@ -120,13 +113,11 @@ impl Fresnel for FresnelDielectric {
     }
 }
 
-/// # Summary
 /// A `Fresnel` implementation that returns 100% reflection for all incoming directions.
 /// Although this is physically implausible, it is a convenient capability to have available.
 pub struct FresnelNoOp;
 
 impl Fresnel for FresnelNoOp {
-    /// # Summary
     /// Returns full 100% reflection.
     ///
     /// # Arguments

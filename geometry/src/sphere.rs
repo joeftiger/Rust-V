@@ -6,7 +6,6 @@ use crate::{Boundable, Container, Cube, Intersectable, Intersection};
 use ultraviolet::Vec3;
 use utility::math::solve_quadratic;
 
-/// # Summary
 /// A sphere consists of a center and a radius.
 #[derive(Copy, Clone, PartialEq)]
 pub struct Sphere {
@@ -15,7 +14,6 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    /// # Summary
     /// Creates a new sphere.
     ///
     /// # Constraints
@@ -101,7 +99,6 @@ impl Intersectable for Sphere {
 }
 
 impl Default for Sphere {
-    /// # Summary
     /// Constructs the default sphere of radius `1.0` around the zero point.
     ///
     /// # Returns

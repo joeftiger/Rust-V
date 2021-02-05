@@ -3,7 +3,8 @@ pub mod bvh;
 mod cube;
 mod cylinder;
 mod debug_util;
-mod mesh;
+mod legacy_mesh;
+pub mod mesh;
 mod point;
 pub mod ray;
 mod sphere;
@@ -14,14 +15,13 @@ use crate::debug_util::{in_range_incl, is_finite, is_normalized};
 pub use aabb::Aabb;
 pub use cube::Cube;
 pub use cylinder::Cylinder;
-pub use mesh::{Mesh, SimpleMesh, Triangle};
+pub use legacy_mesh::{Mesh, SimpleMesh, Triangle};
 pub use point::Point;
 pub use ray::Ray;
 pub use sphere::Sphere;
 use std::f32::consts::{PI, TAU};
 use utility::floats::BIG_EPSILON;
 
-/// # Summary
 /// The unit vectors in all directions.
 #[rustfmt::skip]
 pub const UNIT_VECTORS: [Vec3; 6] = [
@@ -33,7 +33,6 @@ pub const UNIT_VECTORS: [Vec3; 6] = [
     Vec3 { x: 0.0, y: 0.0, z: -1.0 },
 ];
 
-/// # Summary
 /// Offsets a point by an epsilon into the normal direction, depending on the angle to the given
 /// direction.
 ///
@@ -66,7 +65,6 @@ pub fn offset_point(point: Vec3, normal: Vec3, direction: Vec3) -> Vec3 {
     point + offset
 }
 
-/// # Summary
 /// Offsets a point by an epsilon into the normal direction, depending on the angle to the given
 /// direction and creates a ray from it.
 ///
@@ -100,7 +98,6 @@ pub fn offset_ray_towards(point: Vec3, normal: Vec3, direction: Vec3) -> Ray {
     Ray::new_fast(origin, direction)
 }
 
-/// # Summary
 /// Offsets a point by an epsilon into the normal direction, depending on the angle to the given
 /// direction and creates a ray to the target from it.
 ///
@@ -135,7 +132,6 @@ pub fn offset_ray_to(point: Vec3, normal: Vec3, target: Vec3) -> Ray {
     Ray::new(origin, direction.normalized(), 0.0, direction.mag())
 }
 
-/// # Summary
 /// Converts spherical coordinates to cartesian coordinates in the given frame wth following description:
 /// * `frame.x_axis`: to your right
 /// * `frame.y_axis`: to your top
@@ -162,7 +158,6 @@ pub fn spherical_to_cartesian_frame(theta: f32, phi: f32, frame: &CoordinateSyst
     spherical_to_cartesian_frame_trig(sin_theta, cos_theta, sin_phi, cos_phi, frame)
 }
 
-/// # Summary
 /// Converts spherical coordinates to cartesian coordinates in the given frame wth following description:
 /// * `frame.x_axis`: to your right
 /// * `frame.y_axis`: to your top
@@ -231,7 +226,6 @@ pub fn spherical_to_cartesian(theta: f32, phi: f32) -> Vec3 {
     spherical_to_cartesian_trig(sin_theta, cos_theta, sin_phi, cos_phi)
 }
 
-/// # Summary
 /// Converts spherical coordinates to cartesian coordinates in the following described frame:
 /// * x-axis: to your right
 /// * y-axis: to your top
@@ -273,7 +267,6 @@ pub fn spherical_to_cartesian_trig(
     Vec3::new(x, y, z)
 }
 
-/// # Summary
 /// An intersection consists of the following 4 properties:
 /// * `point` - The intersection point
 /// * `normal` - The surface normal (showing outside, even if intersection hits inside!)
@@ -288,7 +281,6 @@ pub struct Intersection {
 }
 
 impl Intersection {
-    /// # Summary
     /// Creates a new intersection.
     ///
     /// # Constraints
@@ -316,7 +308,6 @@ impl Intersection {
     }
 }
 
-/// # Summary
 /// A coordinate system represents 3 (orthogonal) vectors in 3D space.
 #[derive(Copy, Clone, Debug)]
 pub struct CoordinateSystem {
@@ -326,7 +317,6 @@ pub struct CoordinateSystem {
 }
 
 impl CoordinateSystem {
-    /// # Summary
     /// Creates a new coordinate system.
     ///
     /// # Constraints
@@ -359,7 +349,6 @@ impl CoordinateSystem {
         }
     }
 
-    /// # Summary
     /// Creates a new coordinate system around the given `x` direction vector.
     ///
     /// # Constraints
@@ -386,7 +375,6 @@ impl CoordinateSystem {
         }
     }
 
-    /// # Summary
     /// Creates a new coordinate system around the given `y` direction vector.
     ///
     /// # Constraints
@@ -422,7 +410,6 @@ impl CoordinateSystem {
         // }
     }
 
-    /// # Summary
     /// Creates a new coordinate system around the given `z` direction vector.
     ///
     /// # Constraints
@@ -456,10 +443,8 @@ impl Default for CoordinateSystem {
     }
 }
 
-/// # Summary
 /// A trait for objects that surround space and may contain points.
 pub trait Container {
-    /// # Summary
     /// Returns whether this object contains the given `piint` bounds-inclusive.
     ///
     /// # Arguments
@@ -470,10 +455,8 @@ pub trait Container {
     fn contains(&self, point: &Vec3) -> bool;
 }
 
-/// # Summary
 /// A trait for objects that can report a cube as their bounds.
 pub trait Boundable {
-    /// # Summary
     /// Returns the bounds of this object
     ///
     /// # Returns
@@ -481,10 +464,8 @@ pub trait Boundable {
     fn bounds(&self) -> Cube;
 }
 
-/// # Summary
 /// A trait for objects that can be intersected by rays.
 pub trait Intersectable {
-    /// # Summary
     /// Intersects the given ray with this object. Upon intersection, it will return some
     /// intersection info containing the reference to the given ray.
     ///
@@ -518,7 +499,6 @@ pub trait Intersectable {
     /// * Intersection or `None`
     fn intersect(&self, ray: &Ray) -> Option<Intersection>;
 
-    /// # Summary
     /// Checks whether the given ray intersects with this object.
     /// Unless overridden, it naively checks if `intersect(ray)` is `Some`.
     ///
@@ -532,7 +512,6 @@ pub trait Intersectable {
     }
 }
 
-/// # Summary
 /// A super-trait to combine `Boundable` and `Intersectable`, therefore giving a valid geometry.
 pub trait Geometry: Boundable + Intersectable {}
 

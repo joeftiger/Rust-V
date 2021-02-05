@@ -5,7 +5,6 @@ use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use color::Colors;
 
-/// # Summary
 /// The Whitted integrator is a common integrator following specular reflection/transmission recursively.
 #[derive(Clone)]
 pub struct Whitted {
@@ -13,7 +12,6 @@ pub struct Whitted {
 }
 
 impl Whitted {
-    /// # Summary
     /// Creates a new Whitted integrator.
     ///
     /// # Arguments

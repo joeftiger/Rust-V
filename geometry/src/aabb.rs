@@ -9,7 +9,6 @@ pub struct Aabb {
 }
 
 impl Aabb {
-    /// # Summary
     /// Creates a new aabb.
     ///
     /// # Constraints
@@ -27,7 +26,6 @@ impl Aabb {
         Self { min, max }
     }
 
-    /// # Summary
     /// Returns the "empty aabb", spanning from `min: INFINITY` to `max: NEG_INFINITY`.
     ///
     /// This aabb is effectively **invalid**, but might be useful to compute bounding boxes
@@ -39,7 +37,6 @@ impl Aabb {
         Self { min, max }
     }
 
-    /// # Summary
     /// Returns the size of this aabb in all 3 dimensions.
     ///
     /// # Returns
@@ -48,7 +45,6 @@ impl Aabb {
         self.max - self.min
     }
 
-    /// # Summary
     /// Returns the center of this aabb.
     ///
     /// # Returns
@@ -57,7 +53,6 @@ impl Aabb {
         (self.min + self.max) / 2.0
     }
 
-    /// # Summary
     /// Joins this aabb with another one, effectively creating a aabb spanning both aabbs.
     ///
     /// # Arguments
@@ -85,7 +80,6 @@ impl Boundable for Aabb {
 }
 
 impl Intersectable for Aabb {
-    /// # Summary
     /// Intersects the given ray **as infinite ray** with this object. Upon intersection, it will return some
     /// intersection info containing the reference to the infinite ray.
     ///
@@ -136,7 +130,6 @@ impl Intersectable for Aabb {
         ))
     }
 
-    /// # Summary
     /// Checks whether the given ray **as infinite ray** intersects with this object.
     ///
     /// # Arguments

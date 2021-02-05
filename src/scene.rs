@@ -3,7 +3,6 @@ use geometry::{Aabb, Boundable, Intersectable, Intersection, Ray};
 use std::sync::Arc;
 use ultraviolet::Vec3;
 
-/// # Summary
 /// A scene intersection is a more detailed `Intersection`, also containing a reference to the
 /// intersected object.
 #[derive(Clone)]
@@ -16,7 +15,6 @@ pub struct SceneIntersection {
 }
 
 impl SceneIntersection {
-    /// # Summary
     /// Creates a new scene intersection.
     ///
     /// # Arguments
@@ -36,7 +34,6 @@ impl SceneIntersection {
     }
 }
 
-/// # Summary
 /// A scene consists of scene objects and lights.
 pub struct Scene {
     bounding_box: Aabb,
@@ -45,7 +42,6 @@ pub struct Scene {
 }
 
 impl Scene {
-    /// # Summary
     /// Adds the given object to the scene.
     ///
     /// If the object is an emitter, it will also be added to the lights.
@@ -67,7 +63,6 @@ impl Scene {
         self
     }
 
-    /// # Summary
     /// Intersects the scene with the given ray.
     ///
     /// # Performance
@@ -109,7 +104,6 @@ impl Scene {
         self.objects.iter().any(|o| o.intersects(ray))
     }
 
-    /// # Summary
     /// Intersects the scene with the given ray.
     ///
     /// # Performance

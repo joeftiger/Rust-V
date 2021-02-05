@@ -5,7 +5,6 @@ use crate::{Aabb, Boundable, Container, Intersectable, Intersection};
 use ultraviolet::Vec3;
 use utility::floats::BIG_EPSILON;
 
-/// # Summary
 /// A cube represents an axis-aligned bounding box in 3 dimension. It is very efficient using only
 /// 2 coordinates to represent such a box.
 #[derive(Copy, Clone, PartialEq)]
@@ -15,7 +14,6 @@ pub struct Cube {
 }
 
 impl Cube {
-    /// # Summary
     /// Creates a new cube.
     ///
     /// # Constraints
@@ -33,7 +31,6 @@ impl Cube {
         Self { min, max }
     }
 
-    /// # Summary
     /// Returns the "empty cube", spanning from `min: INFINITY` to `max: NEG_INFINITY`.
     ///
     /// This cube is effectively **invalid**, but might be useful to compute bounding boxes
@@ -45,7 +42,6 @@ impl Cube {
         Self { min, max }
     }
 
-    /// # Summary
     /// Returns the size of this cube in all 3 dimensions.
     ///
     /// # Returns
@@ -54,7 +50,6 @@ impl Cube {
         self.max - self.min
     }
 
-    /// # Summary
     /// Returns the center of this cube.
     ///
     /// # Returns
@@ -63,7 +58,6 @@ impl Cube {
         (self.min + self.max) / 2.0
     }
 
-    /// # Summary
     /// Joins this cube with another one, effectively creating a cube spanning both cubes.
     ///
     /// # Arguments
@@ -141,7 +135,6 @@ impl Intersectable for Cube {
 }
 
 impl Default for Cube {
-    /// # Summary
     /// Constructs the default cube spanning the 3 dimensional space of `[-1, 1]`.
     ///
     /// # Returns

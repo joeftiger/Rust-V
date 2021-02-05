@@ -7,7 +7,6 @@ pub use random_sampler::RandomSampler;
 use crate::debug_utils::{in_range_incl_left, within_01};
 use ultraviolet::{Vec2, Vec3};
 
-/// # Summary
 /// A sample consists of 3 random values packed together into a `f32` and a `Vec2`.
 #[derive(Debug)]
 pub struct Sample {
@@ -24,17 +23,14 @@ impl Sample {
     }
 }
 
-/// # Summary
 /// A sampler is responsible for generating random values inside `[0, 1)` in various formats.
 pub trait Sampler: Send + Sync {
-    /// # Summary
     /// Generates a new random value inside `[0, 1)`.
     ///
     /// # Returns
     /// * A random value
     fn get_1d(&self) -> f32;
 
-    /// # Summary
     /// Generates a new random `Vec2` inside `[0, 1)`.
     ///
     /// # Returns
@@ -44,7 +40,6 @@ pub trait Sampler: Send + Sync {
         Vec2::new(self.get_1d(), self.get_1d())
     }
 
-    /// # Summary
     /// Generates a new random `Vec3` inside `[0, 1)`.
     ///
     /// # Returns
@@ -54,7 +49,6 @@ pub trait Sampler: Send + Sync {
         Vec3::new(self.get_1d(), self.get_1d(), self.get_1d())
     }
 
-    /// # Summary
     /// Generates a new random sample inside `[0, 1)`.
     ///
     /// # Returns

@@ -9,17 +9,14 @@ use geometry::{Boundable, Cube, Geometry, Intersectable, Intersection, Ray};
 use ultraviolet::{Vec2, Vec3};
 use utility::floats::BIG_EPSILON;
 
-/// # Summary
 /// An emitter is a receiver that also emits light.
 pub trait EmitterExt: ReceiverExt {
-    /// # Summary
     /// Returns the emission of this emitter.
     ///
     /// # Returns
     /// * The emission
     fn emission(&self) -> Spectrum;
 
-    /// # Summary
     /// Returns the radiance of this emitter, comparing the incident and normal vector.
     ///
     /// # Constraints
@@ -50,7 +47,6 @@ pub trait EmitterExt: ReceiverExt {
         }
     }
 
-    /// # Summary
     /// Samples the emitter from a given point in space.
     ///
     /// # Constraints
@@ -66,7 +62,6 @@ pub trait EmitterExt: ReceiverExt {
     fn sample(&self, point: &Vec3, sample: &Vec2) -> EmitterSample;
 }
 
-/// # Summary
 /// An emitter is similar to a receiver, consisting of a geometry and a BSDF. Additionally, the
 /// emitter also has an emission.
 pub struct Emitter<T> {
@@ -76,7 +71,6 @@ pub struct Emitter<T> {
 }
 
 impl<T> Emitter<T> {
-    /// # Summary
     /// Creates a new emitter.
     ///
     /// # Arguments
@@ -153,7 +147,6 @@ where
     }
 }
 
-/// # Summary
 /// An emitter sample consists of
 /// * A `radiance` of the emitter
 /// * An `incident` vector (normalized) towards the emitter
@@ -167,7 +160,6 @@ pub struct EmitterSample {
 }
 
 impl EmitterSample {
-    /// # Summary
     /// Creates a new emitter sample.
     ///
     /// # Constraints
@@ -200,14 +192,12 @@ impl EmitterSample {
     }
 }
 
-/// # Summary
 /// A simple occlusion tester to test a ray against a scene.
 pub struct OcclusionTester {
     ray: Ray,
 }
 
 impl OcclusionTester {
-    /// # Summary
     /// Creates a new occlusion tester between the two given points.
     /// The created ray partition will be clamped to `[e, distance - e]`, with `e` denoting an epsilon
     /// and `distance` the distance between the points.
@@ -245,7 +235,6 @@ impl OcclusionTester {
         Self { ray }
     }
 
-    /// # Summary
     /// Tests the contained ray against the scene, whether it is unoccluded.
     ///
     /// # Arguments
@@ -258,7 +247,6 @@ impl OcclusionTester {
         !scene.is_occluded(&self.ray)
     }
 
-    /// # Summary
     /// Tests the contained ray against the scene.
     ///
     /// # Arguments
@@ -271,7 +259,6 @@ impl OcclusionTester {
     }
 }
 
-/// # Summary
 /// Describes a `point`, `normal` and `pdf` of a sampled surface.
 pub struct SurfaceSample {
     pub point: Vec3,
@@ -280,7 +267,6 @@ pub struct SurfaceSample {
 }
 
 impl SurfaceSample {
-    /// # Summary
     /// Creates a new surface sample.
     ///
     /// # Constraints
@@ -307,17 +293,14 @@ impl SurfaceSample {
     }
 }
 
-/// # Summary
 /// Allows geometries to be sampled for a surface point.
 pub trait Sampleable: Geometry + Send + Sync {
-    /// # Summary
     /// Returns the surface area of this object.
     ///
     /// # Returns
     /// * The surface area
     fn surface_area(&self) -> f32;
 
-    /// # Summary
     /// Samples the surface from the given point in the "solid angle" form.
     ///
     /// # Constraints
