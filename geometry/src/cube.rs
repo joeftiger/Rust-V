@@ -1,19 +1,19 @@
 use crate::ray::Ray;
 #[cfg(test)]
 use crate::UNIT_VECTORS;
-use crate::{Aabb, Boundable, Container, Intersectable, Intersection};
+use crate::{Boundable, Container, Intersectable, Intersection};
 use ultraviolet::Vec3;
 use utility::floats::BIG_EPSILON;
 
 /// A cube represents an axis-aligned bounding box in 3 dimension. It is very efficient using only
 /// 2 coordinates to represent such a box.
 #[derive(Copy, Clone, PartialEq)]
-pub struct Cube {
+pub struct Aabb {
     pub min: Vec3,
     pub max: Vec3,
 }
 
-impl Cube {
+impl Aabb {
     /// Creates a new cube.
     ///
     /// # Constraints
@@ -50,6 +50,15 @@ impl Cube {
         self.max - self.min
     }
 
+    /// Returns the volume of this cube.
+    ///
+    /// # Returns
+    /// * The volume
+    pub fn volume(&self) -> f32 {
+        let size = self.size();
+        size.x * size.y * size.z
+    }
+
     /// Returns the center of this cube.
     ///
     /// # Returns
@@ -72,19 +81,19 @@ impl Cube {
     }
 }
 
-impl Container for Cube {
+impl Container for Aabb {
     fn contains(&self, point: &Vec3) -> bool {
         *point == point.clamped(self.min, self.max)
     }
 }
 
-impl Boundable for Cube {
-    fn bounds(&self) -> Cube {
+impl Boundable for Aabb {
+    fn bounds(&self) -> Aabb {
         *self
     }
 }
 
-impl Intersectable for Cube {
+impl Intersectable for Aabb {
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         let t1 = (self.min - ray.origin) / ray.direction;
         let t2 = (self.max - ray.origin) / ray.direction;
@@ -134,25 +143,13 @@ impl Intersectable for Cube {
     }
 }
 
-impl Default for Cube {
+impl Default for Aabb {
     /// Constructs the default cube spanning the 3 dimensional space of `[-1, 1]`.
     ///
     /// # Returns
     /// * `[-1, 1]` Self
     fn default() -> Self {
         Self::new(-Vec3::one(), Vec3::one())
-    }
-}
-
-impl From<Aabb> for Cube {
-    fn from(aabb: Aabb) -> Self {
-        Self::new(aabb.min, aabb.max)
-    }
-}
-
-impl From<&Aabb> for Cube {
-    fn from(aabb: &Aabb) -> Self {
-        Self::new(aabb.min, aabb.max)
     }
 }
 
@@ -164,7 +161,7 @@ fn intersect_outside() {
     let mut directions = UNIT_VECTORS;
     directions.iter_mut().for_each(|v| *v *= -1.0);
 
-    let cube = Cube::default();
+    let cube = Aabb::default();
 
     for i in 0..UNIT_VECTORS.len() {
         let ray = Ray::new_fast(origins[i], directions[i]);
@@ -180,7 +177,7 @@ fn intersect_inside() {
     let origins = [Vec3::zero(); UNIT_VECTORS.len()];
     let directions = UNIT_VECTORS;
 
-    let cube = Cube::default();
+    let cube = Aabb::default();
 
     for i in 0..UNIT_VECTORS.len() {
         let ray = Ray::new_fast(origins[i], directions[i]);

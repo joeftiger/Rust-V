@@ -1,12 +1,13 @@
+use crate::bvh::Tree;
 use crate::debug_util::{is_finite, is_normalized};
-use crate::{Aabb, Boundable, Cube, Intersectable, Intersection, Ray};
-use std::sync::Arc;
+use crate::{Aabb, Boundable, Container, Intersectable, Intersection, Ray};
 use tobj::Mesh as TobjMesh;
 use ultraviolet::{Mat3, Rotor3, Vec3};
 use utility::floats::EPSILON;
 
 /// The shading mode defines the shading of normals. In `Flat` mode, the surface of triangles will
 /// appear flat. In `Phong` however, they will be interpolated to create a smooth looking surface.
+#[derive(Debug)]
 pub enum ShadingMode {
     Flat,
     Phong,
@@ -14,6 +15,7 @@ pub enum ShadingMode {
 
 /// A vertex consists of a position and normal vector, which possibly influences the shading of
 /// [`triangles`](Triangle).
+#[derive(Copy, Clone)]
 struct Vertex {
     position: Vec3,
     normal: Vec3,
@@ -48,13 +50,10 @@ impl Vertex {
 /// [`Mesh`](Mesh) it resides in.
 #[derive(Clone)]
 struct Triangle {
-    a: Vec3,
-    b: Vec3,
-    c: Vec3,
-    n_a: Vec3,
-    n_b: Vec3,
-    n_c: Vec3,
-    normal: Vec3,
+    a: u32,
+    b: u32,
+    c: u32,
+    normal: u32,
 }
 
 impl Triangle {
@@ -65,101 +64,95 @@ impl Triangle {
     ///              Should be normalized.
     ///
     /// # Arguments
-    /// * `a` - The vertex index of a mesh
-    /// * `b` - The vertex index of a mesh
-    /// * `c` - The vertex index of a mesh
+    /// * `v0` - The vertex 0
+    /// * `v1` - The vertex 1
+    /// * `v2` - The vertex 2
     /// * `normal` - The triangle normal vector
     ///
     /// # Returns
     /// * Self
-    fn new(a: Vec3, b: Vec3, c: Vec3, n_a: Vec3, n_b: Vec3, n_c: Vec3, normal: Vec3) -> Self {
-        debug_assert!(is_finite(&a));
-        debug_assert!(is_finite(&b));
-        debug_assert!(is_finite(&c));
-        debug_assert!(is_finite(&normal));
-        debug_assert!(is_normalized(&normal));
-
-        Self {
-            a,
-            b,
-            c,
-            n_a,
-            n_b,
-            n_c,
-            normal,
-        }
+    fn new(a: u32, b: u32, c: u32, normal: u32) -> Self {
+        Self { a, b, c, normal }
     }
-}
 
-impl Boundable for Triangle {
-    fn bounds(&self) -> Cube {
-        let min = self.a.min_by_component(self.b.min_by_component(self.c));
-        let max = self.a.max_by_component(self.b.max_by_component(self.c));
+    fn bounds(&self, mesh: &Mesh) -> Aabb {
+        let a = mesh.vertices[self.a as usize].position;
+        let b = mesh.vertices[self.b as usize].position;
+        let c = mesh.vertices[self.c as usize].position;
 
-        Cube::new(min, max)
+        let min = a.min_by_component(b.min_by_component(c));
+        let max = a.max_by_component(b.max_by_component(c));
+
+        Aabb::new(min, max)
     }
-}
 
-impl Intersectable for Triangle {
-    fn intersect(&self, ray: &Ray) -> Option<Intersection> {
-        let a1 = -ray.direction;
-        let a2 = self.b - self.a;
-        let a3 = self.c - self.a;
+    fn intersect(&self, mesh: &Mesh, ray: &Ray) -> Option<Intersection> {
+        let v0 = mesh.vertices[self.a as usize];
+        let v1 = mesh.vertices[self.b as usize];
+        let v2 = mesh.vertices[self.c as usize];
 
-        let denom = Mat3::new(a1, a2, a3).determinant();
-        if denom.abs() < EPSILON {
-            return None;
-        }
+        let a = v0.position;
+        let b = v1.position;
+        let c = v2.position;
 
-        let b = ray.origin - self.a;
-
-        let beta = Mat3::new(a1, b, a3).determinant() / denom;
-        if !(0.0..=1.0).contains(&beta) {
-            return None;
-        }
-
-        let gamma = Mat3::new(a1, a2, b).determinant() / denom;
-        if gamma < 0.0 || beta + gamma > 1.0 {
-            return None;
-        }
-
-        let t = Mat3::new(b, a2, a3).determinant() / denom;
-
-        // let a_to_b = self.b - self.a;
-        // let a_to_c = self.c - self.a;
-        // let part0 = ray.direction.cross(a_to_c);
+        // let a1 = -ray.direction;
+        // let a2 = b - a;
+        // let a3 = c - a;
         //
-        // let det = a_to_b.dot(part0);
-        // if det < EPSILON {
+        // let denom = Mat3::new(a1, a2, a3).determinant();
+        // if denom.abs() < EPSILON {
         //     return None;
         // }
         //
-        // let part1 = ray.origin - self.a;
-        // let beta = part1.dot(part0) / det;
+        // let b = ray.origin - a;
+        //
+        // let beta = Mat3::new(a1, b, a3).determinant() / denom;
         // if !(0.0..=1.0).contains(&beta) {
         //     return None;
         // }
         //
-        // let part2 = part1.cross(a_to_b);
-        // let gamma = ray.direction.dot(part2) / det;
+        // let gamma = Mat3::new(a1, a2, b).determinant() / denom;
         // if gamma < 0.0 || beta + gamma > 1.0 {
         //     return None;
         // }
         //
-        // let t = a_to_c.dot(part2) / det;
+        // let t = Mat3::new(b, a2, a3).determinant() / denom;
+
+        let a_to_b = b - a;
+        let a_to_c = c - a;
+        let part0 = ray.direction.cross(a_to_c);
+
+        let det = a_to_b.dot(part0);
+        if det < EPSILON {
+            return None;
+        }
+
+        let part1 = ray.origin - a;
+        let beta = part1.dot(part0) / det;
+        if !(0.0..=1.0).contains(&beta) {
+            return None;
+        }
+
+        let part2 = part1.cross(a_to_b);
+        let gamma = ray.direction.dot(part2) / det;
+        if gamma < 0.0 || beta + gamma > 1.0 {
+            return None;
+        }
+
+        let t = a_to_c.dot(part2) / det;
         if !ray.contains(t) {
             return None;
         }
 
         let point = ray.at(t);
-        let normal = match self.mesh.mode {
-            ShadingMode::Flat => self.normal,
+        let normal = match mesh.shading_mode {
+            ShadingMode::Flat => mesh.normals[self.normal as usize],
             ShadingMode::Phong => {
                 let alpha = 1.0 - beta - gamma;
 
-                let n0 = vertex_a.normal;
-                let n1 = vertex_b.normal;
-                let n2 = vertex_c.normal;
+                let n0 = v0.normal;
+                let n1 = v1.normal;
+                let n2 = v2.normal;
 
                 (alpha * n0 + beta * n1 + gamma * n2).normalized()
             }
@@ -168,14 +161,10 @@ impl Intersectable for Triangle {
         Some(Intersection::new(point, normal, t, *ray))
     }
 
-    fn intersects(&self, ray: &Ray) -> bool {
-        let vertex_a = &self.mesh.vertices[self.a as usize];
-        let vertex_b = &self.mesh.vertices[self.b as usize];
-        let vertex_c = &self.mesh.vertices[self.c as usize];
-
-        let a = vertex_a.position;
-        let b = vertex_b.position;
-        let c = vertex_c.position;
+    fn intersects(&self, mesh: &Mesh, ray: &Ray) -> bool {
+        let a = mesh.vertices[self.a as usize].position;
+        let b = mesh.vertices[self.b as usize].position;
+        let c = mesh.vertices[self.c as usize].position;
 
         let a_to_b = b - a;
         let a_to_c = c - a;
@@ -207,35 +196,42 @@ impl Intersectable for Triangle {
 /// Depending on the [`MeshMode`](MeshMode), the intersection normals will be interpolated.
 pub struct Mesh {
     vertices: Vec<Vertex>,
-    triangles: Vec<Triangle>,
-    mode: ShadingMode,
+    normals: Vec<Vec3>,
     bounds: Aabb,
+    shading_mode: ShadingMode,
+    bvh: Tree<Triangle>,
 }
 
 impl Mesh {
     fn new(
         vertices: Vec<Vertex>,
+        normals: Vec<Vec3>,
         triangles: Vec<Triangle>,
-        mode: ShadingMode,
         bounds: Aabb,
+        shading_mode: ShadingMode,
     ) -> Self {
-        Self {
+        let mut this = Self {
             vertices,
-            triangles,
-            mode,
+            normals,
             bounds,
-        }
+            shading_mode,
+            bvh: Tree::empty(),
+        };
+
+        this.bvh = Tree::new(triangles, |t| t.bounds(&this));
+
+        this
     }
 
     /// Loads the given tobj mesh.
     ///
     /// # Arguments
     /// * `tobj_mesh` - The tobj mesh to load
-    /// * `mode` - The shading mode
+    /// * `shading_mode` - The shading mode
     ///
     /// # Returns
     /// * Self
-    pub fn load(tobj_mesh: &TobjMesh, mode: ShadingMode) -> Self {
+    pub fn load(tobj_mesh: &TobjMesh, shading_mode: ShadingMode) -> Mesh {
         assert!(!tobj_mesh.normals.is_empty());
         assert_eq!(tobj_mesh.positions.len(), tobj_mesh.normals.len());
 
@@ -266,14 +262,8 @@ impl Mesh {
         vertices.shrink_to_fit();
         assert_eq!(i, tobj_mesh.positions.len());
 
-        let mut mesh = Self {
-            vertices,
-            triangles: Vec::with_capacity(tobj_mesh.indices.len() / 3),
-            mode,
-            bounds,
-        };
-
-        let m = Arc::new(mesh);
+        let mut normals = Vec::with_capacity(tobj_mesh.indices.len() / 3);
+        let mut triangles = Vec::with_capacity(tobj_mesh.indices.len() / 3);
 
         let mut j = 0;
         while j < tobj_mesh.indices.len() {
@@ -281,20 +271,23 @@ impl Mesh {
             let b = tobj_mesh.indices[j + 1];
             let c = tobj_mesh.indices[j + 2];
 
-            let p0 = m.vertices[a as usize].position;
-            let p1 = m.vertices[b as usize].position;
-            let p2 = m.vertices[c as usize].position;
+            let p0 = vertices[a as usize].position;
+            let p1 = vertices[b as usize].position;
+            let p2 = vertices[c as usize].position;
             let normal = (p1 - p0).cross(p2 - p0).normalized();
 
-            let triangle = Triangle::new(mesh, a, b, c, normal);
-            m.triangles.push(triangle);
+            let n = normals.len() as u32;
+            normals.push(normal);
+
+            let triangle = Triangle::new(a, b, c, n);
+            triangles.push(triangle);
 
             j += 3;
         }
-        m.triangles.shrink_to_fit();
+        triangles.shrink_to_fit();
         assert_eq!(j, tobj_mesh.indices.len());
 
-        *m
+        Mesh::new(vertices, normals, triangles, bounds, shading_mode)
     }
 
     /// Translates the vertices of this mesh, updating the `bounds`.
@@ -356,17 +349,7 @@ impl Mesh {
     /// # Returns
     /// * Self for chained transformations.
     pub fn rotate(&mut self, rotation: Rotor3) -> &mut Self {
-        let mut new_bounds = Aabb::empty();
-        self.vertices.iter_mut().for_each(|v| {
-            v.position = rotation * v.position;
-
-            new_bounds.min = new_bounds.min.min_by_component(v.position);
-            new_bounds.max = new_bounds.min.max_by_component(v.position);
-        });
-
-        self.bounds = new_bounds;
-
-        self
+        self.transform(rotation.into_matrix())
     }
 
     /// Applies a transformation for the vertices of this mesh, updating the `bounds`.
@@ -392,41 +375,30 @@ impl Mesh {
 
         self
     }
-
-    pub fn update_bounds(&mut self) {
-        let mut new_bounds = Aabb::empty();
-        self.vertices.iter_mut().for_each(|v| {
-            new_bounds.min = new_bounds.min.min_by_component(v.position);
-            new_bounds.max = new_bounds.min.max_by_component(v.position);
-        });
-
-        self.bounds = new_bounds;
-    }
 }
 
 impl Boundable for Mesh {
-    fn bounds(&self) -> Cube {
+    fn bounds(&self) -> Aabb {
         self.bounds.into()
     }
 }
 
 impl Intersectable for Mesh {
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
-        if self.bounds.intersects(ray) {
-            return None;
-        }
-
         let mut new_ray = *ray;
         let mut intersection = None;
 
-        for triangle in &self.triangles {
-            if let Some(i) = triangle.intersect(&new_ray) {
+        let hits = self.bvh.intersect(ray);
+        for hit in &hits {
+            if let Some(i) = hit.intersect(self, &new_ray) {
+                println!("not empty");
                 new_ray.t_end = i.t;
                 intersection = Some(i);
             }
         }
 
         if let Some(mut i) = intersection {
+            println!("REALLY not empty");
             i.ray = *ray;
             Some(i)
         } else {
@@ -435,10 +407,6 @@ impl Intersectable for Mesh {
     }
 
     fn intersects(&self, ray: &Ray) -> bool {
-        self.bounds.intersects(ray)
-            && self
-                .triangles
-                .iter()
-                .any(|triangle| triangle.intersects(ray))
+        !self.bvh.intersect(ray).is_empty()
     }
 }

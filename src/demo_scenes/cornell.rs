@@ -10,7 +10,7 @@ use crate::scene::Scene;
 use crate::Spectrum;
 use bitflags::_core::f32::consts::FRAC_PI_8;
 use color::{Color, Colors};
-use geometry::{Boundable, Cube, Mesh, ShadingMode, Sphere};
+use geometry::{Aabb, Boundable, Mesh, ShadingMode, Sphere};
 use std::sync::Arc;
 use ultraviolet::{Rotor3, UVec2, Vec3};
 
@@ -58,20 +58,19 @@ fn create_bunny() -> SceneObject {
     let file_name = "./meshes/bunny_simplified.obj";
     let (model, _) = tobj::load_obj(file_name, true).expect("Could not load bunny file");
 
-    let mut bunny = Mesh::load(&model[0].mesh, ShadingMode::Flat);
+    let mut bunny = Mesh::load(&model[0].mesh, ShadingMode::Phong);
 
-    bunny.translate(-bunny.bounds().center());
+    // bunny.translate(-bunny.bounds().center());
     bunny.scale(Vec3::broadcast(15.0));
-    bunny.rotate(Rotor3::from_rotation_xz(-FRAC_PI_8));
+    // bunny.rotate(Rotor3::from_rotation_xz(-FRAC_PI_8));
 
     // translation + scale + rotation
-    let bounds = bunny.bounds();
-    let center = bounds.center();
-    let center_floor = Vec3::new(center.x, bounds.min.y, center.z);
-
-    let translation = Vec3::new(X_CENTER, FLOOR + 0.01, Z_CENTER) - center_floor;
-    bunny.translate(translation);
-    bunny.update_bounds();
+    // let bounds = bunny.bounds();
+    // let center = bounds.center();
+    // let center_floor = Vec3::new(center.x, bounds.min.y, center.z);
+    //
+    // let translation = Vec3::new(X_CENTER, FLOOR + 0.01, Z_CENTER) - center_floor;
+    // bunny.translate(translation);
 
     let specular = FresnelSpecular::new(
         Spectrum::new_const(1.0),
@@ -121,7 +120,7 @@ fn create_wall(wall: &Wall) -> SceneObject {
         Wall::Right => Vec3::new(RIGHT_WALL + THICKNESS, CEILING + THICKNESS, FRONT),
         Wall::Bottom => Vec3::new(RIGHT_WALL + THICKNESS, FLOOR, FRONT),
     };
-    let cube = Cube::new(min, max);
+    let cube = Aabb::new(min, max);
 
     let spectrum = match wall {
         Wall::Top | Wall::Back | Wall::Bottom => Spectrum::white() * 0.75,
@@ -157,8 +156,8 @@ impl DemoScene for CornellScene {
             scene.add(create_wall(wall));
         });
 
-        // scene.add(create_sphere());
-        scene.add(create_bunny());
+        scene.add(create_sphere());
+        // scene.add(create_bunny());
         scene.add(create_emitter());
 
         (scene, camera)

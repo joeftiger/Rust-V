@@ -1,5 +1,5 @@
 use crate::debug_util::is_finite;
-use crate::{Boundable, Cube, Intersectable, Intersection, Ray};
+use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
 use ultraviolet::Vec3;
 use utility::math::solve_quadratic;
 
@@ -58,12 +58,12 @@ impl Cylinder {
 
 impl Boundable for Cylinder {
     // TODO: Not a close-fit bounding box
-    fn bounds(&self) -> Cube {
+    fn bounds(&self) -> Aabb {
         let offset = Vec3::one() * self.radius;
         let min = self.caps.0.min_by_component(self.caps.1) - offset;
         let max = self.caps.0.max_by_component(self.caps.1) + offset;
 
-        Cube::new(min, max)
+        Aabb::new(min, max)
     }
 }
 

@@ -1,6 +1,4 @@
-mod aabb;
 pub mod bvh;
-mod bvh_sah;
 mod cube;
 mod cylinder;
 mod debug_util;
@@ -12,8 +10,7 @@ mod sphere;
 use ultraviolet::Vec3;
 
 use crate::debug_util::{in_range_incl, is_finite, is_normalized};
-pub use aabb::Aabb;
-pub use cube::Cube;
+pub use cube::Aabb;
 pub use cylinder::Cylinder;
 pub use mesh::{Mesh, ShadingMode};
 pub use point::Point;
@@ -461,7 +458,7 @@ pub trait Boundable {
     ///
     /// # Returns
     /// * The bounds
-    fn bounds(&self) -> Cube;
+    fn bounds(&self) -> Aabb;
 }
 
 /// A trait for objects that can be intersected by rays.
@@ -476,10 +473,10 @@ pub trait Intersectable {
     /// The **intersection normal** always points to the **outside**.
     /// To obtain the normal from inside the object, one can use following
     /// ```rust
-    /// use geometry::{Cube, Intersectable, Ray};
+    /// use geometry::{Aabb, Intersectable, Ray};
     /// use ultraviolet::Vec3;
     ///
-    /// let cube = Cube::default();
+    /// let cube = Aabb::default();
     /// let mut ray = Ray::new_fast(Vec3::zero(), Vec3::unit_x());
     ///
     /// let intersection = cube.intersect(&mut ray).unwrap(); // intersects surely

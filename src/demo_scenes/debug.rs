@@ -11,7 +11,7 @@ use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::scene::Scene;
 use crate::Spectrum;
 use color::Color;
-use geometry::{Cube, Cylinder, Point, Sphere};
+use geometry::{Aabb, Cylinder, Point, Sphere};
 use std::sync::Arc;
 use ultraviolet::{UVec2, Vec3};
 
@@ -41,7 +41,7 @@ impl DemoScene for DebugScene {
 fn ground() -> SceneObject {
     let min = Vec3::new(-10000.0, FLOOR - 5.0, -10000.0);
     let max = Vec3::new(10000.0, FLOOR, 10000.0);
-    let cube = Cube::new(min, max);
+    let cube = Aabb::new(min, max);
 
     let lambertian = LambertianReflection::new(Spectrum::new_const(1.0));
     let bsdf = BSDF::new(vec![Box::new(lambertian)]);

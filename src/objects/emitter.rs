@@ -5,7 +5,7 @@ use crate::objects::receiver::ReceiverExt;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use color::Color;
-use geometry::{Boundable, Cube, Geometry, Intersectable, Intersection, Ray};
+use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 use ultraviolet::{Vec2, Vec3};
 use utility::floats::BIG_EPSILON;
 
@@ -129,7 +129,7 @@ impl<T> Boundable for Emitter<T>
 where
     T: Boundable,
 {
-    fn bounds(&self) -> Cube {
+    fn bounds(&self) -> Aabb {
         self.geometry.bounds()
     }
 }

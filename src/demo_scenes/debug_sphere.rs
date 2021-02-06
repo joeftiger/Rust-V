@@ -5,7 +5,7 @@ use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::scene::Scene;
 use crate::Spectrum;
 use color::Color;
-use geometry::{Cube, Sphere};
+use geometry::{Aabb, Sphere};
 use std::sync::Arc;
 use ultraviolet::{UVec2, Vec3};
 
@@ -27,7 +27,7 @@ impl DemoScene for DebugSphereScene {
 fn ground() -> SceneObject {
     let min = Vec3::new(-100.0, -5.0, -100.0);
     let max = Vec3::new(100.0, 0.0, 100.0);
-    let cube = Cube::new(min, max);
+    let cube = Aabb::new(min, max);
 
     let lambertian = LambertianReflection::new(Spectrum::new_const(1.0));
     let bsdf = BSDF::new(vec![Box::new(lambertian)]);

@@ -1,5 +1,5 @@
 use crate::bxdf::BSDF;
-use geometry::{Boundable, Cube, Geometry, Intersectable, Intersection, Ray};
+use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 
 /// A receiver is a geometry that also has a bsdf.
 pub trait ReceiverExt: Geometry + Send + Sync {
@@ -53,7 +53,7 @@ impl<T> Boundable for Receiver<T>
 where
     T: Boundable,
 {
-    fn bounds(&self) -> Cube {
+    fn bounds(&self) -> Aabb {
         self.geometry.bounds()
     }
 }
