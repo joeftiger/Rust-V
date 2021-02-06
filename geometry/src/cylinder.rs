@@ -130,29 +130,3 @@ impl Intersectable for Cylinder {
         }
     }
 }
-
-fn check_cylinder(c: &Cylinder, ray: &Ray, t: f32) -> Option<Intersection> {
-    if !ray.contains(t) {
-        return None;
-    }
-
-    let point = ray.at(t);
-
-    let (axis, height) = {
-        let ax = c.caps.1 - c.caps.0;
-        (ax.normalized(), ax.mag())
-    };
-    let center = c.caps.0 + (height / 2.0) * axis;
-
-    let diff = point - center;
-
-    let z = 2.0 * diff.dot(axis);
-    if z.abs() <= height {
-        let mut normal = diff / c.radius;
-        normal -= normal.dot(axis) * axis;
-
-        Some(Intersection::new(point, normal, t, *ray))
-    } else {
-        None
-    }
-}
