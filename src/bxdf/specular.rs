@@ -205,8 +205,8 @@ impl BxDF for FresnelSpecular {
         let cos_outgoing = cos_theta(outgoing);
         let f = fresnel_dielectric(cos_outgoing, self.eta_i, self.eta_t);
 
-        let entering = cos_theta(outgoing) > 0.0;
-        let (eta_i, eta_t, normal) = if entering {
+        // if entering
+        let (eta_i, eta_t, normal) = if cos_outgoing > 0.0 {
             (self.eta_i, self.eta_t, bxdf_normal())
         } else {
             (self.eta_t, self.eta_i, -bxdf_normal())
