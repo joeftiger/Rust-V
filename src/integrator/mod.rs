@@ -25,12 +25,11 @@ pub use path::Path;
 pub use whitted::Whitted;
 
 use crate::bxdf::{BxDFType, BSDF};
-use crate::objects::ReceiverExt;
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use color::{Color, Colors};
-use geometry::{offset_ray_towards, Ray};
+use geometry::Ray;
 
 /// An integrator to calculate the color of a pixel / ray.
 ///
@@ -72,124 +71,6 @@ pub trait Integrator: Send + Sync {
         sampler: &dyn Sampler,
         depth: u32,
     ) -> Spectrum;
-
-    /// Computes the specular reflection at the given scene intersection, calling `illumination()`
-    /// with a newly generated reflected ray.
-    ///
-    /// # Arguments
-    /// * `scene` - The scene being integratd
-    /// * `intersection` - The scene intersection we illuminate
-    /// * `sampler` - A sampler to generate values
-    /// * `depth` - The current recursive depth (if needed)
-    ///
-    /// # Returns
-    /// * The illumination at the intersection
-    //noinspection DuplicatedCode
-    fn specular_reflection(
-        &self,
-        scene: &Scene,
-        intersection: &SceneIntersection,
-        sampler: &dyn Sampler,
-        depth: u32,
-    ) -> Spectrum {
-        debug_assert!(depth < self.max_depth());
-
-        let outgoing = -intersection.ray.direction;
-
-        let bsdf = intersection.object.bsdf();
-        let normal = intersection.normal;
-        let sample = sampler.get_sample();
-
-        let bxdf_sample_option = bsdf.sample(
-            &normal,
-            &outgoing,
-            BxDFType::REFLECTION | BxDFType::SPECULAR,
-            &sample,
-        );
-
-        let mut reflection = Spectrum::black();
-
-        if let Some(bxdf_sample) = bxdf_sample_option {
-            if bxdf_sample.pdf > 0.0 && !bxdf_sample.spectrum.is_black() {
-                let cos = bxdf_sample.incident.dot(normal);
-
-                if cos != 0.0 {
-                    let refl_ray = offset_ray_towards(
-                        intersection.point,
-                        intersection.normal,
-                        bxdf_sample.incident,
-                    );
-
-                    if let Some(si) = scene.intersect(&refl_ray) {
-                        let illumination = self.illumination(scene, &si, sampler, depth);
-                        reflection +=
-                            illumination * bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
-                    }
-                }
-            }
-        }
-
-        reflection
-    }
-
-    /// Computes the specular transmission at the given scene intersection, calling `illumination()`
-    /// with a newly generated transmitted ray.
-    ///
-    /// # Arguments
-    /// * `scene` - The scene being integratd
-    /// * `intersection` - The scene intersection we illuminate
-    /// * `sampler` - A sampler to generate values
-    /// * `depth` - The current recursive depth (if needed)
-    ///
-    /// # Returns
-    /// * The illumination at the intersection
-    //noinspection DuplicatedCode
-    fn specular_transmission(
-        &self,
-        scene: &Scene,
-        intersection: &SceneIntersection,
-        sampler: &dyn Sampler,
-        depth: u32,
-    ) -> Spectrum {
-        debug_assert!(depth < self.max_depth());
-
-        let outgoing = -intersection.ray.direction;
-
-        let bsdf = intersection.object.bsdf();
-        let normal = intersection.normal;
-        let sample = sampler.get_sample();
-
-        let bxdf_sample_option = bsdf.sample(
-            &normal,
-            &outgoing,
-            BxDFType::SPECULAR | BxDFType::TRANSMISSION,
-            &sample,
-        );
-
-        let mut transmission = Spectrum::black();
-
-        if let Some(bxdf_sample) = bxdf_sample_option {
-            if bxdf_sample.pdf > 0.0 && !bxdf_sample.spectrum.is_black() {
-                let cos = bxdf_sample.incident.dot(normal);
-
-                if cos != 0.0 {
-                    let refl_ray = offset_ray_towards(
-                        intersection.point,
-                        intersection.normal,
-                        bxdf_sample.incident,
-                    );
-
-                    if let Some(si) = scene.intersect(&refl_ray) {
-                        let illumination = self.illumination(scene, &si, sampler, depth + 1);
-                        transmission +=
-                            illumination * bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
-                    }
-                }
-            }
-        }
-
-        transmission
-    }
 }
 
 fn direct_illumination(
