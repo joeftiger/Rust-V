@@ -11,6 +11,7 @@ use crate::Spectrum;
 use bitflags::_core::f32::consts::FRAC_PI_8;
 use color::{Color, Colors};
 use geometry::{Aabb, Boundable, Mesh, ShadingMode, Sphere};
+use std::f32::consts::PI;
 use std::sync::Arc;
 use ultraviolet::{Rotor3, UVec2, Vec3};
 
@@ -55,13 +56,13 @@ fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
 }
 
 fn create_bunny() -> SceneObject {
-    let file_name = "./meshes/bunny.obj";
+    let file_name = "./meshes/armadillo.obj";
     let (model, _) = tobj::load_obj(file_name, true).expect("Could not load bunny file");
 
     let mut bunny = Mesh::load(&model[0].mesh, ShadingMode::Phong);
 
     bunny.translate(-bunny.bounds().center());
-    bunny.scale(Vec3::broadcast(15.0));
+    bunny.scale(Vec3::broadcast(1.0));
 
     // translation + scale + rotation
     let bounds = bunny.bounds();
@@ -69,9 +70,7 @@ fn create_bunny() -> SceneObject {
     let center_floor = Vec3::new(center.x, bounds.min.y, center.z);
 
     let translation = Vec3::new(X_CENTER, FLOOR + 0.01, Z_CENTER) - center_floor;
-    println!("{:?}", center_floor);
-    println!("{:?}", translation);
-    bunny.rotate(Rotor3::from_rotation_xz(-FRAC_PI_8));
+    bunny.rotate(Rotor3::from_rotation_xz(PI));
     bunny.translate(translation);
     bunny.build_bvh();
 
