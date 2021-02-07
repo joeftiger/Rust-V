@@ -3,7 +3,7 @@ use crate::debug_util::{is_finite, is_normalized};
 use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
 use tobj::Mesh as TobjMesh;
 use ultraviolet::{Mat3, Rotor3, Vec3};
-use utility::floats::EPSILON;
+use utility::floats::{fast_clamp, EPSILON};
 
 /// The shading mode defines the shading of normals. In `Flat` mode, the surface of triangles will
 /// appear flat. In `Phong` however, they will be interpolated to create a smooth looking surface.
@@ -41,6 +41,15 @@ impl Vertex {
         debug_assert!(is_normalized(&normal));
 
         Self { position, normal }
+    }
+
+    fn new_pos(position: Vec3) -> Self {
+        debug_assert!(is_finite(&position));
+
+        Self {
+            position,
+            normal: Vec3::zero(),
+        }
     }
 }
 
@@ -87,74 +96,50 @@ impl Triangle {
     }
 
     fn intersect(&self, mesh: &Mesh, ray: &Ray) -> Option<Intersection> {
-        let v0 = mesh.vertices[self.a as usize];
-        let v1 = mesh.vertices[self.b as usize];
-        let v2 = mesh.vertices[self.c as usize];
+        let vertex0 = mesh.vertices[self.a as usize];
+        let vertex1 = mesh.vertices[self.b as usize];
+        let vertex2 = mesh.vertices[self.c as usize];
 
-        let a = v0.position;
-        let b = v1.position;
-        let c = v2.position;
+        let edge1 = vertex1.position - vertex0.position;
+        let edge2 = vertex2.position - vertex0.position;
+        let p_vec = ray.direction.cross(edge2);
 
-        let a1 = -ray.direction;
-        let a2 = b - a;
-        let a3 = c - a;
-
-        let denom = Mat3::new(a1, a2, a3).determinant();
-        if denom.abs() < EPSILON {
+        let det = edge1.dot(p_vec);
+        if det < EPSILON {
             return None;
         }
 
-        let b = ray.origin - a;
+        let t_vec = ray.origin - vertex0.position;
 
-        let beta = Mat3::new(a1, b, a3).determinant() / denom;
-        if !(0.0..=1.0).contains(&beta) {
+        let u = t_vec.dot(p_vec);
+        if u < 0.0 || u > det {
             return None;
         }
 
-        let gamma = Mat3::new(a1, a2, b).determinant() / denom;
-        if gamma < 0.0 || beta + gamma > 1.0 {
+        let q_vec = t_vec.cross(edge1);
+
+        let v = ray.direction.dot(q_vec);
+        if v < 0.0 || u + v > det {
             return None;
         }
 
-        let t = Mat3::new(b, a2, a3).determinant() / denom;
-
-        // let a_to_b = b - a;
-        // let a_to_c = c - a;
-        // let part0 = ray.direction.cross(a_to_c);
-        //
-        // let det = a_to_b.dot(part0);
-        // if det < EPSILON {
-        //     return None;
-        // }
-        //
-        // let part1 = ray.origin - a;
-        // let beta = part1.dot(part0) / det;
-        // if !(0.0..=1.0).contains(&beta) {
-        //     return None;
-        // }
-        //
-        // let part2 = part1.cross(a_to_b);
-        // let gamma = ray.direction.dot(part2) / det;
-        // if gamma < 0.0 || beta + gamma > 1.0 {
-        //     return None;
-        // }
-        //
-        // let t = a_to_c.dot(part2) / det;
+        let inv_det = 1.0 / det;
+        let t = inv_det * edge2.dot(q_vec);
         if !ray.contains(t) {
             return None;
         }
 
         let point = ray.at(t);
+
         let normal = match mesh.shading_mode {
             ShadingMode::Flat => mesh.normals[self.normal as usize],
             ShadingMode::Phong => {
+                let beta = u * inv_det;
+                let gamma = v * inv_det;
                 let alpha = 1.0 - beta - gamma;
 
-                let n0 = v0.normal;
-                let n1 = v1.normal;
-                let n2 = v2.normal;
-
-                (alpha * n0 + beta * n1 + gamma * n2).normalized()
+                (alpha * vertex0.normal + beta * vertex1.normal + gamma * vertex2.normal)
+                    .normalized()
             }
         };
 
@@ -221,7 +206,8 @@ impl Mesh {
         }
     }
 
-    /// Loads the given tobj mesh.
+    /// Loads the given tobj mesh. If the tobj mesh contains vertex normals, they will be used.
+    /// Otherwise they will be computed.
     ///
     /// # Arguments
     /// * `tobj_mesh` - The tobj mesh to load
@@ -230,9 +216,6 @@ impl Mesh {
     /// # Returns
     /// * Self
     pub fn load(tobj_mesh: &TobjMesh, shading_mode: ShadingMode) -> Mesh {
-        assert!(!tobj_mesh.normals.is_empty());
-        assert_eq!(tobj_mesh.positions.len(), tobj_mesh.normals.len());
-
         let mut bounds = Aabb::empty();
 
         let mut vertices = Vec::with_capacity(tobj_mesh.positions.len());
@@ -243,16 +226,22 @@ impl Mesh {
                 tobj_mesh.positions[i + 1],
                 tobj_mesh.positions[i + 2],
             );
-            let normal = Vec3::new(
-                tobj_mesh.normals[i],
-                tobj_mesh.normals[i + 1],
-                tobj_mesh.normals[i + 2],
-            );
 
             bounds.min = bounds.min.min_by_component(position);
             bounds.max = bounds.max.max_by_component(position);
 
-            let vertex = Vertex::new(position, normal);
+            let vertex = if tobj_mesh.normals.is_empty() {
+                Vertex::new_pos(position)
+            } else {
+                let normal = Vec3::new(
+                    tobj_mesh.normals[i],
+                    tobj_mesh.normals[i + 1],
+                    tobj_mesh.normals[i + 2],
+                );
+
+                Vertex::new(position, normal)
+            };
+
             vertices.push(vertex);
 
             i += 3;
@@ -274,6 +263,8 @@ impl Mesh {
             let p2 = vertices[c as usize].position;
             let normal = (p1 - p0).cross(p2 - p0).normalized();
 
+            debug_assert_ne!(normal, Vec3::zero());
+
             let n = normals.len() as u32;
             normals.push(normal);
 
@@ -285,7 +276,63 @@ impl Mesh {
         triangles.shrink_to_fit();
         assert_eq!(j, tobj_mesh.indices.len());
 
+        if tobj_mesh.normals.is_empty() {
+            triangles.iter().for_each(|t| {
+                let (w0, w1, w2) = Self::angle_weights(
+                    vertices[t.a as usize].position,
+                    vertices[t.b as usize].position,
+                    vertices[t.c as usize].position,
+                );
+                debug_assert!(!(w0 == 0.0 && w1 == 0.0 && w2 == 0.0));
+
+                let normal = normals[t.normal as usize];
+
+                vertices[t.a as usize].normal += w0 * normal;
+                vertices[t.b as usize].normal += w1 * normal;
+                vertices[t.c as usize].normal += w2 * normal;
+            });
+
+            vertices.iter_mut().for_each(|v| {
+                debug_assert!(is_finite(&v.normal));
+                debug_assert_ne!(v.normal, Vec3::zero());
+                v.normal.normalize()
+            });
+        }
+
         Mesh::new(vertices, normals, triangles, bounds, shading_mode)
+    }
+
+    /// Determines the weights by which to scale triangle (p0, p1, p2)'s normal when
+    /// accumulating the vertex normal for vertices 0, 1, 2.
+    ///
+    /// # Constraints
+    /// * `p0` - All values should be finite (neither infinite nor `NaN`).
+    /// * `p1` - All values should be finite.
+    /// * `p2` - All values should be finite.
+    ///
+    /// # Arguments
+    /// * `p0` - The position 0 of a triangle
+    /// * `p1` - The position 1 of a triangle
+    /// * `p2` - The position 2 of a triangle
+    ///
+    /// # Returns
+    /// * `w0` - The weight for vertex 0
+    /// * `w1` - The weight for vertex 1
+    /// * `w2` - The weight for vertex 2
+    fn angle_weights(p0: Vec3, p1: Vec3, p2: Vec3) -> (f32, f32, f32) {
+        debug_assert!(is_finite(&p0));
+        debug_assert!(is_finite(&p1));
+        debug_assert!(is_finite(&p2));
+
+        let e01 = (p1 - p0).normalized();
+        let e12 = (p2 - p1).normalized();
+        let e20 = (p0 - p2).normalized();
+
+        let w0 = fast_clamp(e01.dot(-e20), -1.0, 1.0);
+        let w1 = fast_clamp(e12.dot(-e01), -1.0, 1.0);
+        let w2 = fast_clamp(e20.dot(-e12), -1.0, 1.0);
+
+        (w0, w1, w2)
     }
 
     /// Translates the vertices of this mesh, updating the `bounds`.
