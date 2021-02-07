@@ -1,10 +1,9 @@
-use crate::bvh::candidate::Candidates;
+use crate::bvh::candidate::{Candidate, Candidates};
 use crate::bvh::item::Item;
 use crate::bvh::plane::Plane;
 use crate::bvh::side::Side;
 use crate::{Aabb, ContainerGeometry, Ray};
 use std::collections::HashSet;
-use std::iter::FromIterator;
 use std::sync::Arc;
 
 const K_T: f32 = 15.;
@@ -54,13 +53,16 @@ where
         // Check that the cost of the splitting is not higher than the cost of the leaf.
         if cost > K_I * n as f32 {
             // Create the set of primitives
-            let items = HashSet::from_iter(candidates.iter().filter_map(|c| {
-                if c.is_left && c.dimension() == 0 {
-                    Some(c.item.clone())
-                } else {
-                    None
-                }
-            }));
+            let items = candidates
+                .iter()
+                .filter_map(|c| {
+                    if c.is_left && c.dimension() == 0 {
+                        Some(c.item.clone())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
 
             return Self::Leaf { items };
         }
@@ -80,7 +82,11 @@ where
         }
     }
 
-    fn partition(n: usize, space: &Aabb, candidates: &Candidates<T>) -> (f32, usize, usize, usize) {
+    fn partition(
+        n: usize,
+        space: &Aabb,
+        candidates: &[Candidate<T>],
+    ) -> (f32, usize, usize, usize) {
         let mut best_cost = f32::INFINITY;
         let mut best_candidate_index = 0;
 
@@ -178,7 +184,7 @@ where
     /// Step 1 of classify.
     /// Given a candidate list and a splitting candidate identify wich items are part of the
     /// left, right and both subspaces.
-    fn classify_items(candidates: &Candidates<T>, best_index: usize, sides: &mut Vec<Side>) {
+    fn classify_items(candidates: &[Candidate<T>], best_index: usize, sides: &mut Vec<Side>) {
         let best_dimension = candidates[best_index].dimension();
         for i in 0..(best_index + 1) {
             if candidates[i].dimension() == best_dimension {
@@ -199,7 +205,7 @@ where
     // Step 2: Splicing candidates left and right subspace given items sides
     fn splicing_candidates(
         mut candidates: Candidates<T>,
-        sides: &Vec<Side>,
+        sides: &[Side],
     ) -> (Candidates<T>, Candidates<T>) {
         let mut left_candidates = Candidates::with_capacity(candidates.len() / 2);
         let mut right_candidates = Candidates::with_capacity(candidates.len() / 2);

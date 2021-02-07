@@ -58,7 +58,7 @@ impl Scene {
             self.lights.push(e.clone())
         }
 
-        self.bounding_box = self.bounding_box.join(&obj.bounds().into());
+        self.bounding_box = self.bounding_box.join(&obj.bounds());
 
         self
     }

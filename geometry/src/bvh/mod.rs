@@ -71,6 +71,6 @@ where
     T: Clone,
 {
     fn bounds(&self) -> Aabb {
-        self.space.into()
+        self.space
     }
 }

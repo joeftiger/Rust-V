@@ -219,12 +219,12 @@ impl Mesh {
         let mut bounds = Aabb::empty();
 
         let mut vertices = Vec::with_capacity(tobj_mesh.positions.len());
-        let mut i = 0;
-        while i < tobj_mesh.positions.len() {
+        let mut pos_index = 0;
+        while pos_index < tobj_mesh.positions.len() {
             let position = Vec3::new(
-                tobj_mesh.positions[i],
-                tobj_mesh.positions[i + 1],
-                tobj_mesh.positions[i + 2],
+                tobj_mesh.positions[pos_index],
+                tobj_mesh.positions[pos_index + 1],
+                tobj_mesh.positions[pos_index + 2],
             );
 
             bounds.min = bounds.min.min_by_component(position);
@@ -234,9 +234,9 @@ impl Mesh {
                 Vertex::new_pos(position)
             } else {
                 let normal = Vec3::new(
-                    tobj_mesh.normals[i],
-                    tobj_mesh.normals[i + 1],
-                    tobj_mesh.normals[i + 2],
+                    tobj_mesh.normals[pos_index],
+                    tobj_mesh.normals[pos_index + 1],
+                    tobj_mesh.normals[pos_index + 2],
                 );
 
                 Vertex::new(position, normal)
@@ -244,37 +244,37 @@ impl Mesh {
 
             vertices.push(vertex);
 
-            i += 3;
+            pos_index += 3;
         }
         vertices.shrink_to_fit();
-        assert_eq!(i, tobj_mesh.positions.len());
+        assert_eq!(pos_index, tobj_mesh.positions.len());
 
         let mut normals = Vec::with_capacity(tobj_mesh.indices.len() / 3);
         let mut triangles = Vec::with_capacity(tobj_mesh.indices.len() / 3);
 
-        let mut j = 0;
-        while j < tobj_mesh.indices.len() {
-            let a = tobj_mesh.indices[j];
-            let b = tobj_mesh.indices[j + 1];
-            let c = tobj_mesh.indices[j + 2];
+        let mut index = 0;
+        while index < tobj_mesh.indices.len() {
+            let a_index = tobj_mesh.indices[index];
+            let b_index = tobj_mesh.indices[index + 1];
+            let c_index = tobj_mesh.indices[index + 2];
 
-            let p0 = vertices[a as usize].position;
-            let p1 = vertices[b as usize].position;
-            let p2 = vertices[c as usize].position;
+            let p0 = vertices[a_index as usize].position;
+            let p1 = vertices[b_index as usize].position;
+            let p2 = vertices[c_index as usize].position;
             let normal = (p1 - p0).cross(p2 - p0).normalized();
 
             debug_assert_ne!(normal, Vec3::zero());
 
-            let n = normals.len() as u32;
+            let normal_index = normals.len() as u32;
             normals.push(normal);
 
-            let triangle = Triangle::new(a, b, c, n);
+            let triangle = Triangle::new(a_index, b_index, c_index, normal_index);
             triangles.push(triangle);
 
-            j += 3;
+            index += 3;
         }
         triangles.shrink_to_fit();
-        assert_eq!(j, tobj_mesh.indices.len());
+        assert_eq!(index, tobj_mesh.indices.len());
 
         if tobj_mesh.normals.is_empty() {
             triangles.iter().for_each(|t| {
@@ -474,6 +474,11 @@ impl Intersectable for Mesh {
     }
 
     fn intersects(&self, ray: &Ray) -> bool {
-        !self.bvh.intersect(ray).is_empty()
+        let hits = self.bvh.intersect(ray);
+        if hits.is_empty() {
+            return false;
+        }
+
+        hits.iter().any(|t| t.intersects(self, ray))
     }
 }

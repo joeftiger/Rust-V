@@ -8,7 +8,6 @@ use crate::objects::Receiver;
 use crate::objects::{Emitter, SceneObject};
 use crate::scene::Scene;
 use crate::Spectrum;
-use bitflags::_core::f32::consts::FRAC_PI_8;
 use color::{Color, Colors};
 use geometry::{Aabb, Boundable, Mesh, ShadingMode, Sphere};
 use std::f32::consts::PI;
