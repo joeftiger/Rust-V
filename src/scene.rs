@@ -1,5 +1,5 @@
 use crate::objects::{EmitterExt, SceneObject};
-use geometry::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use geometry::{Aabb, Boundable, ContainerGeometry, Intersectable, Intersection, Ray};
 use std::sync::Arc;
 use ultraviolet::Vec3;
 
@@ -116,11 +116,8 @@ impl Scene {
     /// # Returns
     /// * Whether the ray intersects
     pub fn intersects(&self, ray: &Ray) -> bool {
-        if !self.bounding_box.intersects(&ray) {
-            return false;
-        }
-
-        self.objects.iter().any(|o| o.intersects(ray))
+        self.bounding_box.contains_or_intersects(ray)
+            && self.objects.iter().any(|o| o.intersects(ray))
     }
 }
 
