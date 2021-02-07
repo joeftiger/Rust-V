@@ -2,7 +2,7 @@ use crate::bvh::candidate::{Candidate, Candidates};
 use crate::bvh::item::Item;
 use crate::bvh::node::Node;
 use crate::bvh::side::Side;
-use crate::{Aabb, Boundable, Container, Intersectable, Ray};
+use crate::{Aabb, Boundable, ContainerGeometry, Ray};
 use std::collections::HashSet;
 use std::sync::Arc;
 
@@ -55,7 +55,7 @@ where
     }
 
     pub fn intersect(&self, ray: &Ray) -> Vec<Arc<T>> {
-        if self.space.contains(&ray.origin) || self.space.intersects(ray) {
+        if self.space.contains_or_intersects(ray) {
             let mut items = HashSet::new();
             self.root.intersect(ray, &mut items);
 

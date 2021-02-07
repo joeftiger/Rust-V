@@ -1,6 +1,6 @@
 use crate::bvh::Tree;
 use crate::debug_util::{is_finite, is_normalized};
-use crate::{Aabb, Boundable, Container, Intersectable, Intersection, Ray};
+use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
 use tobj::Mesh as TobjMesh;
 use ultraviolet::{Mat3, Rotor3, Vec3};
 use utility::floats::EPSILON;
@@ -95,51 +95,51 @@ impl Triangle {
         let b = v1.position;
         let c = v2.position;
 
-        // let a1 = -ray.direction;
-        // let a2 = b - a;
-        // let a3 = c - a;
-        //
-        // let denom = Mat3::new(a1, a2, a3).determinant();
-        // if denom.abs() < EPSILON {
-        //     return None;
-        // }
-        //
-        // let b = ray.origin - a;
-        //
-        // let beta = Mat3::new(a1, b, a3).determinant() / denom;
-        // if !(0.0..=1.0).contains(&beta) {
-        //     return None;
-        // }
-        //
-        // let gamma = Mat3::new(a1, a2, b).determinant() / denom;
-        // if gamma < 0.0 || beta + gamma > 1.0 {
-        //     return None;
-        // }
-        //
-        // let t = Mat3::new(b, a2, a3).determinant() / denom;
+        let a1 = -ray.direction;
+        let a2 = b - a;
+        let a3 = c - a;
 
-        let a_to_b = b - a;
-        let a_to_c = c - a;
-        let part0 = ray.direction.cross(a_to_c);
-
-        let det = a_to_b.dot(part0);
-        if det < EPSILON {
+        let denom = Mat3::new(a1, a2, a3).determinant();
+        if denom.abs() < EPSILON {
             return None;
         }
 
-        let part1 = ray.origin - a;
-        let beta = part1.dot(part0) / det;
+        let b = ray.origin - a;
+
+        let beta = Mat3::new(a1, b, a3).determinant() / denom;
         if !(0.0..=1.0).contains(&beta) {
             return None;
         }
 
-        let part2 = part1.cross(a_to_b);
-        let gamma = ray.direction.dot(part2) / det;
+        let gamma = Mat3::new(a1, a2, b).determinant() / denom;
         if gamma < 0.0 || beta + gamma > 1.0 {
             return None;
         }
 
-        let t = a_to_c.dot(part2) / det;
+        let t = Mat3::new(b, a2, a3).determinant() / denom;
+
+        // let a_to_b = b - a;
+        // let a_to_c = c - a;
+        // let part0 = ray.direction.cross(a_to_c);
+        //
+        // let det = a_to_b.dot(part0);
+        // if det < EPSILON {
+        //     return None;
+        // }
+        //
+        // let part1 = ray.origin - a;
+        // let beta = part1.dot(part0) / det;
+        // if !(0.0..=1.0).contains(&beta) {
+        //     return None;
+        // }
+        //
+        // let part2 = part1.cross(a_to_b);
+        // let gamma = ray.direction.dot(part2) / det;
+        // if gamma < 0.0 || beta + gamma > 1.0 {
+        //     return None;
+        // }
+        //
+        // let t = a_to_c.dot(part2) / det;
         if !ray.contains(t) {
             return None;
         }
@@ -197,6 +197,7 @@ impl Triangle {
 pub struct Mesh {
     vertices: Vec<Vertex>,
     normals: Vec<Vec3>,
+    triangles: Vec<Triangle>,
     bounds: Aabb,
     shading_mode: ShadingMode,
     bvh: Tree<Triangle>,
@@ -210,17 +211,14 @@ impl Mesh {
         bounds: Aabb,
         shading_mode: ShadingMode,
     ) -> Self {
-        let mut this = Self {
+        Self {
             vertices,
             normals,
+            triangles,
             bounds,
             shading_mode,
             bvh: Tree::empty(),
-        };
-
-        this.bvh = Tree::new(triangles, |t| t.bounds(&this));
-
-        this
+        }
     }
 
     /// Loads the given tobj mesh.
@@ -329,7 +327,17 @@ impl Mesh {
     pub fn scale(&mut self, scale: Vec3) -> &mut Self {
         debug_assert!(is_finite(&scale));
 
-        self.vertices.iter_mut().for_each(|v| v.position *= scale);
+        for v in &mut self.vertices {
+            v.position *= scale;
+            v.normal *= scale;
+            v.normal.normalize();
+        }
+
+        // self.vertices.iter_mut().for_each(|v| {
+        //     v.position *= scale;
+        //     v.normal *= scale;
+        //     v.normal.normalize();
+        // });
         self.bounds.min *= scale;
         self.bounds.max *= scale;
 
@@ -375,11 +383,25 @@ impl Mesh {
 
         self
     }
+
+    pub fn update_bounds(&mut self) {
+        let mut new_bounds = Aabb::empty();
+        self.vertices.iter_mut().for_each(|v| {
+            new_bounds.min = new_bounds.min.min_by_component(v.position);
+            new_bounds.max = new_bounds.min.max_by_component(v.position);
+        });
+
+        self.bounds = new_bounds;
+    }
+
+    pub fn build_bvh(&mut self) {
+        self.bvh = Tree::new(self.triangles.clone(), |t| t.bounds(self));
+    }
 }
 
 impl Boundable for Mesh {
     fn bounds(&self) -> Aabb {
-        self.bounds.into()
+        self.bounds
     }
 }
 
@@ -391,14 +413,12 @@ impl Intersectable for Mesh {
         let hits = self.bvh.intersect(ray);
         for hit in &hits {
             if let Some(i) = hit.intersect(self, &new_ray) {
-                println!("not empty");
                 new_ray.t_end = i.t;
                 intersection = Some(i);
             }
         }
 
         if let Some(mut i) = intersection {
-            println!("REALLY not empty");
             i.ray = *ray;
             Some(i)
         } else {

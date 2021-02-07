@@ -2,7 +2,7 @@ use crate::bvh::candidate::Candidates;
 use crate::bvh::item::Item;
 use crate::bvh::plane::Plane;
 use crate::bvh::side::Side;
-use crate::{Aabb, Container, Intersectable, Ray};
+use crate::{Aabb, ContainerGeometry, Ray};
 use std::collections::HashSet;
 use std::iter::FromIterator;
 use std::sync::Arc;
@@ -48,29 +48,19 @@ impl<T> Node<T>
 where
     T: Clone,
 {
-    pub fn new(
-        space: Aabb,
-        mut candidates: Candidates<T>,
-        n: usize,
-        sides: &mut Vec<Side>,
-    ) -> Self {
+    pub fn new(space: Aabb, candidates: Candidates<T>, n: usize, sides: &mut Vec<Side>) -> Self {
         let (cost, best_index, n_l, n_r) = Self::partition(n, &space, &candidates);
 
         // Check that the cost of the splitting is not higher than the cost of the leaf.
         if cost > K_I * n as f32 {
             // Create the set of primitives
-            let mut items = HashSet::with_capacity(n);
-            candidates
-                .drain(..)
-                .filter(|c| c.is_left && c.dimension() == 0)
-                .for_each(|c| {
-                    items.insert(c.item);
-                });
-            // let items = HashSet::from_iter(candidates.iter().filter_map(|c| if c.is_left && c.dimension() == 0 {
-            //     Some(c.item.clone())
-            // } else {
-            //     None
-            // }));
+            let items = HashSet::from_iter(candidates.iter().filter_map(|c| {
+                if c.is_left && c.dimension() == 0 {
+                    Some(c.item.clone())
+                } else {
+                    None
+                }
+            }));
 
             return Self::Leaf { items };
         }
@@ -231,10 +221,10 @@ where
         match self {
             Node::Leaf { items } => intersect_items.extend(items.clone()),
             Node::Node { node } => {
-                if node.left_space.contains(&ray.origin) || node.left_space.intersects(ray) {
+                if node.left_space.contains_or_intersects(ray) {
                     node.left_node.intersect(ray, intersect_items);
                 }
-                if node.right_space.contains(&ray.origin) || node.right_space.intersects(ray) {
+                if node.right_space.contains_or_intersects(ray) {
                     node.right_node.intersect(ray, intersect_items);
                 }
             }

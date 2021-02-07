@@ -513,3 +513,11 @@ pub trait Intersectable {
 pub trait Geometry: Boundable + Intersectable {}
 
 impl<T> Geometry for T where T: Boundable + Intersectable {}
+
+pub trait ContainerGeometry: Container + Intersectable {
+    fn contains_or_intersects(&self, ray: &Ray) -> bool {
+        self.contains(&ray.origin) || self.intersects(ray)
+    }
+}
+
+impl<T> ContainerGeometry for T where T: Container + Intersectable {}
