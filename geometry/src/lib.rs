@@ -1,3 +1,4 @@
+mod bubble;
 pub mod bvh;
 mod cube;
 mod cylinder;
@@ -10,6 +11,7 @@ mod sphere;
 use ultraviolet::Vec3;
 
 use crate::debug_util::{in_range_incl, is_finite, is_normalized};
+pub use bubble::Bubble;
 pub use cube::Aabb;
 pub use cylinder::Cylinder;
 pub use mesh::{Mesh, ShadingMode};
