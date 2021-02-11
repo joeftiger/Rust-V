@@ -28,6 +28,7 @@ impl RenderWindow {
         let wait_key = Duration::from_millis(500);
         let render_job = self.renderer.render();
 
+        let mut passes = 0;
         while let Ok(event) = self.window.wait_key(wait_key) {
             if let Some(e) = event {
                 if e.key == KeyCode::Escape {
@@ -41,6 +42,9 @@ impl RenderWindow {
             }
 
             let image = self.renderer.get_image_u8();
+            passes += 1;
+            println!("{} passes", passes);
+
             if let Some(err) = self.window.set_image(image, "Rendering").err() {
                 eprintln!("{}\nSkipping this image!", err);
             }
