@@ -18,10 +18,12 @@
 
 mod debug_normals;
 mod path;
+mod path_enhanced;
 mod whitted;
 
 pub use debug_normals::DebugNormals;
 pub use path::Path;
+pub use path_enhanced::PathEnhanced;
 pub use whitted::Whitted;
 
 use crate::bxdf::{BxDFType, BSDF};
@@ -35,8 +37,6 @@ use geometry::Ray;
 ///
 /// This trait provides generic methods like `specular_reflection` and `specular_transmission`.
 pub trait Integrator: Send + Sync {
-    fn max_depth(&self) -> u32;
-
     /// Integrates the given scene with the primary ray and the sampler
     ///
     /// # Arguments

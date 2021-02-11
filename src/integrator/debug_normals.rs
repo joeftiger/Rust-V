@@ -8,10 +8,6 @@ use ultraviolet::Vec3;
 pub struct DebugNormals;
 
 impl Integrator for DebugNormals {
-    fn max_depth(&self) -> u32 {
-        1
-    }
-
     fn illumination(
         &self,
         _: &Scene,

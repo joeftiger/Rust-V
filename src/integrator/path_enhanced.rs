@@ -7,17 +7,21 @@ use crate::Spectrum;
 use color::{Color, Colors};
 use geometry::offset_ray_towards;
 
-pub struct Path {
+pub struct PathEnhanced {
     max_depth: u32,
+    max_specular_depth: u32,
 }
 
-impl Path {
-    pub fn new(max_depth: u32) -> Self {
-        Self { max_depth }
+impl PathEnhanced {
+    pub fn new(max_depth: u32, max_specular_depth: u32) -> Self {
+        Self {
+            max_depth,
+            max_specular_depth,
+        }
     }
 }
 
-impl Integrator for Path {
+impl Integrator for PathEnhanced {
     fn illumination(
         &self,
         scene: &Scene,
@@ -31,7 +35,9 @@ impl Integrator for Path {
         let mut hit = intersection.clone();
         let mut specular = false;
 
-        for bounce in 0..self.max_depth {
+        let mut bounce = 0;
+        let mut specular_bounce = 0;
+        while bounce < self.max_depth && specular_bounce < self.max_specular_depth {
             let outgoing = -hit.ray.direction;
             let normal = hit.normal;
             let mut bounce_illum = Spectrum::black();
@@ -71,6 +77,12 @@ impl Integrator for Path {
                 }
             } else {
                 break;
+            }
+
+            if specular {
+                specular_bounce += 1;
+            } else {
+                bounce += 1;
             }
         }
 

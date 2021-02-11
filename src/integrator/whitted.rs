@@ -45,7 +45,7 @@ impl Whitted {
         depth: u32,
         typ: BxDFType,
     ) -> Spectrum {
-        debug_assert!(depth < self.max_depth());
+        debug_assert!(depth < self.max_depth);
 
         let outgoing = -intersection.ray.direction;
 
@@ -59,9 +59,14 @@ impl Whitted {
 
         if let Some(bxdf_sample) = bxdf_sample_option {
             if bxdf_sample.pdf > 0.0 && !bxdf_sample.spectrum.is_black() {
-                let cos = bxdf_sample.incident.dot(normal);
+                let cos_abs = if bxdf_sample.typ.is_specular() {
+                    // division of cosine omitted in specular bxdfs
+                    1.0
+                } else {
+                    bxdf_sample.incident.dot(normal).abs()
+                };
 
-                if cos != 0.0 {
+                if cos_abs != 0.0 {
                     let refl_ray = offset_ray_towards(
                         intersection.point,
                         intersection.normal,
@@ -71,7 +76,7 @@ impl Whitted {
                     if let Some(si) = scene.intersect(&refl_ray) {
                         let illumination = self.illumination(scene, &si, sampler, depth);
                         reflection +=
-                            illumination * bxdf_sample.spectrum * (cos.abs() / bxdf_sample.pdf);
+                            illumination * bxdf_sample.spectrum * (cos_abs / bxdf_sample.pdf);
                     }
                 }
             }
@@ -82,10 +87,6 @@ impl Whitted {
 }
 
 impl Integrator for Whitted {
-    fn max_depth(&self) -> u32 {
-        self.max_depth
-    }
-
     fn illumination(
         &self,
         scene: &Scene,
