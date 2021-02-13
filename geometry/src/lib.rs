@@ -3,6 +3,7 @@ pub mod bvh;
 mod cube;
 mod cylinder;
 mod debug_util;
+pub mod lenses;
 mod mesh;
 mod point;
 pub mod ray;
