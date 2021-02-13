@@ -1,11 +1,14 @@
-mod noop_sampler;
-mod random_sampler;
+use ultraviolet::{Vec2, Vec3};
+
+pub mod pixel_samplers;
 
 pub use noop_sampler::NoOpSampler;
 pub use random_sampler::RandomSampler;
 
 use crate::debug_utils::{in_range_incl_left, within_01};
-use ultraviolet::{Vec2, Vec3};
+
+mod noop_sampler;
+mod random_sampler;
 
 /// A sample consists of 3 random values packed together into a `f32` and a `Vec2`.
 #[derive(Debug)]

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::bxdf::refraction_index::{AIR, GLASS};
+use crate::bxdf::refraction_index::{AIR, GLASS, WATER};
 use crate::bxdf::{FresnelSpecular, OrenNayar, BSDF};
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
@@ -9,7 +9,8 @@ use crate::objects::{Emitter, SceneObject};
 use crate::scene::Scene;
 use crate::Spectrum;
 use color::{Color, Colors};
-use geometry::{Aabb, Boundable, Mesh, ShadingMode, Sphere};
+use geometry::lenses::BiconvexLens;
+use geometry::{Aabb, Boundable, Bubble, Mesh, ShadingMode, Sphere};
 use std::f32::consts::PI;
 use std::sync::Arc;
 use ultraviolet::{Rotor3, UVec2, Vec3};
@@ -55,13 +56,13 @@ fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
 }
 
 fn create_bunny() -> SceneObject {
-    let file_name = "./meshes/armadillo.obj";
+    let file_name = "./meshes/buddha.obj";
     let (model, _) = tobj::load_obj(file_name, true).expect("Could not load bunny file");
 
     let mut bunny = Mesh::load(&model[0].mesh, ShadingMode::Phong);
 
-    bunny.translate(-bunny.bounds().center());
-    bunny.scale(Vec3::broadcast(1.0));
+    // bunny.translate(-bunny.bounds().center());
+    bunny.scale(Vec3::broadcast(3.0));
 
     // translation + scale + rotation
     let bounds = bunny.bounds();
@@ -101,6 +102,44 @@ fn create_sphere() -> SceneObject {
     let bsdf = BSDF::new(vec![Box::new(specular)]);
 
     let receiver = Receiver::new(sphere, bsdf);
+    SceneObject::new_receiver(receiver)
+}
+
+fn create_bubble() -> SceneObject {
+    let center = Vec3::new(X_CENTER, Y_CENTER, Z_CENTER);
+    let offset = Vec3::unit_y() * (THICKNESS / 3.0);
+    let bubble = Bubble::new(center, RADIUS * 2.0, THICKNESS, offset);
+
+    let specular = FresnelSpecular::new(
+        Spectrum::new_const(1.0),
+        Spectrum::new_const(1.0),
+        AIR,
+        WATER,
+    );
+    let bsdf = BSDF::new(vec![Box::new(specular)]);
+
+    let receiver = Receiver::new(bubble, bsdf);
+    SceneObject::new_receiver(receiver)
+}
+
+fn create_biconvex_lens() -> SceneObject {
+    let radius = RADIUS * 3.0;
+    let dist2 = THICKNESS * 3.0;
+    let center0 = Vec3::new(X_CENTER, Y_CENTER + radius - dist2, Z_CENTER);
+    let center1 = Vec3::new(X_CENTER, Y_CENTER - radius + dist2, Z_CENTER);
+    let sphere0 = Sphere::new(center0, radius);
+    let sphere1 = Sphere::new(center1, radius);
+    let lens = BiconvexLens::new(sphere0, sphere1);
+
+    let specular = FresnelSpecular::new(
+        Spectrum::new_const(1.0),
+        Spectrum::new_const(1.0),
+        AIR,
+        GLASS,
+    );
+    let bsdf = BSDF::new(vec![Box::new(specular)]);
+
+    let receiver = Receiver::new(lens, bsdf);
     SceneObject::new_receiver(receiver)
 }
 
@@ -158,7 +197,9 @@ impl DemoScene for CornellScene {
         });
 
         // scene.add(create_sphere());
-        scene.add(create_bunny());
+        // scene.add(create_bunny());
+        scene.add(create_biconvex_lens());
+        // scene.add(create_bubble());
         scene.add(create_emitter());
 
         (scene, camera)

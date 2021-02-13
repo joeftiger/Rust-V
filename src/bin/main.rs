@@ -4,7 +4,7 @@ extern crate clap;
 use clap::App;
 
 use rust_v::demo_scenes::{CornellScene, DebugScene, DebugSphereScene, DemoScene, SphereScene};
-use rust_v::integrator::{DebugNormals, Integrator, Path, Whitted};
+use rust_v::integrator::{DebugNormals, Integrator, Path, PathEnhanced, Whitted};
 use rust_v::renderer::Renderer;
 use rust_v::sampler::{NoOpSampler, RandomSampler, Sampler};
 use rust_v::RenderConfig;
@@ -148,7 +148,11 @@ impl MainConfig {
         let integrator: Arc<dyn Integrator> = match self.integrator_type {
             IntegratorType::Debug => Arc::new(DebugNormals),
             IntegratorType::Whitted => Arc::new(Whitted::new(self.render_config.depth)),
-            IntegratorType::Path => Arc::new(Path::new(self.render_config.depth)),
+            IntegratorType::Path => Arc::new(PathEnhanced::new(
+                self.render_config.depth,
+                self.render_config.depth * 10,
+            )),
+            // IntegratorType::Path => Arc::new(Path::new(self.render_config.depth)),
         };
 
         let sampler: Arc<dyn Sampler> = match self.integrator_type {

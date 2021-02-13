@@ -139,7 +139,7 @@ pub struct Renderer {
     config: RenderConfig,
     render_blocks: Arc<Vec<RwLock<RenderBlock>>>,
     progress: Arc<AtomicU32>,
-    progress_bar: Arc<Mutex<ProgressBar>>,
+    pub progress_bar: Arc<Mutex<ProgressBar>>,
 }
 
 impl Renderer {
@@ -290,6 +290,7 @@ impl Renderer {
             // each thread loops and gets the next block unless it should stop or has finished.
             let handle = thread::Builder::new()
                 .name(format!("Render thread {}", i))
+                .stack_size(8 * 1024 * 1024)
                 .spawn(move || loop {
                     if this_should_stop.load(Ordering::Relaxed) {
                         break;

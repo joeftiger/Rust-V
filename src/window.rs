@@ -42,8 +42,11 @@ impl RenderWindow {
             }
 
             let image = self.renderer.get_image_u8();
-            passes += 1;
-            println!("{} passes", passes);
+            {
+                let mutex = self.renderer.progress_bar.lock().unwrap();
+                mutex.println(format!("{}", passes));
+                passes += 1;
+            }
 
             if let Some(err) = self.window.set_image(image, "Rendering").err() {
                 eprintln!("{}\nSkipping this image!", err);
