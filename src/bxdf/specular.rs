@@ -212,8 +212,8 @@ impl BxDF for FresnelSpecular {
             (self.eta_t, self.eta_i, -bxdf_normal())
         };
 
-        if let Some(incident) = refract(*outgoing, normal, eta_i / eta_t) {
-            if f < sample.x {
+        if f < sample.x {
+            if let Some(incident) = refract(*outgoing, normal, eta_i / eta_t) {
                 // let incident = incident.normalized();
 
                 let cos_i = cos_theta(&incident);
