@@ -40,3 +40,19 @@ pub fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {
         Some((x1, x0))
     }
 }
+
+#[inline(always)]
+pub fn lerp(from: f32, to: f32, t: f32) -> f32 {
+    (1.0 - t) * from + to * t
+}
+
+#[inline(always)]
+pub fn inv_lerp(from: f32, to: f32, res: f32) -> f32 {
+    (res - from) / (to - from)
+}
+
+#[inline(always)]
+pub fn lerp_map(from_lerp: (f32, f32), to_lerp: (f32, f32), res: f32) -> f32 {
+    let t = inv_lerp(from_lerp.0, from_lerp.1, res);
+    lerp(to_lerp.0, to_lerp.1, t)
+}
