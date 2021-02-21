@@ -178,7 +178,7 @@ impl Triangle {
 }
 
 /// A mesh consists of vertices and triangles, allowing queries for intersections.
-/// Depending on the [`MeshMode`](MeshMode), the intersection normals will be interpolated.
+/// Depending on the [`ShadingMode`](ShadingMode), the intersection normals will be interpolated.
 pub struct Mesh {
     vertices: Vec<Vertex>,
     normals: Vec<Vec3>,

@@ -1,6 +1,10 @@
-///! Borosilicate crown glass (known as BK7).
-///
-///! Data taken from [here](https://refractiveindex.info/?shelf=3d&book=glass&page=BK7) on 2021-02-21.
+//! Borosilicate crown glass (known as BK7) coefficients.
+//!
+//! # Resources
+//! * Data taken from [here](https://refractiveindex.info/?shelf=3d&book=glass&page=BK7) on
+//! 2021-02-21.
+//! * Sellmeier data taken from [here](https://en.wikipedia.org/wiki/Sellmeier_equation) on
+//! 2021-02-21.
 
 /// Computes the refractive index of **glass** according to the Sellmeier equation.
 ///

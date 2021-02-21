@@ -1,7 +1,7 @@
-///! Describes H20 in liquid form.
-///!
-///! # Resources
-///! Data taken from [here](https://refractiveindex.info/?shelf=3d&book=liquids&page=water) on 2021-02-21.
+//! H2O coefficients at 25°C.
+//!
+//! # Resources
+//! Data taken from [here](https://refractiveindex.info/?shelf=3d&book=liquids&page=water) on 2021-02-21.
 
 pub static INDEX: [f32; 169] = {
     [

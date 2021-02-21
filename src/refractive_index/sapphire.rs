@@ -1,7 +1,10 @@
-///! Sapphire coefficients
-///!
-///! Data taken from [here](https://refractiveindex.info/?shelf=main&book=Al2O3&page=Querry-o) on
-///! 2021-02-21.
+//! Sapphire coefficients.
+//!
+//! # Resources
+//! * Data taken from [here](https://refractiveindex.info/?shelf=main&book=Al2O3&page=Querry-o) on
+//! 2021-02-21.
+//! * Sellmeier data taken from [here](https://en.wikipedia.org/wiki/Sellmeier_equation) on
+//! 2021-02-21.
 
 /// Computes the refractive index of **sapphire** according to the Sellmeier equation.
 ///
