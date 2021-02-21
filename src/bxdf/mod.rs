@@ -219,7 +219,6 @@ pub fn bxdf_to_world(v: Vec3) -> Rotor3 {
 }
 
 bitflags! {
-
     /// All BxDF have types, for example
     /// * `BRDF` - Bidirectional Reflection Function
     /// * `BTDF` - Bidirectional Transmission Function
