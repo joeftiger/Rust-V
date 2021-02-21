@@ -19,6 +19,7 @@
 mod debug_normals;
 mod path;
 mod path_enhanced;
+mod spectral_path;
 mod whitted;
 
 pub use debug_normals::DebugNormals;
