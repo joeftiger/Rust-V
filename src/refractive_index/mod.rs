@@ -12,68 +12,83 @@
 use utility::floats::fast_cmp;
 use utility::math::lerp_map;
 
-mod air;
-mod glass;
-mod plastic;
-mod water;
+pub mod air;
+pub mod glass;
+pub mod sapphire;
+pub mod water;
 
 pub enum RefractiveType {
     AIR,
     VACUUM,
     WATER,
     GLASS,
+    SAPPHIRE,
 }
 
 impl RefractiveType {
+    /// Returns the refractive index (inaccurate for different wavelengths).y
+    ///
+    /// # Returns
+    /// * The refractive index
     pub fn n_uniform(&self) -> f32 {
         match self {
             RefractiveType::AIR => 1.00029,
             RefractiveType::VACUUM => 1.0,
             RefractiveType::WATER => 1.3325,
             RefractiveType::GLASS => 1.5168,
+            RefractiveType::SAPPHIRE => 1.7490,
         }
     }
 
+    /// Returns the extinction coefficient (if it exists).
+    ///
+    /// # Returns
+    /// * `Some` extinction coefficient, or
+    /// * `None`
     pub fn k_uniform(&self) -> Option<f32> {
         match self {
             RefractiveType::AIR => None,
             RefractiveType::VACUUM => None,
             RefractiveType::WATER => Some(7.2792e-9),
             RefractiveType::GLASS => Some(9.7525e-9),
+            RefractiveType::SAPPHIRE => Some(0.020900),
         }
     }
 
     /// Returns the refractive index at a given wavelength.
     ///
     /// # Arguments
-    /// * `wavelength_nm` - The wavelength in nm
+    /// * `lambda` - The wavelength in **µm**
     ///
     /// # Returns
     /// * The corresponding refractive index
-    pub fn n(&self, wavelength_nm: f32) -> f32 {
+    pub fn n(&self, lambda: f32) -> f32 {
         match self {
-            RefractiveType::AIR => search_and_get(&air::INDEX, &air::N, wavelength_nm),
+            // RefractiveType::AIR => search_and_get(&air::INDEX, &air::N, lambda),
+            RefractiveType::AIR => air::sellmeier_n(lambda),
             RefractiveType::VACUUM => 1.0,
-            RefractiveType::WATER => search_and_get(&water::INDEX, &water::N, wavelength_nm),
-            RefractiveType::GLASS => search_and_get(&glass::INDEX_N, &glass::N, wavelength_nm),
+            RefractiveType::WATER => search_and_lerp(&water::INDEX, &water::N, lambda),
+            RefractiveType::GLASS => glass::sellmeier_n(lambda),
+            RefractiveType::SAPPHIRE => sapphire::sellmeier_n(lambda),
         }
     }
 
     /// Returns the extinction coefficient at a given wavelength (if it exists).
     ///
     /// # Arguments
-    /// * `wavelength_nm` - The wavelength in nm
+    /// * `lambda` - The wavelength in **µm**
     ///
     /// # Returns
-    /// * `Some` corresponding extinction coefficient
+    /// * `Some` corresponding extinction coefficient, or
     /// * `None`
-    pub fn k(&self, wavelength_nm: f32) -> Option<f32> {
+    pub fn k(&self, lambda: f32) -> Option<f32> {
         match self {
             RefractiveType::AIR => None,
             RefractiveType::VACUUM => None,
-            RefractiveType::WATER => Some(search_and_get(&water::INDEX, &water::K, wavelength_nm)),
-            RefractiveType::GLASS => {
-                Some(search_and_get(&glass::INDEX_K, &glass::K, wavelength_nm))
+            RefractiveType::WATER => Some(search_and_lerp(&water::INDEX, &water::K, lambda)),
+            RefractiveType::GLASS => Some(search_and_lerp(&glass::INDEX_K, &glass::K, lambda)),
+            RefractiveType::SAPPHIRE => {
+                Some(search_and_lerp(&sapphire::INDEX_K, &sapphire::K, lambda))
             }
         }
     }
@@ -82,6 +97,7 @@ impl RefractiveType {
 /// Searches for the index of a given value inside a given slice.
 /// If no such value is found, it will return the the indexes below/above the value, allowing to
 /// lerp further usages.
+#[inline]
 pub fn search_index(slice: &[f32], value: f32) -> Result<usize, (usize, usize)> {
     match slice.binary_search_by(|a| fast_cmp(*a, value)) {
         Ok(index) => Ok(index),
@@ -89,11 +105,12 @@ pub fn search_index(slice: &[f32], value: f32) -> Result<usize, (usize, usize)> 
     }
 }
 
-pub fn search_and_get(index_slice: &[f32], value_slice: &[f32], wavelength_nm: f32) -> f32 {
+#[inline]
+pub fn search_and_lerp(index_slice: &[f32], value_slice: &[f32], wavelength_nm: f32) -> f32 {
     match search_index(index_slice, wavelength_nm) {
         Ok(i) => value_slice[i],
         Err((min, max)) => {
-            if max > value_slice.len() {
+            if max >= value_slice.len() {
                 return value_slice[min];
             }
 

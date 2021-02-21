@@ -1,8 +1,7 @@
 ///! Describes H20 in liquid form.
 ///!
 ///! # Resources
-///! Data taken from https://refractiveindex.info/?shelf=3d&book=liquids&page=water on 2021-02-21.
-///! use crate::refractive_index::{search_index, RefractiveIndex};
+///! Data taken from [here](https://refractiveindex.info/?shelf=3d&book=liquids&page=water) on 2021-02-21.
 
 pub static INDEX: [f32; 169] = {
     [
