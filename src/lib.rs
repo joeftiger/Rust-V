@@ -19,8 +19,10 @@ pub mod scene;
 
 pub use configuration::RenderConfig;
 
+pub mod refractive_index;
 #[cfg(feature = "live-window")]
 mod window;
+
 #[cfg(feature = "live-window")]
 pub use window::RenderWindow;
 
