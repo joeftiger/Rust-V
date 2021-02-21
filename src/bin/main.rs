@@ -148,11 +148,11 @@ impl MainConfig {
         let integrator: Arc<dyn Integrator> = match self.integrator_type {
             IntegratorType::Debug => Arc::new(DebugNormals),
             IntegratorType::Whitted => Arc::new(Whitted::new(self.render_config.depth)),
-            IntegratorType::Path => Arc::new(PathEnhanced::new(
+            IntegratorType::Path => Arc::new(Path::new(self.render_config.depth)),
+            IntegratorType::PathEnhanced => Arc::new(PathEnhanced::new(
                 self.render_config.depth,
-                self.render_config.depth * 10,
+                self.render_config.depth * 4,
             )),
-            // IntegratorType::Path => Arc::new(Path::new(self.render_config.depth)),
         };
 
         let sampler: Arc<dyn Sampler> = match self.integrator_type {
@@ -227,9 +227,9 @@ impl TryInto<PixelType> for &str {
     type Error = String;
 
     fn try_into(self) -> Result<PixelType, Self::Error> {
-        match self {
-            "u8" | "U8" => Ok(PixelType::U8),
-            "u16" | "U16" => Ok(PixelType::U16),
+        match self.to_lowercase().as_str() {
+            "u8" => Ok(PixelType::U8),
+            "u16" => Ok(PixelType::U16),
             _ => Err(self.to_string()),
         }
     }
@@ -241,16 +241,18 @@ pub enum IntegratorType {
     Debug,
     Whitted,
     Path,
+    PathEnhanced,
 }
 
 impl TryInto<IntegratorType> for &str {
     type Error = String;
 
     fn try_into(self) -> Result<IntegratorType, Self::Error> {
-        match self {
-            "debug" | "Debug" | "DEBUG" => Ok(IntegratorType::Debug),
-            "whitted" | "Whitted" | "WHITTED" => Ok(IntegratorType::Whitted),
-            "path" | "Path" | "PATH" => Ok(IntegratorType::Path),
+        match self.to_lowercase().as_str() {
+            "debug" => Ok(IntegratorType::Debug),
+            "whitted" => Ok(IntegratorType::Whitted),
+            "path" => Ok(IntegratorType::Path),
+            "pathenhanced" => Ok(IntegratorType::PathEnhanced),
             _ => Err(self.to_string()),
         }
     }
@@ -269,11 +271,11 @@ impl TryInto<DemoType> for &str {
     type Error = String;
 
     fn try_into(self) -> Result<DemoType, Self::Error> {
-        match self {
-            "spheres" | "Spheres" | "SPHERES" => Ok(DemoType::SphereScene),
-            "cornell" | "Cornell" | "CORNELL" => Ok(DemoType::CornellScene),
-            "debug" | "Debug" | "DEBUG" => Ok(DemoType::DebugScene),
-            "debugsphere" | "DebugSphere" | "DEBUGSPHERE" => Ok(DemoType::DebugSphereScene),
+        match self.to_lowercase().as_str() {
+            "spheres" => Ok(DemoType::SphereScene),
+            "cornell" => Ok(DemoType::CornellScene),
+            "debug" => Ok(DemoType::DebugScene),
+            "debugsphere" => Ok(DemoType::DebugSphereScene),
             _ => Err(self.to_string()),
         }
     }
