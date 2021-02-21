@@ -34,14 +34,21 @@ color = { path = "./color" }
 geometry = { path = "./geometry" }
 utility = { path = "./utility" }
 
+[dev-dependencies]
+criterion = ""
+
+[[bench]]
+name = "refractive_index"
+harness = false
+
 [features]
 default = []
 live-window = ["show-image"]
 
 [profile.release]
-#codegen-units = 1
+codegen-units = 1
 opt-level = 3
-#lto = true
+lto = true
 incremental = true
 
 [profile.dev]
