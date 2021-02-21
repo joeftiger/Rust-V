@@ -1,9 +1,11 @@
+#![allow(unused_variables)]
+#![allow(dead_code)]
+
 use ultraviolet::Vec2;
 
 mod stratified_sampler;
 
 pub trait PixelSampler {
-    fn new(samples_per_pixel: u32) {}
     /// Generates a new camera pixel offset for a given pixel
     ///
     /// # Constraints
