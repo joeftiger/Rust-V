@@ -137,6 +137,7 @@ pub struct Renderer {
     sampler: Arc<dyn Sampler>,
     integrator: Arc<dyn Integrator>,
     config: RenderConfig,
+    #[allow(clippy::rc_buffer)]
     render_blocks: Arc<Vec<RwLock<RenderBlock>>>,
     progress: Arc<AtomicU32>,
     pub progress_bar: Arc<Mutex<ProgressBar>>,
