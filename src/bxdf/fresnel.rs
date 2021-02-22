@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use crate::refractive_index::RefractiveType;
 use crate::Spectrum;
 use color::Color;
 use std::mem::swap;
@@ -85,12 +86,14 @@ pub trait Fresnel: Send + Sync {
     /// # Returns
     /// * The reflectance
     fn evaluate(&self, cos_i: f32) -> Spectrum;
+
+    fn evaluate_lambda(&self, lambda: f32, cos_i: f32) -> f32;
 }
 
 /// An implementation of `Fresnel` for dielectric materials.
 pub struct FresnelDielectric {
-    eta_i: f32,
-    eta_t: f32,
+    eta_i: RefractiveType,
+    eta_t: RefractiveType,
 }
 
 impl FresnelDielectric {
@@ -102,14 +105,20 @@ impl FresnelDielectric {
     ///
     /// # Returns
     /// * Self
-    pub fn new(eta_i: f32, eta_t: f32) -> Self {
+    pub fn new(eta_i: RefractiveType, eta_t: RefractiveType) -> Self {
         Self { eta_i, eta_t }
     }
 }
 
 impl Fresnel for FresnelDielectric {
     fn evaluate(&self, cos_i: f32) -> Spectrum {
-        Spectrum::new_const(fresnel_dielectric(cos_i, self.eta_i, self.eta_t))
+        let fresnel = fresnel_dielectric(cos_i, self.eta_i.n_uniform(), self.eta_t.n_uniform());
+
+        Spectrum::new_const(fresnel)
+    }
+
+    fn evaluate_lambda(&self, lambda: f32, cos_i: f32) -> f32 {
+        fresnel_dielectric(cos_i, self.eta_i.n(lambda), self.eta_t.n(lambda))
     }
 }
 
@@ -127,5 +136,9 @@ impl Fresnel for FresnelNoOp {
     /// * `1.0` spectrum
     fn evaluate(&self, _: f32) -> Spectrum {
         Spectrum::new_const(1.0)
+    }
+
+    fn evaluate_lambda(&self, _: f32, _: f32) -> f32 {
+        1.0
     }
 }

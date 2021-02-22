@@ -17,6 +17,7 @@ pub mod glass;
 pub mod sapphire;
 pub mod water;
 
+#[derive(Copy, Clone)]
 pub enum RefractiveType {
     AIR,
     VACUUM,
@@ -30,6 +31,7 @@ impl RefractiveType {
     ///
     /// # Returns
     /// * The refractive index
+    #[inline(always)]
     pub fn n_uniform(&self) -> f32 {
         match self {
             RefractiveType::AIR => 1.00029,
@@ -45,6 +47,7 @@ impl RefractiveType {
     /// # Returns
     /// * `Some` extinction coefficient, or
     /// * `None`
+    #[inline(always)]
     pub fn k_uniform(&self) -> Option<f32> {
         match self {
             RefractiveType::AIR => None,

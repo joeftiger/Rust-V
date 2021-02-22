@@ -6,6 +6,8 @@ use crate::bxdf::{
     FresnelDielectric,
 };
 use crate::debug_utils::{is_normalized, within_01};
+use crate::light::LightWave;
+use crate::refractive_index::RefractiveType;
 use crate::Spectrum;
 use color::Color;
 use ultraviolet::{Vec2, Vec3};
@@ -46,7 +48,7 @@ impl BxDF for SpecularReflection {
         Spectrum::new_const(0.0)
     }
 
-    fn sample(&self, outgoing: &Vec3, _: &Vec2) -> Option<BxDFSample> {
+    fn sample(&self, outgoing: &Vec3, _: &Vec2) -> Option<BxDFSample<Spectrum>> {
         debug_assert!(is_normalized(outgoing));
 
         let incident = bxdf_incident_to(outgoing);
@@ -72,8 +74,8 @@ impl BxDF for SpecularReflection {
 /// Describes a specular transmission.
 pub struct SpecularTransmission {
     t: Spectrum,
-    eta_i: f32,
-    eta_t: f32,
+    eta_i: RefractiveType,
+    eta_t: RefractiveType,
     fresnel: FresnelDielectric,
 }
 
@@ -88,7 +90,7 @@ impl SpecularTransmission {
     ///
     /// # Returns
     /// * Self
-    pub fn new(t: Spectrum, eta_i: f32, eta_t: f32) -> Self {
+    pub fn new(t: Spectrum, eta_i: RefractiveType, eta_t: RefractiveType) -> Self {
         let fresnel = FresnelDielectric::new(eta_i, eta_t);
         Self {
             t,
@@ -115,7 +117,7 @@ impl BxDF for SpecularTransmission {
         Spectrum::new_const(0.0)
     }
 
-    fn sample(&self, outgoing: &Vec3, _: &Vec2) -> Option<BxDFSample> {
+    fn sample(&self, outgoing: &Vec3, _: &Vec2) -> Option<BxDFSample<Spectrum>> {
         debug_assert!(is_normalized(outgoing));
 
         let entering = cos_theta(outgoing) > 0.0;
@@ -125,7 +127,9 @@ impl BxDF for SpecularTransmission {
             (self.eta_t, self.eta_i, -bxdf_normal())
         };
 
-        if let Some(mut incident) = refract(*outgoing, normal, eta_i / eta_t) {
+        if let Some(mut incident) =
+            refract(*outgoing, normal, eta_i.n_uniform() / eta_t.n_uniform())
+        {
             incident.normalize();
 
             let cos_i = cos_theta(&incident);
@@ -153,8 +157,8 @@ impl BxDF for SpecularTransmission {
 pub struct FresnelSpecular {
     r: Spectrum,
     t: Spectrum,
-    eta_i: f32,
-    eta_t: f32,
+    eta_i: RefractiveType,
+    eta_t: RefractiveType,
     fresnel: FresnelDielectric,
 }
 
@@ -170,7 +174,7 @@ impl FresnelSpecular {
     ///
     /// # Returns
     /// * Self
-    pub fn new(r: Spectrum, t: Spectrum, eta_i: f32, eta_t: f32) -> Self {
+    pub fn new(r: Spectrum, t: Spectrum, eta_i: RefractiveType, eta_t: RefractiveType) -> Self {
         let fresnel = FresnelDielectric::new(eta_i, eta_t);
         Self {
             r,
@@ -198,24 +202,24 @@ impl BxDF for FresnelSpecular {
         Spectrum::new_const(0.0)
     }
 
-    fn sample(&self, outgoing: &Vec3, sample: &Vec2) -> Option<BxDFSample> {
+    fn sample(&self, outgoing: &Vec3, sample: &Vec2) -> Option<BxDFSample<Spectrum>> {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
 
         let cos_outgoing = cos_theta(outgoing);
-        let f = fresnel_dielectric(cos_outgoing, self.eta_i, self.eta_t);
+        let eta_i_orig = self.eta_i.n_uniform();
+        let eta_t_orig = self.eta_t.n_uniform();
+        let f = fresnel_dielectric(cos_outgoing, eta_i_orig, eta_t_orig);
 
         // if entering
         let (eta_i, eta_t, normal) = if cos_outgoing > 0.0 {
-            (self.eta_i, self.eta_t, bxdf_normal())
+            (eta_i_orig, eta_t_orig, bxdf_normal())
         } else {
-            (self.eta_t, self.eta_i, -bxdf_normal())
+            (eta_t_orig, eta_i_orig, -bxdf_normal())
         };
 
         if f < sample.x {
             if let Some(incident) = refract(*outgoing, normal, eta_i / eta_t) {
-                // let incident = incident.normalized();
-
                 let cos_i = cos_theta(&incident);
                 let spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
 
@@ -230,6 +234,66 @@ impl BxDF for FresnelSpecular {
         let spectrum = self.r * f;
 
         Some(BxDFSample::new(spectrum, incident, f, typ))
+    }
+
+    fn sample_light_wave(
+        &self,
+        outgoing: &Vec3,
+        light_wave: &LightWave,
+        sample: &Vec2,
+    ) -> Option<BxDFSample<LightWave>> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        let lambda = light_wave.lambda;
+
+        let cos_outgoing = cos_theta(outgoing);
+
+        let eta_i_orig = self.eta_i.n(lambda);
+        let eta_t_orig = self.eta_t.n(lambda);
+        let f = fresnel_dielectric(cos_outgoing, eta_i_orig, eta_t_orig);
+
+        // if entering
+        let (eta_i, eta_t, normal) = if cos_outgoing > 0.0 {
+            (eta_i_orig, eta_t_orig, bxdf_normal())
+        } else {
+            (eta_t_orig, eta_i_orig, -bxdf_normal())
+        };
+
+        let refl_trans = if let Some(k) = self.eta_t.k(lambda) {
+            1.0 - k
+        } else {
+            1.0 - self.eta_t.k_uniform().unwrap_or(0.0)
+        };
+
+        if f < sample.x {
+            if let Some(incident) = refract(*outgoing, normal, eta_i / eta_t) {
+                let cos_i = cos_theta(&incident);
+
+                let intensity = light_wave.intensity
+                    * refl_trans
+                    * (1.0 - self.fresnel.evaluate_lambda(lambda, cos_i));
+                let typ = BxDFType::SPECULAR | BxDFType::TRANSMISSION;
+
+                return Some(BxDFSample::new(
+                    light_wave.with_intensity(intensity),
+                    incident,
+                    1.0 - f,
+                    typ,
+                ));
+            }
+        }
+
+        let intensity = light_wave.intensity * refl_trans * f;
+        let incident = bxdf_incident_to(outgoing);
+        let typ = BxDFType::REFLECTION | BxDFType::SPECULAR;
+
+        Some(BxDFSample::new(
+            light_wave.with_intensity(intensity),
+            incident,
+            f,
+            typ,
+        ))
     }
 
     /// No scattering for specular reflection/transmission leads to no pdf.

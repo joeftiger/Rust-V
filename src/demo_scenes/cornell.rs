@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 
-use crate::bxdf::refraction_index::{AIR, GLASS, WATER};
 use crate::bxdf::{FresnelSpecular, OrenNayar, BSDF};
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
 use crate::objects::Receiver;
 use crate::objects::{Emitter, SceneObject};
+use crate::refractive_index::RefractiveType;
 use crate::scene::Scene;
 use crate::Spectrum;
 use color::{Color, Colors};
@@ -77,8 +77,8 @@ fn create_bunny() -> SceneObject {
     let specular = FresnelSpecular::new(
         Spectrum::new_const(1.0),
         Spectrum::new_const(1.0),
-        AIR,
-        GLASS,
+        RefractiveType::AIR,
+        RefractiveType::GLASS,
     );
 
     let bsdf = BSDF::new(vec![Box::new(specular)]);
@@ -95,8 +95,8 @@ fn create_sphere() -> SceneObject {
     let specular = FresnelSpecular::new(
         Spectrum::new_const(1.0),
         Spectrum::new_const(1.0),
-        AIR,
-        GLASS,
+        RefractiveType::AIR,
+        RefractiveType::GLASS,
     );
     // let reflection = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
     let bsdf = BSDF::new(vec![Box::new(specular)]);
@@ -113,8 +113,8 @@ fn create_bubble() -> SceneObject {
     let specular = FresnelSpecular::new(
         Spectrum::new_const(1.0),
         Spectrum::new_const(1.0),
-        AIR,
-        WATER,
+        RefractiveType::AIR,
+        RefractiveType::GLASS,
     );
     let bsdf = BSDF::new(vec![Box::new(specular)]);
 
@@ -134,8 +134,8 @@ fn create_biconvex_lens() -> SceneObject {
     let specular = FresnelSpecular::new(
         Spectrum::new_const(1.0),
         Spectrum::new_const(1.0),
-        AIR,
-        GLASS,
+        RefractiveType::AIR,
+        RefractiveType::GLASS,
     );
     let bsdf = BSDF::new(vec![Box::new(specular)]);
 

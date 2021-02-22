@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::filters::Filter;
 use std::sync::Arc;
 use ultraviolet::{IVec2, UVec2, Vec3};

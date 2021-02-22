@@ -1,13 +1,13 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use crate::bxdf::refraction_index::{AIR, GLASS};
 use crate::bxdf::{
     FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
 };
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY};
 use crate::objects::{Emitter, Receiver, SceneObject};
+use crate::refractive_index::RefractiveType;
 use crate::scene::Scene;
 use crate::Spectrum;
 use color::Color;
@@ -74,13 +74,13 @@ fn sphere() -> SceneObject {
 
     let _transmission = Box::new(SpecularTransmission::new(
         Spectrum::new_const(1.0),
-        AIR,
-        GLASS,
+        RefractiveType::AIR,
+        RefractiveType::GLASS,
     ));
     let reflection = Box::new(SpecularTransmission::new(
         Spectrum::new_const(1.0),
-        AIR,
-        GLASS,
+        RefractiveType::AIR,
+        RefractiveType::GLASS,
     ));
 
     let bsdf = BSDF::new(vec![

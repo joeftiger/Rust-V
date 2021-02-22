@@ -2,7 +2,6 @@ mod bsdf;
 mod fresnel;
 mod lambertian;
 mod oren_nayar;
-pub mod refraction_index;
 mod specular;
 
 pub use bsdf::BSDF;
@@ -13,9 +12,9 @@ pub use oren_nayar::OrenNayar;
 pub use specular::{FresnelSpecular, SpecularReflection, SpecularTransmission};
 
 use crate::debug_utils::{is_finite, is_normalized, within_01};
+use crate::light::LightWave;
 use crate::mc::sample_unit_hemisphere;
 use crate::Spectrum;
-use color::Color;
 use std::f32::consts::{FRAC_1_PI, PI};
 use ultraviolet::{Rotor3, Vec2, Vec3};
 
@@ -284,14 +283,17 @@ impl BxDFType {
 /// * `incident` - An evaluated incident direction
 /// * `pdf` - An evaluated pdf
 /// * `typ` - The sampled `BxDFType`
-pub struct BxDFSample {
-    pub spectrum: Spectrum,
+pub struct BxDFSample<T> {
+    pub spectrum: T,
     pub incident: Vec3,
     pub pdf: f32,
     pub typ: BxDFType,
 }
 
-impl BxDFSample {
+impl<T> BxDFSample<T>
+where
+    T: Default,
+{
     /// Creates a new sample.
     ///
     /// # Constraints
@@ -305,7 +307,7 @@ impl BxDFSample {
     ///
     /// # Returns
     /// * Self
-    pub fn new(spectrum: Spectrum, incident: Vec3, pdf: f32, typ: BxDFType) -> Self {
+    pub fn new(spectrum: T, incident: Vec3, pdf: f32, typ: BxDFType) -> Self {
         debug_assert!(is_normalized(&incident));
 
         Self {
@@ -327,7 +329,7 @@ impl BxDFSample {
     ///     * `pdf` - Zero
     ///     * `typ` - None
     pub fn empty() -> Self {
-        let spectrum = Spectrum::new_const(0.0);
+        let spectrum = Default::default();
         let incident = Vec3::zero();
         let pdf = 0.0;
         let typ = BxDFType::NONE;
@@ -391,7 +393,7 @@ pub trait BxDF: Send + Sync {
     ///
     /// # Results
     /// * The sampled spectrum, incident and pdf
-    fn sample(&self, outgoing: &Vec3, sample: &Vec2) -> Option<BxDFSample> {
+    fn sample(&self, outgoing: &Vec3, sample: &Vec2) -> Option<BxDFSample<Spectrum>> {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
 
@@ -402,6 +404,18 @@ pub trait BxDF: Send + Sync {
         let pdf = self.pdf(&incident, outgoing);
 
         Some(BxDFSample::new(spectrum, incident, pdf, self.get_type()))
+    }
+
+    fn sample_light_wave(
+        &self,
+        outgoing: &Vec3,
+        _light_wave: &LightWave,
+        sample: &Vec2,
+    ) -> Option<BxDFSample<LightWave>> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        None
     }
 
     /// Computes the probability density function (`pdf`) for the pair of directions.
@@ -458,7 +472,7 @@ impl BxDF for ScaledBxDF<'_> {
         self.scale * self.bxdf.evaluate(view, from)
     }
 
-    fn sample(&self, outgoing: &Vec3, sample: &Vec2) -> Option<BxDFSample> {
+    fn sample(&self, outgoing: &Vec3, sample: &Vec2) -> Option<BxDFSample<Spectrum>> {
         if let Some(mut sample) = self.bxdf.sample(outgoing, sample) {
             sample.spectrum *= self.scale;
 

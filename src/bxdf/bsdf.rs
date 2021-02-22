@@ -85,7 +85,7 @@ impl BSDF {
         outgoing_world: &Vec3,
         types: BxDFType,
         sample: &Sample,
-    ) -> Option<BxDFSample> {
+    ) -> Option<BxDFSample<Spectrum>> {
         let rotation = world_to_bxdf(normal);
         let outgoing = rotation * *outgoing_world;
 
