@@ -291,7 +291,7 @@ impl Renderer {
             // each thread loops and gets the next block unless it should stop or has finished.
             let handle = thread::Builder::new()
                 .name(format!("Render thread {}", i))
-                .stack_size(8 * 1024 * 1024)
+                .stack_size(16 * 1024 * 1024)
                 .spawn(move || loop {
                     if this_should_stop.load(Ordering::Relaxed) {
                         break;
@@ -310,7 +310,12 @@ impl Renderer {
                             .expect("Progress bar is poisoned")
                             .inc(1);
                     } else {
-                        println!("Render thread {} has no more blocks to do. Stopping...", i);
+                        let bar = this.progress_bar.lock().expect("Progress bar poisoned");
+                        bar.println(format!(
+                            "Render thread {} has no more blocks to do. Stopping...",
+                            i
+                        ));
+
                         break;
                     }
                 })
