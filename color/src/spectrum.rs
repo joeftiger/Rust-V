@@ -3,28 +3,9 @@
 use crate::spectral_data::{
     blue, green, red, white, yellow, LAMBDA_NUM, LAMBDA_START, LAMBDA_STEP,
 };
-use crate::*;
 use std::iter::{Enumerate, Map};
 use std::slice::Iter;
-
-/// A light wave is described by a wavelength (lambda) and an intensity (associated with amplitude).
-#[derive(Copy, Clone, Default)]
-pub struct LightWave {
-    /// The wavelength in μm.
-    pub lambda: f32,
-    /// The intensity of the light wave.
-    pub intensity: f32,
-}
-
-impl LightWave {
-    pub fn new(lambda: f32, intensity: f32) -> Self {
-        Self { lambda, intensity }
-    }
-
-    pub fn with_intensity(&self, intensity: f32) -> Self {
-        Self::new(self.lambda, intensity)
-    }
-}
+use crate::*;
 
 impl Spectrum {
     #[inline(always)]

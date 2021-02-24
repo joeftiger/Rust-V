@@ -10,9 +10,11 @@ mod spectrum;
 mod srgb;
 mod xyz;
 
-pub use spectrum::{LightWave, Spectrum};
+pub use spectrum::Spectrum;
 pub use srgb::Srgb;
 pub use xyz::Xyz;
+
+use spectral_data::{LAMBDA_START, LAMBDA_RANGE};
 
 #[macro_export]
 macro_rules! color {
@@ -31,6 +33,17 @@ macro_rules! color {
 
                 pub const fn size() -> usize {
                     $size
+                }
+
+                pub fn as_light_waves(&self) -> [LightWave; $size] {
+                    let mut light_waves = [LightWave::default(); $size];
+
+                    for i in 0..$size {
+                        light_waves[i].lambda = LAMBDA_START + LAMBDA_RANGE * i as f32 / $size as f32;
+                        light_waves[i].intensity = self[i];
+                    }
+
+                    light_waves
                 }
             }
 
@@ -253,6 +266,25 @@ macro_rules! color {
                 }
             }
         )+
+    }
+}
+
+/// A light wave is described by a wavelength (lambda) and an intensity (associated with amplitude).
+#[derive(Copy, Clone, Default)]
+pub struct LightWave {
+    /// The wavelength in μm.
+    pub lambda: f32,
+    /// The intensity of the light wave.
+    pub intensity: f32,
+}
+
+impl LightWave {
+    pub fn new(lambda: f32, intensity: f32) -> Self {
+        Self { lambda, intensity }
+    }
+
+    pub fn with_intensity(&self, intensity: f32) -> Self {
+        Self::new(self.lambda, intensity)
     }
 }
 
