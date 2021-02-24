@@ -3,7 +3,7 @@ use image::Rgb;
 use ultraviolet::Vec3;
 
 color!(
-    Srgb => f32, f32, 3
+    Srgb => f32, 3
 );
 
 impl Srgb {

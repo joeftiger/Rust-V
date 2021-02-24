@@ -56,13 +56,13 @@ fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
 }
 
 fn create_bunny() -> SceneObject {
-    let file_name = "./meshes/buddha.obj";
+    let file_name = "./meshes/bunny.obj";
     let (model, _) = tobj::load_obj(file_name, true).expect("Could not load bunny file");
 
     let mut bunny = Mesh::load(&model[0].mesh, ShadingMode::Phong);
 
     // bunny.translate(-bunny.bounds().center());
-    bunny.scale(Vec3::broadcast(3.0));
+    // bunny.scale(Vec3::broadcast(3.0));
 
     // translation + scale + rotation
     let bounds = bunny.bounds();
@@ -70,7 +70,7 @@ fn create_bunny() -> SceneObject {
     let center_floor = Vec3::new(center.x, bounds.min.y, center.z);
 
     let translation = Vec3::new(X_CENTER, FLOOR + 0.01, Z_CENTER) - center_floor;
-    bunny.rotate(Rotor3::from_rotation_xz(PI));
+    bunny.rotate(Rotor3::from_rotation_xz(PI / -8.0));
     bunny.translate(translation);
     bunny.build_bvh();
 
@@ -197,8 +197,8 @@ impl DemoScene for CornellScene {
         });
 
         // scene.add(create_sphere());
-        // scene.add(create_bunny());
-        scene.add(create_biconvex_lens());
+        scene.add(create_bunny());
+        // scene.add(create_biconvex_lens());
         // scene.add(create_bubble());
         scene.add(create_emitter());
 

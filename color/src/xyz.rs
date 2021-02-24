@@ -3,7 +3,7 @@ use image::Rgb;
 use ultraviolet::Vec3;
 
 color!(
-    Xyz => f32, f32, 3
+    Xyz => f32, 3
 );
 
 impl Xyz {

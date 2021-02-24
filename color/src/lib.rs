@@ -9,13 +9,13 @@ mod spectrum;
 mod srgb;
 mod xyz;
 
-pub use spectrum::Spectrum;
+pub use spectrum::{LightWave, Spectrum};
 pub use srgb::Srgb;
 pub use xyz::Xyz;
 
 #[macro_export]
 macro_rules! color {
-    ($($name:ident => $storage:ident, $mul:ident, $size:expr), +) => {
+    ($($name:ident => $storage:ident, $size:expr), +) => {
         $(
             #[derive(Clone, Copy, Debug)]
             pub struct $name {
@@ -27,6 +27,10 @@ macro_rules! color {
                     debug_assert!(data.iter().all(|f| !f.is_nan()));
                     Self { data }
                 }
+
+                pub const fn size() -> usize {
+                    $size
+                }
             }
 
             impl Color<$storage> for $name {
@@ -35,7 +39,7 @@ macro_rules! color {
                 }
 
                 fn len(&self) -> usize {
-                    self.data.len()
+                    Self::size()
                 }
 
                 fn is_black(&self) -> bool {
@@ -157,10 +161,10 @@ macro_rules! color {
                 }
             }
 
-            impl Mul<$mul> for $name {
+            impl Mul<$storage> for $name {
                 type Output = Self;
 
-                fn mul(self, rhs: $mul) -> Self::Output {
+                fn mul(self, rhs: $storage) -> Self::Output {
                     let mut data = self.data;
                     for i in 0..data.len() {
                         data[i] *= rhs;
@@ -170,8 +174,8 @@ macro_rules! color {
                 }
             }
 
-            impl MulAssign<$mul> for $name {
-                fn mul_assign(&mut self, rhs: $mul) {
+            impl MulAssign<$storage> for $name {
+                fn mul_assign(&mut self, rhs: $storage) {
                     for i in 0..self.data.len() {
                         self.data[i] *=  rhs;
                     }
@@ -199,10 +203,10 @@ macro_rules! color {
                 }
             }
 
-            impl Div<$mul> for $name {
+            impl Div<$storage> for $name {
                 type Output = Self;
 
-                fn div(self, rhs: $mul) -> Self::Output {
+                fn div(self, rhs: $storage) -> Self::Output {
                     let mut data = self.data;
                     for i in 0..data.len() {
                         data[i] /= rhs;
@@ -212,8 +216,8 @@ macro_rules! color {
                 }
             }
 
-            impl DivAssign<$mul> for $name {
-                fn div_assign(&mut self, rhs: $mul) {
+            impl DivAssign<$storage> for $name {
+                fn div_assign(&mut self, rhs: $storage) {
                     for i in 0..self.data.len() {
                         self.data[i] /= rhs;
                     }

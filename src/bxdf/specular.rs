@@ -6,10 +6,9 @@ use crate::bxdf::{
     FresnelDielectric,
 };
 use crate::debug_utils::{is_normalized, within_01};
-use crate::light::LightWave;
 use crate::refractive_index::RefractiveType;
 use crate::Spectrum;
-use color::Color;
+use color::{Color, LightWave};
 use ultraviolet::{Vec2, Vec3};
 
 /// Describes a specular reflection
@@ -221,8 +220,8 @@ impl BxDF for FresnelSpecular {
         if f < sample.x {
             if let Some(incident) = refract(*outgoing, normal, eta_i / eta_t) {
                 let cos_i = cos_theta(&incident);
-                let spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
 
+                let spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
                 let typ = BxDFType::SPECULAR | BxDFType::TRANSMISSION;
 
                 return Some(BxDFSample::new(spectrum, incident, 1.0 - f, typ));
@@ -260,19 +259,12 @@ impl BxDF for FresnelSpecular {
             (eta_t_orig, eta_i_orig, -bxdf_normal())
         };
 
-        let refl_trans = if let Some(k) = self.eta_t.k(lambda) {
-            1.0 - k
-        } else {
-            1.0 - self.eta_t.k_uniform().unwrap_or(0.0)
-        };
-
         if f < sample.x {
             if let Some(incident) = refract(*outgoing, normal, eta_i / eta_t) {
                 let cos_i = cos_theta(&incident);
 
-                let intensity = light_wave.intensity
-                    * refl_trans
-                    * (1.0 - self.fresnel.evaluate_lambda(lambda, cos_i));
+                let intensity =
+                    light_wave.intensity * (1.0 - self.fresnel.evaluate_lambda(lambda, cos_i));
                 let typ = BxDFType::SPECULAR | BxDFType::TRANSMISSION;
 
                 return Some(BxDFSample::new(
@@ -284,7 +276,7 @@ impl BxDF for FresnelSpecular {
             }
         }
 
-        let intensity = light_wave.intensity * refl_trans * f;
+        let intensity = light_wave.intensity * f;
         let incident = bxdf_incident_to(outgoing);
         let typ = BxDFType::REFLECTION | BxDFType::SPECULAR;
 
