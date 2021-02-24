@@ -5,6 +5,7 @@ use std::fmt::Debug;
 use ultraviolet::{Mat3, Vec3};
 
 pub mod cie;
+pub mod spectral_data;
 mod spectrum;
 mod srgb;
 mod xyz;

@@ -1,11 +1,11 @@
 #![allow(dead_code)]
-use crate::*;
 
-pub const LAMBDA_START: f32 = 400.0;
-pub const LAMBDA_END: f32 = 700.0;
-pub const SPECTRAL_LENGTH: f32 = LAMBDA_END - LAMBDA_START;
-pub const SPECTRAL_STEP: f32 = 10.0; //LEN / SPECTRAL_SAMPLES as f32;
-pub const SPECTRAL_SAMPLES: usize = (SPECTRAL_LENGTH / SPECTRAL_STEP) as usize;
+use crate::spectral_data::{
+    blue, green, red, white, yellow, LAMBDA_NUM, LAMBDA_START, LAMBDA_STEP,
+};
+use crate::*;
+use std::iter::{Enumerate, Map};
+use std::slice::Iter;
 
 /// A light wave is described by a wavelength (lambda) and an intensity (associated with amplitude).
 #[derive(Copy, Clone, Default)]
@@ -29,46 +29,59 @@ impl LightWave {
 impl Spectrum {
     #[inline(always)]
     pub fn get(&self, index: usize) -> LightWave {
-        let lambda = LAMBDA_START + SPECTRAL_STEP * index as f32;
+        let lambda = LAMBDA_START + (LAMBDA_STEP * index) as f32;
         let intensity = self[index];
 
         LightWave::new(lambda, intensity)
     }
+
+    pub fn get_iter(&self) -> Map<Enumerate<Iter<'_, f32>>, fn((usize, &f32)) -> LightWave> {
+        self.data.iter().enumerate().map(|(index, intensity)| {
+            let lambda = LAMBDA_START + (LAMBDA_STEP * index) as f32;
+
+            LightWave::new(lambda, *intensity)
+        })
+    }
+}
+
+impl Colors for Spectrum {
+    fn black() -> Self {
+        Self::new_const(0.0)
+    }
+
+    fn grey() -> Self {
+        Self::white() * 0.5
+    }
+
+    fn white() -> Self {
+        Self::new(white::SPECTRUM)
+    }
+
+    fn red() -> Self {
+        Self::new(red::SPECTRUM)
+    }
+
+    fn yellow() -> Self {
+        Self::new(yellow::SPECTRUM)
+    }
+
+    fn green() -> Self {
+        Self::new(green::SPECTRUM)
+    }
+
+    fn cyan() -> Self {
+        (Self::green() + Self::blue()) * 0.5
+    }
+
+    fn blue() -> Self {
+        Self::new(blue::SPECTRUM)
+    }
+
+    fn pink() -> Self {
+        (Self::red() + Self::blue()) * 0.5
+    }
 }
 
 color!(
-    Spectrum => f32, SPECTRAL_SAMPLES
+    Spectrum => f32, LAMBDA_NUM
 );
-
-// const DUPONT_RED_27: [f32; SPECTRAL_SAMPLES] = {
-//     [
-//         1.0,
-//         (1.0 + 0.91) / 2.0,
-//         0.91,
-//         (0.91 + 0.89) / 2.0,
-//         0.89,
-//         0.87,
-//         0.86,
-//         0.86,
-//         0.85,
-//         0.85,
-//         0.84,
-//         0.85,
-//         0.87,
-//         0.91,
-//         0.91,
-//         0.9,
-//         0.92,
-//         1.07,
-//         1.34,
-//         1.79,
-//         3.15,
-//         7.09,
-//         16.49,
-//         30.31,
-//         41.06,
-//         46.57,
-//         49.08,
-//         50.45,
-//     ]
-// };
