@@ -30,6 +30,10 @@ impl BxDF for LambertianReflection {
     fn evaluate(&self, _: &Vec3, _: &Vec3) -> Spectrum {
         self.r * FRAC_1_PI
     }
+
+    fn evaluate_light_wave(&self, _: &Vec3, _: &Vec3, light_wave_index: usize) -> f32 {
+        self.r[light_wave_index] * FRAC_1_PI
+    }
 }
 
 /// The lambertian transmission transmits equally into all directions of the hemisphere.
@@ -57,5 +61,9 @@ impl BxDF for LambertianTransmission {
 
     fn evaluate(&self, _: &Vec3, _: &Vec3) -> Spectrum {
         self.t * FRAC_1_PI
+    }
+
+    fn evaluate_light_wave(&self, _: &Vec3, _: &Vec3, light_wave_index: usize) -> f32 {
+        self.t[light_wave_index] * FRAC_1_PI
     }
 }

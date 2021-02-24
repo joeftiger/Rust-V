@@ -3,9 +3,9 @@
 use crate::spectral_data::{
     blue, green, red, white, yellow, LAMBDA_NUM, LAMBDA_START, LAMBDA_STEP,
 };
+use crate::*;
 use std::iter::{Enumerate, Map};
 use std::slice::Iter;
-use crate::*;
 
 impl Spectrum {
     #[inline(always)]

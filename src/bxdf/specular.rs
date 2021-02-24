@@ -47,6 +47,10 @@ impl BxDF for SpecularReflection {
         Spectrum::new_const(0.0)
     }
 
+    fn evaluate_light_wave(&self, _: &Vec3, _: &Vec3, _: usize) -> f32 {
+        0.0
+    }
+
     fn sample(&self, outgoing: &Vec3, _: &Vec2) -> Option<BxDFSample<Spectrum>> {
         debug_assert!(is_normalized(outgoing));
 
@@ -114,6 +118,10 @@ impl BxDF for SpecularTransmission {
     /// * `0.0` spectrum
     fn evaluate(&self, _: &Vec3, _: &Vec3) -> Spectrum {
         Spectrum::new_const(0.0)
+    }
+
+    fn evaluate_light_wave(&self, _: &Vec3, _: &Vec3, _: usize) -> f32 {
+        0.0
     }
 
     fn sample(&self, outgoing: &Vec3, _: &Vec2) -> Option<BxDFSample<Spectrum>> {
@@ -201,6 +209,10 @@ impl BxDF for FresnelSpecular {
         Spectrum::new_const(0.0)
     }
 
+    fn evaluate_light_wave(&self, _: &Vec3, _: &Vec3, _: usize) -> f32 {
+        0.0
+    }
+
     fn sample(&self, outgoing: &Vec3, sample: &Vec2) -> Option<BxDFSample<Spectrum>> {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
@@ -238,9 +250,10 @@ impl BxDF for FresnelSpecular {
     fn sample_light_wave(
         &self,
         outgoing: &Vec3,
-        light_wave: &LightWave,
         sample: &Vec2,
-    ) -> Option<BxDFSample<LightWave>> {
+        light_wave: &LightWave,
+        _: usize,
+    ) -> Option<BxDFSample<f32>> {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
 
@@ -267,12 +280,7 @@ impl BxDF for FresnelSpecular {
                     light_wave.intensity * (1.0 - self.fresnel.evaluate_lambda(lambda, cos_i));
                 let typ = BxDFType::SPECULAR | BxDFType::TRANSMISSION;
 
-                return Some(BxDFSample::new(
-                    light_wave.with_intensity(intensity),
-                    incident,
-                    1.0 - f,
-                    typ,
-                ));
+                return Some(BxDFSample::new(intensity, incident, 1.0 - f, typ));
             }
         }
 
@@ -280,12 +288,7 @@ impl BxDF for FresnelSpecular {
         let incident = bxdf_incident_to(outgoing);
         let typ = BxDFType::REFLECTION | BxDFType::SPECULAR;
 
-        Some(BxDFSample::new(
-            light_wave.with_intensity(intensity),
-            incident,
-            f,
-            typ,
-        ))
+        Some(BxDFSample::new(intensity, incident, f, typ))
     }
 
     /// No scattering for specular reflection/transmission leads to no pdf.

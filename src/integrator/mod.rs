@@ -25,13 +25,14 @@ mod whitted;
 pub use debug_normals::DebugNormals;
 pub use path::Path;
 pub use path_enhanced::PathEnhanced;
+pub use spectral_path::SpectralPath;
 pub use whitted::Whitted;
 
 use crate::bxdf::{BxDFType, BSDF};
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
-use color::{Color, Colors};
+use color::Color;
 use geometry::Ray;
 
 /// An integrator to calculate the color of a pixel / ray.
@@ -51,7 +52,7 @@ pub trait Integrator: Send + Sync {
         if let Some(si) = scene.intersect(primary_ray) {
             self.illumination(scene, &si, sampler, 0)
         } else {
-            Spectrum::black()
+            Spectrum::new_const(0.0)
         }
     }
 
@@ -108,6 +109,51 @@ fn direct_illumination(
                 if cos != 0.0 {
                     illumination +=
                         bsdf_spectrum * emitter_sample.radiance * (cos.abs() / emitter_sample.pdf)
+                }
+            }
+        }
+    }
+
+    illumination
+}
+
+fn direct_illumination_light_wave(
+    scene: &Scene,
+    sampler: &dyn Sampler,
+    intersection: &SceneIntersection,
+    bsdf: &BSDF,
+    light_wave_index: usize,
+) -> f32 {
+    let mut illumination = 0.0;
+
+    if bsdf.is_empty() {
+        return illumination;
+    }
+
+    let outgoing_world = -intersection.ray.direction;
+
+    for light in &scene.lights {
+        let emitter_sample =
+            light.sample_light_wave(&intersection.point, &sampler.get_2d(), light_wave_index);
+
+        if emitter_sample.pdf > 0.0
+            && emitter_sample.radiance != 0.0
+            && emitter_sample.occlusion_tester.unoccluded(scene)
+        {
+            let bsdf_intensity = bsdf.evaluate_light_wave(
+                &intersection.normal,
+                &emitter_sample.incident,
+                &outgoing_world,
+                BxDFType::ALL,
+                light_wave_index,
+            );
+
+            if bsdf_intensity != 0.0 {
+                let cos = emitter_sample.incident.dot(intersection.normal);
+
+                if cos != 0.0 {
+                    illumination +=
+                        bsdf_intensity * emitter_sample.radiance * cos.abs() / emitter_sample.pdf;
                 }
             }
         }

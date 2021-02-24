@@ -379,6 +379,9 @@ pub trait BxDF: Send + Sync {
     /// * A scaling spectrum
     fn evaluate(&self, incident: &Vec3, outgoing: &Vec3) -> Spectrum;
 
+    fn evaluate_light_wave(&self, incident: &Vec3, outgoing: &Vec3, light_wave_index: usize)
+        -> f32;
+
     /// Samples an incident light direction for an outgoing light direction from the given sample
     /// space.
     ///
@@ -409,13 +412,21 @@ pub trait BxDF: Send + Sync {
     fn sample_light_wave(
         &self,
         outgoing: &Vec3,
-        _light_wave: &LightWave,
         sample: &Vec2,
-    ) -> Option<BxDFSample<LightWave>> {
+        _light_wave: &LightWave,
+        light_wave_index: usize,
+    ) -> Option<BxDFSample<f32>> {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
+        debug_assert!(light_wave_index < Spectrum::size());
 
-        None
+        let incident = sample_unit_hemisphere(sample);
+        let incident = flip_if_neg(incident);
+
+        let light_wave = self.evaluate_light_wave(&incident, outgoing, light_wave_index);
+        let pdf = self.pdf(&incident, outgoing);
+
+        Some(BxDFSample::new(light_wave, incident, pdf, self.get_type()))
     }
 
     /// Computes the probability density function (`pdf`) for the pair of directions.
@@ -470,6 +481,18 @@ impl BxDF for ScaledBxDF<'_> {
 
     fn evaluate(&self, view: &Vec3, from: &Vec3) -> Spectrum {
         self.scale * self.bxdf.evaluate(view, from)
+    }
+
+    fn evaluate_light_wave(
+        &self,
+        incident: &Vec3,
+        outgoing: &Vec3,
+        light_wave_index: usize,
+    ) -> f32 {
+        self.scale[light_wave_index]
+            * self
+                .bxdf
+                .evaluate_light_wave(incident, outgoing, light_wave_index)
     }
 
     fn sample(&self, outgoing: &Vec3, sample: &Vec2) -> Option<BxDFSample<Spectrum>> {

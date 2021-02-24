@@ -68,4 +68,37 @@ impl BxDF for OrenNayar {
 
         self.r * (FRAC_1_PI * (self.a + self.b * max_cos * sin_alpha * tan_beta))
     }
+
+    fn evaluate_light_wave(
+        &self,
+        incident: &Vec3,
+        outgoing: &Vec3,
+        light_wave_index: usize,
+    ) -> f32 {
+        let sin_theta_i = sin_theta(incident);
+        let sin_theta_o = sin_theta(outgoing);
+
+        let max_cos = if sin_theta_i > EPSILON && sin_theta_o > EPSILON {
+            let sin_phi_i = sin_phi(incident);
+            let sin_phi_o = sin_phi(outgoing);
+            let cos_phi_i = cos_phi(incident);
+            let cos_phi_o = cos_phi(outgoing);
+
+            let d_cos = cos_phi_i * cos_phi_o + sin_phi_i * sin_phi_o;
+            d_cos.max(0.0)
+        } else {
+            0.0
+        };
+
+        let cos_theta_i_abs = cos_theta(incident).abs();
+        let cos_theta_o_abs = cos_theta(outgoing).abs();
+
+        let (sin_alpha, tan_beta) = if cos_theta_i_abs > cos_theta_o_abs {
+            (sin_theta_o, sin_theta_i / cos_theta_i_abs)
+        } else {
+            (sin_theta_i, sin_theta_o / cos_theta_o_abs)
+        };
+
+        self.r[light_wave_index] * (FRAC_1_PI * (self.a + self.b * max_cos * sin_alpha * tan_beta))
+    }
 }

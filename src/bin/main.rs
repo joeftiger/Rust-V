@@ -4,7 +4,7 @@ extern crate clap;
 use clap::App;
 
 use rust_v::demo_scenes::{CornellScene, DebugScene, DebugSphereScene, DemoScene, SphereScene};
-use rust_v::integrator::{DebugNormals, Integrator, Path, PathEnhanced, Whitted};
+use rust_v::integrator::{DebugNormals, Integrator, Path, PathEnhanced, SpectralPath, Whitted};
 use rust_v::renderer::Renderer;
 use rust_v::sampler::{NoOpSampler, RandomSampler, Sampler};
 use rust_v::RenderConfig;
@@ -153,6 +153,10 @@ impl MainConfig {
                 self.render_config.depth,
                 self.render_config.depth * 4,
             )),
+            IntegratorType::SpectralPath => Arc::new(SpectralPath::new(
+                self.render_config.depth,
+                self.render_config.depth * 4,
+            )),
         };
 
         let sampler: Arc<dyn Sampler> = match self.integrator_type {
@@ -242,6 +246,7 @@ pub enum IntegratorType {
     Whitted,
     Path,
     PathEnhanced,
+    SpectralPath,
 }
 
 impl TryInto<IntegratorType> for &str {
@@ -253,6 +258,7 @@ impl TryInto<IntegratorType> for &str {
             "whitted" => Ok(IntegratorType::Whitted),
             "path" => Ok(IntegratorType::Path),
             "pathenhanced" => Ok(IntegratorType::PathEnhanced),
+            "spectralpath" => Ok(IntegratorType::SpectralPath),
             _ => Err(self.to_string()),
         }
     }

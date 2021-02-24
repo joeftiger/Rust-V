@@ -197,9 +197,9 @@ impl DemoScene for CornellScene {
         });
 
         // scene.add(create_sphere());
-        scene.add(create_bunny());
+        // scene.add(create_bunny());
         // scene.add(create_biconvex_lens());
-        // scene.add(create_bubble());
+        scene.add(create_bubble());
         scene.add(create_emitter());
 
         (scene, camera)

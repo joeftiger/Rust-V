@@ -14,7 +14,7 @@ pub use spectrum::Spectrum;
 pub use srgb::Srgb;
 pub use xyz::Xyz;
 
-use spectral_data::{LAMBDA_START, LAMBDA_RANGE};
+use spectral_data::{LAMBDA_RANGE, LAMBDA_START};
 
 #[macro_export]
 macro_rules! color {
@@ -455,8 +455,8 @@ pub fn srgb_to_xyz_mat() -> Mat3 {
 #[allow(clippy::excessive_precision)]
 #[inline(always)]
 pub fn srgb_to_linear(val: f32) -> f32 {
-    assert!(val >= 0.0);
-    assert!(val <= 1.0);
+    // assert!(val >= 0.0);
+    // assert!(val <= 1.0);
     // https://entropymine.com/imageworsener/srgbformula/
     if val <= 0.0404482362771082 {
         val / 12.92
@@ -493,8 +493,8 @@ pub fn srgbs_to_linear(val: Vec3) -> Vec3 {
 #[allow(clippy::excessive_precision)]
 #[inline(always)]
 pub fn linear_to_srgb(val: f32) -> f32 {
-    assert!(val >= 0.0);
-    assert!(val <= 1.0);
+    // assert!(val >= 0.0);
+    // assert!(val <= 1.0);
     // https://entropymine.com/imageworsener/srgbformula/
     if val <= 0.00313066844250063 {
         val * 12.92

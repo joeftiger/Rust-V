@@ -81,6 +81,37 @@ impl BSDF {
             .sum()
     }
 
+    pub fn evaluate_light_wave(
+        &self,
+        normal: &Vec3,
+        incident_world: &Vec3,
+        outgoing_world: &Vec3,
+        mut types: BxDFType,
+        light_wave_index: usize,
+    ) -> f32 {
+        let rotation = world_to_bxdf(normal);
+        let incident = rotation * *incident_world;
+        let outgoing = rotation * *outgoing_world;
+
+        // transmission or reflection
+        if same_hemisphere(&incident, &outgoing) {
+            types &= !BxDFType::TRANSMISSION;
+        } else {
+            types &= !BxDFType::REFLECTION;
+        }
+
+        self.bxdfs
+            .iter()
+            .filter_map(|bxdf| {
+                if bxdf.is_type(types) {
+                    Some(bxdf.evaluate_light_wave(&incident, &outgoing, light_wave_index))
+                } else {
+                    None
+                }
+            })
+            .sum()
+    }
+
     pub fn sample(
         &self,
         normal: &Vec3,
@@ -110,9 +141,10 @@ impl BSDF {
         normal: &Vec3,
         outgoing_world: &Vec3,
         types: BxDFType,
-        wave: &LightWave,
         sample: &Sample,
-    ) -> Option<BxDFSample<LightWave>> {
+        light_wave: &LightWave,
+        light_wave_index: usize,
+    ) -> Option<BxDFSample<f32>> {
         debug_assert!(is_normalized(normal));
         debug_assert!(is_normalized(outgoing_world));
 
@@ -121,7 +153,9 @@ impl BSDF {
 
         let bxdf = self.random_matching_bxdf(types, sample.one_d)?;
 
-        if let Some(mut sample) = bxdf.sample_light_wave(&outgoing, wave, &sample.two_d) {
+        if let Some(mut sample) =
+            bxdf.sample_light_wave(&outgoing, &sample.two_d, light_wave, light_wave_index)
+        {
             sample.incident = rotation.reversed() * sample.incident;
 
             Some(sample)

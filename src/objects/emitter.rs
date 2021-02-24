@@ -17,6 +17,8 @@ pub trait EmitterExt: ReceiverExt {
     /// * The emission
     fn emission(&self) -> Spectrum;
 
+    fn emission_light_wave(&self, light_wave_index: usize) -> f32;
+
     /// Returns the radiance of this emitter, comparing the incident and normal vector.
     ///
     /// # Constraints
@@ -47,6 +49,21 @@ pub trait EmitterExt: ReceiverExt {
         }
     }
 
+    fn radiance_light_wave(&self, incident: &Vec3, normal: &Vec3, light_wave_index: usize) -> f32 {
+        debug_assert!(is_finite(incident));
+        debug_assert!(is_normalized(incident));
+        debug_assert!(is_finite(normal));
+        debug_assert!(is_normalized(normal));
+        debug_assert!(light_wave_index < Spectrum::size());
+
+        let dot = incident.dot(*normal);
+        if dot > 0.0 {
+            self.emission_light_wave(light_wave_index)
+        } else {
+            0.0
+        }
+    }
+
     /// Samples the emitter from a given point in space.
     ///
     /// # Constraints
@@ -59,7 +76,14 @@ pub trait EmitterExt: ReceiverExt {
     ///
     /// # Returns
     /// * An emitter sample
-    fn sample(&self, point: &Vec3, sample: &Vec2) -> EmitterSample;
+    fn sample(&self, point: &Vec3, sample: &Vec2) -> EmitterSample<Spectrum>;
+
+    fn sample_light_wave(
+        &self,
+        point: &Vec3,
+        sample: &Vec2,
+        light_wave_index: usize,
+    ) -> EmitterSample<f32>;
 }
 
 /// An emitter is similar to a receiver, consisting of a geometry and a BSDF. Additionally, the
@@ -97,16 +121,43 @@ where
         self.emission
     }
 
-    fn sample(&self, point: &Vec3, sample: &Vec2) -> EmitterSample {
+    fn emission_light_wave(&self, light_wave_index: usize) -> f32 {
+        debug_assert!(light_wave_index < Spectrum::size());
+
+        self.emission[light_wave_index]
+    }
+
+    fn sample(&self, point: &Vec3, sample: &Vec2) -> EmitterSample<Spectrum> {
         debug_assert!(is_finite(point));
         debug_assert!(within_01(sample));
 
-        let surface_sample = self.geometry.sample_surface(&point, sample);
+        let surface_sample = self.geometry.sample_surface(point, sample);
 
         let occlusion_tester = OcclusionTester::between(*point, surface_sample.point);
         let incident = occlusion_tester.ray.direction;
 
         let radiance = self.radiance(&-incident, &surface_sample.normal);
+
+        EmitterSample::new(radiance, incident, surface_sample.pdf, occlusion_tester)
+    }
+
+    fn sample_light_wave(
+        &self,
+        point: &Vec3,
+        sample: &Vec2,
+        light_wave_index: usize,
+    ) -> EmitterSample<f32> {
+        debug_assert!(is_finite(point));
+        debug_assert!(within_01(sample));
+        debug_assert!(light_wave_index < Spectrum::size());
+
+        let surface_sample = self.geometry.sample_surface(point, sample);
+
+        let occlusion_tester = OcclusionTester::between(*point, surface_sample.point);
+        let incident = occlusion_tester.ray.direction;
+
+        let radiance =
+            self.radiance_light_wave(&-incident, &surface_sample.normal, light_wave_index);
 
         EmitterSample::new(radiance, incident, surface_sample.pdf, occlusion_tester)
     }
@@ -152,14 +203,14 @@ where
 /// * An `incident` vector (normalized) towards the emitter
 /// * A `pdf` (inside `[0, 1]`) that the emitter is hit
 /// * An `occlusion tester` to test against a scene
-pub struct EmitterSample {
-    pub radiance: Spectrum,
+pub struct EmitterSample<T> {
+    pub radiance: T,
     pub incident: Vec3,
     pub pdf: f32,
     pub occlusion_tester: OcclusionTester,
 }
 
-impl EmitterSample {
+impl<T> EmitterSample<T> {
     /// Creates a new emitter sample.
     ///
     /// # Constraints
@@ -174,12 +225,7 @@ impl EmitterSample {
     ///
     /// # Returns
     /// * Self
-    pub fn new(
-        radiance: Spectrum,
-        incident: Vec3,
-        pdf: f32,
-        occlusion_tester: OcclusionTester,
-    ) -> Self {
+    pub fn new(radiance: T, incident: Vec3, pdf: f32, occlusion_tester: OcclusionTester) -> Self {
         debug_assert!(is_finite(&incident));
         debug_assert!(is_normalized(&incident));
 
