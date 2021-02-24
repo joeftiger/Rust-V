@@ -1,9 +1,10 @@
 use crate::bvh::Tree;
 use crate::debug_util::{is_finite, is_normalized};
 use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use std::mem::swap;
 use tobj::Mesh as TobjMesh;
 use ultraviolet::{Mat3, Rotor3, Vec3};
-use utility::floats::{fast_clamp, EPSILON};
+use utility::floats::fast_clamp;
 
 /// The shading mode defines the shading of normals. In `Flat` mode, the surface of triangles will
 /// appear flat. In `Phong` however, they will be interpolated to create a smooth looking surface.
@@ -11,6 +12,20 @@ use utility::floats::{fast_clamp, EPSILON};
 pub enum ShadingMode {
     Flat,
     Phong,
+}
+
+/// Returns the index of the maximum component of a vector.
+#[inline(always)]
+fn max_index(v: &Vec3) -> usize {
+    if v.x > v.y {
+        if v.x > v.z {
+            return 0;
+        }
+    } else if v.y > v.z {
+        return 1;
+    }
+
+    2
 }
 
 /// A vertex consists of a position and normal vector, which possibly influences the shading of
@@ -95,39 +110,120 @@ impl Triangle {
         Aabb::new(min, max)
     }
 
+    #[allow(clippy::many_single_char_names)]
     fn intersect(&self, mesh: &Mesh, ray: &Ray) -> Option<Intersection> {
         let vertex0 = mesh.vertices[self.a as usize];
         let vertex1 = mesh.vertices[self.b as usize];
         let vertex2 = mesh.vertices[self.c as usize];
 
-        let edge1 = vertex1.position - vertex0.position;
-        let edge2 = vertex2.position - vertex0.position;
-        let p_vec = ray.direction.cross(edge2);
+        let dir = &ray.direction;
+        // calculate dimension where the ray direction is maximal
+        let kz = max_index(&dir.abs());
+        let mut kx = kz + 1;
+        if kx == 3 {
+            kx = 0
+        }
+        let mut ky = kx + 1;
+        if ky == 3 {
+            ky = 0
+        }
 
-        let det = edge1.dot(p_vec);
-        if det < EPSILON {
+        // swap dimension to preserve winding direction of triangles
+        if dir[kz] < 0.0 {
+            swap(&mut kx, &mut ky);
+        }
+
+        // calculate shear constants
+        let sx = dir[kx] / dir[kz];
+        let sy = dir[ky] / dir[kz];
+        let sz = 1.0 / dir[kz];
+
+        // calculate vertices relative to ray origin
+        let a = vertex0.position - ray.origin;
+        let b = vertex1.position - ray.origin;
+        let c = vertex2.position - ray.origin;
+
+        // perform shear and scale of vertices
+        let ax = a[kx] - sx * a[kz];
+        let ay = a[ky] - sy * a[kz];
+        let bx = b[kx] - sx * b[kz];
+        let by = b[ky] - sy * b[kz];
+        let cx = c[kx] - sx * c[kz];
+        let cy = c[ky] - sy * c[kz];
+
+        // calculate scaled barycentric coordinates
+        let mut u = cx * by - cy * bx;
+        let mut v = ax * cy - ay * cx;
+        let mut w = bx * ay - by * ax;
+
+        // perform edge tests
+        if u < 0.0 || v < 0.0 || w < 0.0 {
             return None;
         }
 
-        let t_vec = ray.origin - vertex0.position;
+        // fallback to test against edges using double precision
+        if u == 0.0 {
+            u = (cx as f64 * by as f64 - cy as f64 * bx as f64) as f32;
+        }
+        if v == 0.0 {
+            v = (ax as f64 * cy as f64 - ay as f64 * cx as f64) as f32;
+        }
+        if w == 0.0 {
+            w = (bx as f64 * ay as f64 - by as f64 * ax as f64) as f32;
+        }
 
-        let u = t_vec.dot(p_vec);
-        if u < 0.0 || u > det {
+        // perform edge tests
+        if u < 0.0 || v < 0.0 || w < 0.0 {
             return None;
         }
 
-        let q_vec = t_vec.cross(edge1);
-
-        let v = ray.direction.dot(q_vec);
-        if v < 0.0 || u + v > det {
+        // calculate determinant
+        let det = u + v + w;
+        if det == 0.0 {
             return None;
         }
 
+        // for normalization
         let inv_det = 1.0 / det;
-        let t = inv_det * edge2.dot(q_vec);
+
+        // calculate scaled z-coordinates of vertices and use them to calculate the hit distance
+        let az = sz * a[kz];
+        let bz = sz * b[kz];
+        let cz = sz * c[kz];
+        let t = (u * az + v * bz + w * cz) * inv_det;
+
         if !ray.contains(t) {
             return None;
         }
+
+        // let edge1 = vertex1.position - vertex0.position;
+        // let edge2 = vertex2.position - vertex0.position;
+        // let p_vec = ray.direction.cross(edge2);
+        //
+        // let det = edge1.dot(p_vec);
+        // if det < EPSILON {
+        //     return None;
+        // }
+        //
+        // let t_vec = ray.origin - vertex0.position;
+        //
+        // let u = t_vec.dot(p_vec);
+        // if u < 0.0 || u > det {
+        //     return None;
+        // }
+        //
+        // let q_vec = t_vec.cross(edge1);
+        //
+        // let v = ray.direction.dot(q_vec);
+        // if v < 0.0 || u + v > det {
+        //     return None;
+        // }
+        //
+        // let inv_det = 1.0 / det;
+        // let t = inv_det * edge2.dot(q_vec);
+        // if !ray.contains(t) {
+        //     return None;
+        // }
 
         let point = ray.at(t);
 
@@ -146,39 +242,122 @@ impl Triangle {
         Some(Intersection::new(point, normal, t, *ray))
     }
 
+    #[allow(clippy::many_single_char_names)]
     fn intersects(&self, mesh: &Mesh, ray: &Ray) -> bool {
-        let a = mesh.vertices[self.a as usize].position;
-        let b = mesh.vertices[self.b as usize].position;
-        let c = mesh.vertices[self.c as usize].position;
+        let vertex0 = mesh.vertices[self.a as usize];
+        let vertex1 = mesh.vertices[self.b as usize];
+        let vertex2 = mesh.vertices[self.c as usize];
 
-        let a_to_b = b - a;
-        let a_to_c = c - a;
-        let part0 = ray.direction.cross(a_to_c);
+        let dir = &ray.direction;
+        // calculate dimension where the ray direction is maximal
+        let kz = max_index(&dir.abs());
+        let mut kx = kz + 1;
+        if kx == 3 {
+            kx = 0
+        }
+        let mut ky = kx + 1;
+        if ky == 3 {
+            ky = 0
+        }
 
-        let det = a_to_b.dot(part0);
-        if det < EPSILON {
+        // swap dimension to preserve winding direction of triangles
+        if dir[kz] < 0.0 {
+            swap(&mut kx, &mut ky);
+        }
+
+        // calculate shear constants
+        let sx = dir[kx] / dir[kz];
+        let sy = dir[ky] / dir[kz];
+        let sz = 1.0 / dir[kz];
+
+        // calculate vertices relative to ray origin
+        let a = vertex0.position - ray.origin;
+        let b = vertex1.position - ray.origin;
+        let c = vertex2.position - ray.origin;
+
+        // perform shear and scale of vertices
+        let ax = a[kx] - sx * a[kz];
+        let ay = a[ky] - sy * a[kz];
+        let bx = b[kx] - sx * b[kz];
+        let by = b[ky] - sy * b[kz];
+        let cx = c[kx] - sx * c[kz];
+        let cy = c[ky] - sy * c[kz];
+
+        // calculate scaled barycentric coordinates
+        let mut u = cx * by - cy * bx;
+        let mut v = ax * cy - ay * cx;
+        let mut w = bx * ay - by * ax;
+
+        // perform edge tests
+        if u < 0.0 || v < 0.0 || w < 0.0 {
             return false;
         }
 
-        let part1 = ray.origin - a;
-        let beta = part1.dot(part0) / det;
-        if !(0.0..=1.0).contains(&beta) {
+        // fallback to test against edges using double precision
+        if u == 0.0 {
+            u = (cx as f64 * by as f64 - cy as f64 * bx as f64) as f32;
+        }
+        if v == 0.0 {
+            v = (ax as f64 * cy as f64 - ay as f64 * cx as f64) as f32;
+        }
+        if w == 0.0 {
+            w = (bx as f64 * ay as f64 - by as f64 * ax as f64) as f32;
+        }
+
+        // perform edge tests
+        if u < 0.0 || v < 0.0 || w < 0.0 {
             return false;
         }
 
-        let part2 = part1.cross(a_to_b);
-        let gamma = ray.direction.dot(part2) / det;
-        if gamma < 0.0 || beta + gamma > 1.0 {
+        // calculate determinant
+        let det = u + v + w;
+        if det == 0.0 {
             return false;
         }
 
-        let t = a_to_c.dot(part2) / det;
+        // for normalization
+        let inv_det = 1.0 / det;
+
+        // calculate scaled z-coordinates of vertices and use them to calculate the hit distance
+        let az = sz * a[kz];
+        let bz = sz * b[kz];
+        let cz = sz * c[kz];
+        let t = (u * az + v * bz + w * cz) * inv_det;
+
         ray.contains(t)
+
+        // let a = mesh.vertices[self.a as usize].position;
+        // let b = mesh.vertices[self.b as usize].position;
+        // let c = mesh.vertices[self.c as usize].position;
+        //
+        // let a_to_b = b - a;
+        // let a_to_c = c - a;
+        // let part0 = ray.direction.cross(a_to_c);
+        //
+        // let det = a_to_b.dot(part0);
+        // if det < EPSILON {
+        //     return false;
+        // }
+        //
+        // let part1 = ray.origin - a;
+        // let beta = part1.dot(part0) / det;
+        // if !(0.0..=1.0).contains(&beta) {
+        //     return false;
+        // }
+        //
+        // let part2 = part1.cross(a_to_b);
+        // let gamma = ray.direction.dot(part2) / det;
+        // if gamma < 0.0 || beta + gamma > 1.0 {
+        //     return false;
+        // }
+        //
+        // let t = a_to_c.dot(part2) / det;
+        // ray.contains(t)
     }
 }
 
 /// A mesh consists of vertices and triangles, allowing queries for intersections.
-/// Depending on the [`ShadingMode`](ShadingMode), the intersection normals will be interpolated.
+/// Depending on the [`MeshMode`](MeshMode), the intersection normals will be interpolated.
 pub struct Mesh {
     vertices: Vec<Vertex>,
     normals: Vec<Vec3>,
