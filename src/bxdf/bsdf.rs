@@ -1,6 +1,8 @@
 use crate::bxdf::{same_hemisphere, world_to_bxdf, BxDF, BxDFSample, BxDFType};
+use crate::debug_utils::is_normalized;
 use crate::sampler::Sample;
 use crate::Spectrum;
+use color::LightWave;
 use std::ops::Deref;
 use ultraviolet::Vec3;
 
@@ -86,12 +88,40 @@ impl BSDF {
         types: BxDFType,
         sample: &Sample,
     ) -> Option<BxDFSample<Spectrum>> {
+        debug_assert!(is_normalized(normal));
+        debug_assert!(is_normalized(outgoing_world));
+
         let rotation = world_to_bxdf(normal);
         let outgoing = rotation * *outgoing_world;
 
         let bxdf = self.random_matching_bxdf(types, sample.one_d)?;
 
         if let Some(mut sample) = bxdf.sample(&outgoing, &sample.two_d) {
+            sample.incident = rotation.reversed() * sample.incident;
+
+            Some(sample)
+        } else {
+            None
+        }
+    }
+
+    pub fn sample_light_wave(
+        &self,
+        normal: &Vec3,
+        outgoing_world: &Vec3,
+        types: BxDFType,
+        wave: &LightWave,
+        sample: &Sample,
+    ) -> Option<BxDFSample<LightWave>> {
+        debug_assert!(is_normalized(normal));
+        debug_assert!(is_normalized(outgoing_world));
+
+        let rotation = world_to_bxdf(normal);
+        let outgoing = rotation * *outgoing_world;
+
+        let bxdf = self.random_matching_bxdf(types, sample.one_d)?;
+
+        if let Some(mut sample) = bxdf.sample_light_wave(&outgoing, wave, &sample.two_d) {
             sample.incident = rotation.reversed() * sample.incident;
 
             Some(sample)

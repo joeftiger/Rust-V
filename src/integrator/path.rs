@@ -25,7 +25,7 @@ impl Integrator for Path {
         sampler: &dyn Sampler,
         _: u32,
     ) -> Spectrum {
-        let mut illumination = Spectrum::black();
+        let mut illumination = Spectrum::new_const(0.0);
         let mut throughput = Spectrum::new_const(1.0);
 
         let mut hit = intersection.clone();

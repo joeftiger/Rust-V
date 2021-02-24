@@ -10,7 +10,7 @@ struct Pixel {
     splat_xyz: Vec3,
 }
 
-pub struct Sensor {
+pub struct PixelSensor {
     pub resolution: UVec2,
     pub diagonal: f32,
     pub filter: Arc<dyn Filter>,
@@ -19,6 +19,6 @@ pub struct Sensor {
     pixels: Vec<Pixel>,
 }
 
-impl Sensor {}
+impl PixelSensor {}
 
 struct SensorTile {}

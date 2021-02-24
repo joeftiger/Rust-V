@@ -80,7 +80,7 @@ fn direct_illumination(
     intersection: &SceneIntersection,
     bsdf: &BSDF,
 ) -> Spectrum {
-    let mut illumination = Spectrum::black();
+    let mut illumination = Spectrum::new_const(0.0);
 
     if bsdf.is_empty() {
         return illumination;
