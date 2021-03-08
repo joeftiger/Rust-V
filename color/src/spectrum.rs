@@ -1,27 +1,23 @@
 #![allow(dead_code)]
 
-use crate::spectral_data::{
-    blue, green, red, white, yellow, LAMBDA_NUM, LAMBDA_START, LAMBDA_STEP,
-};
+use crate::cie::xyz_of;
+use crate::spectral_data::{blue, green, red, white, yellow, LAMBDA_NUM, LAMBDA_START};
 use crate::*;
-use std::iter::{Enumerate, Map};
-use std::slice::Iter;
+use image::Rgb;
 
 impl Spectrum {
-    #[inline(always)]
-    pub fn get(&self, index: usize) -> LightWave {
-        let lambda = LAMBDA_START + (LAMBDA_STEP * index) as f32;
-        let intensity = self[index];
-
-        LightWave::new(lambda, intensity)
+    pub fn as_xyz(self) -> Xyz {
+        self.into()
     }
 
-    pub fn get_iter(&self) -> Map<Enumerate<Iter<'_, f32>>, fn((usize, &f32)) -> LightWave> {
-        self.data.iter().enumerate().map(|(index, intensity)| {
-            let lambda = LAMBDA_START + (LAMBDA_STEP * index) as f32;
+    pub fn as_srgb(self) -> Srgb {
+        self.into()
+    }
+}
 
-            LightWave::new(lambda, *intensity)
-        })
+impl IndexSpectral for Spectrum {
+    fn index_spectral(&self, index: usize) -> f32 {
+        self.data[index]
     }
 }
 
@@ -60,6 +56,40 @@ impl Colors for Spectrum {
 
     fn pink() -> Self {
         (Self::red() + Self::blue()) * 0.5
+    }
+}
+
+impl Into<Xyz> for Spectrum {
+    fn into(self) -> Xyz {
+        self.as_light_waves()
+            .iter()
+            .fold(Xyz::new_const(0.0), |acc, next| {
+                acc + xyz_of(next.lambda) * next.intensity
+            })
+    }
+}
+
+impl Into<Srgb> for Spectrum {
+    fn into(self) -> Srgb {
+        self.as_xyz().to_srgb()
+    }
+}
+
+impl Into<Rgb<u8>> for Spectrum {
+    fn into(self) -> Rgb<u8> {
+        self.as_srgb().into()
+    }
+}
+
+impl Into<Rgb<u16>> for Spectrum {
+    fn into(self) -> Rgb<u16> {
+        self.as_srgb().into()
+    }
+}
+
+impl Into<Rgb<f32>> for Spectrum {
+    fn into(self) -> Rgb<f32> {
+        self.as_srgb().into()
     }
 }
 

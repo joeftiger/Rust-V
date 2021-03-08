@@ -2,7 +2,7 @@ use std::iter::Sum;
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign};
 
 use std::fmt::Debug;
-use ultraviolet::{Mat3, Vec3};
+use ultraviolet::{Lerp, Mat3, Vec3};
 
 pub mod cie;
 pub mod spectral_data;
@@ -14,7 +14,7 @@ pub use spectrum::Spectrum;
 pub use srgb::Srgb;
 pub use xyz::Xyz;
 
-use spectral_data::{LAMBDA_RANGE, LAMBDA_START};
+use spectral_data::{LAMBDA_END, LAMBDA_START};
 
 #[macro_export]
 macro_rules! color {
@@ -39,7 +39,7 @@ macro_rules! color {
                     let mut light_waves = [LightWave::default(); $size];
 
                     for i in 0..$size {
-                        light_waves[i].lambda = LAMBDA_START + LAMBDA_RANGE * i as f32 / $size as f32;
+                        light_waves[i].lambda = LAMBDA_START.lerp(LAMBDA_END, i as f32 / $size as f32);
                         light_waves[i].intensity = self[i];
                     }
 
@@ -382,6 +382,10 @@ pub trait Color<T = f32>:
     fn component_max(&self) -> T;
 }
 
+pub trait IndexSpectral {
+    fn index_spectral(&self, index: usize) -> f32;
+}
+
 /// A trait allowing colors to return known colors:
 ///  * black
 ///  * grey
@@ -421,7 +425,7 @@ pub trait Colors<T = f32>: Color<T> {
 pub fn xyz_to_srgb_mat() -> Mat3 {
     // https://en.wikipedia.org/wiki/SRGB#The_forward_transformation_(CIE_XYZ_to_sRGB)
     Mat3::new(
-        Vec3::new(3.240_97, -0.96924364, 0.05563008),
+        Vec3::new(3.24096994, -0.96924364, 0.05563008),
         Vec3::new(-1.53738318, 1.8759675, -0.20397696),
         Vec3::new(-0.49861076, 0.04155506, 1.05697151),
     )

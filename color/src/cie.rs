@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 #![allow(clippy::excessive_precision)]
 
+use crate::Xyz;
+
 pub const CIE_SAMPLES: usize = 471;
 
 //noinspection RsApproxConstant
@@ -956,7 +958,6 @@ pub const CIE_Y_2: [f32; CIE_SAMPLES] = {
     ]
 };
 
-#[allow(dead_code)]
 pub const CIE_Z_2: [f32; CIE_SAMPLES] = {
     [
         0.0006061,
@@ -1433,8 +1434,40 @@ pub const CIE_Z_2: [f32; CIE_SAMPLES] = {
     ]
 };
 
+//-------------------------------------------------------------
+// Data taken from https://en.wikipedia.org/wiki/CIE_1931_color_space#Analytical_approximation
+
 /// A piecewise-Gaussian function.
+#[inline(always)]
 pub fn gaussian(lambda: f32, alpha: f32, mu: f32, sigma1: f32, sigma2: f32) -> f32 {
-    let sqrt = (lambda - mu) / if lambda < mu { sigma1 } else { sigma2 };
-    alpha * f32::exp(-(sqrt * sqrt) / 2.0)
+    let t = (lambda - mu) / if lambda < mu { sigma1 } else { sigma2 };
+    alpha * f32::exp(-(t * t) / 2.0)
+}
+
+#[inline]
+pub fn x_bar(lambda: f32) -> f32 {
+    gaussian(lambda, 1.056, 5998.0, 379.0, 310.0)
+        + gaussian(lambda, 0.362, 4420.0, 160.0, 267.0)
+        + gaussian(lambda, -0.065, 5011.0, 204.0, 262.0)
+}
+
+#[inline]
+pub fn y_bar(lambda: f32) -> f32 {
+    gaussian(lambda, 0.821, 5688.0, 469.0, 405.0) + gaussian(lambda, 0.286, 5309.0, 163.0, 311.0)
+}
+
+#[inline]
+pub fn z_bar(lambda: f32) -> f32 {
+    gaussian(lambda, 1.217, 4370.0, 118.0, 360.0) + gaussian(lambda, 0.681, 4590.0, 260.0, 138.0)
+}
+
+#[inline(always)]
+fn mu_m_to_angstrom(lambda: f32) -> f32 {
+    10_000.0 * lambda
+}
+
+#[inline]
+pub fn xyz_of(mut lambda: f32) -> Xyz {
+    lambda = mu_m_to_angstrom(lambda);
+    Xyz::new([x_bar(lambda), y_bar(lambda), z_bar(lambda)])
 }

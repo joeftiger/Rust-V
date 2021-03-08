@@ -16,7 +16,18 @@ impl Srgb {
     }
 
     pub fn to_xyz(&self) -> Xyz {
-        Xyz::from(srgbs_to_linear(srgb_to_xyz_mat() * self.to_vec3()))
+        Xyz::from(srgb_to_xyz_mat() * srgbs_to_linear(self.to_vec3()))
+    }
+}
+
+impl IndexSpectral for Srgb {
+    fn index_spectral(&self, index: usize) -> f32 {
+        match index {
+            0 => 0.645,
+            1 => 0.526,
+            2 => 0.444,
+            _ => panic!(),
+        }
     }
 }
 
