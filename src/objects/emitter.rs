@@ -4,7 +4,7 @@ use crate::debug_utils::{is_finite, is_normalized, within_01};
 use crate::objects::receiver::ReceiverExt;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
-use color::Color;
+use color::{Color, IndexSpectral};
 use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 use ultraviolet::{Vec2, Vec3};
 use utility::floats::BIG_EPSILON;
@@ -124,7 +124,7 @@ where
     fn emission_light_wave(&self, light_wave_index: usize) -> f32 {
         debug_assert!(light_wave_index < Spectrum::size());
 
-        self.emission[light_wave_index]
+        self.emission.index_spectral(light_wave_index)
     }
 
     fn sample(&self, point: &Vec3, sample: &Vec2) -> EmitterSample<Spectrum> {

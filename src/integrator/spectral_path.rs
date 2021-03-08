@@ -32,14 +32,11 @@ impl Integrator for SpectralPath {
         sampler: &dyn Sampler,
         depth: u32,
     ) -> Spectrum {
-        // let mut illumination = Spectrum::new_const(0.0);
-        // let mut throughput = Spectrum::new_const(1.0);
-        //
         let mut hit = intersection.clone();
         let mut specular = false;
 
         let mut illumination = Spectrum::new_const(0.0);
-        let mut light_waves = Spectrum::new_const(f32::MIN_POSITIVE).as_light_waves();
+        let mut light_waves = Spectrum::new_const(100.0).as_light_waves();
 
         for light_wave_index in 0..Spectrum::size() {
             let light_wave = &mut light_waves[light_wave_index];
@@ -52,18 +49,19 @@ impl Integrator for SpectralPath {
                 let outgoing = -hit.ray.direction;
                 let normal = hit.normal;
                 let bsdf = hit.object.bsdf();
+                let mut bounce_illum = 0.0;
 
                 if bounce == 0 || specular {
                     if let SceneObject::Emitter(e) = &hit.object {
-                        light_wave.intensity += e.emission_light_wave(light_wave_index);
+                        bounce_illum += e.emission_light_wave(light_wave_index);
                         //e.radiance(&outgoing, &normal);
                     }
                 }
 
-                light_wave.intensity +=
+                bounce_illum +=
                     direct_illumination_light_wave(scene, sampler, &hit, &bsdf, light_wave_index);
 
-                illumination[light_wave_index] += throughput * light_wave.intensity;
+                illumination[light_wave_index] += throughput * bounce_illum * light_wave.intensity;
 
                 let sample = sampler.get_sample();
                 if let Some(bxdf_sample) = bsdf.sample_light_wave(
@@ -105,6 +103,6 @@ impl Integrator for SpectralPath {
             }
         }
 
-        illumination / 3.0
+        illumination
     }
 }

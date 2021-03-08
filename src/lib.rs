@@ -26,4 +26,4 @@ mod window;
 #[cfg(feature = "live-window")]
 pub use window::RenderWindow;
 
-pub type Spectrum = color::Srgb;
+pub type Spectrum = color::Spectrum;
