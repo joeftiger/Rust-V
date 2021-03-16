@@ -35,6 +35,10 @@ use crate::Spectrum;
 use color::Color;
 use geometry::Ray;
 
+pub trait IntegratorAverage<> {
+
+}
+
 /// An integrator to calculate the color of a pixel / ray.
 ///
 /// This trait provides generic methods like `specular_reflection` and `specular_transmission`.

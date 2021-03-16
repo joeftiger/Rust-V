@@ -142,7 +142,6 @@ impl BSDF {
         outgoing_world: &Vec3,
         types: BxDFType,
         sample: &Sample,
-        light_wave: &LightWave,
         light_wave_index: usize,
     ) -> Option<BxDFSample<f32>> {
         debug_assert!(is_normalized(normal));
@@ -154,7 +153,7 @@ impl BSDF {
         let bxdf = self.random_matching_bxdf(types, sample.one_d)?;
 
         if let Some(mut sample) =
-            bxdf.sample_light_wave(&outgoing, &sample.two_d, light_wave, light_wave_index)
+            bxdf.sample_light_wave(&outgoing, &sample.two_d, light_wave_index)
         {
             sample.incident = rotation.reversed() * sample.incident;
 

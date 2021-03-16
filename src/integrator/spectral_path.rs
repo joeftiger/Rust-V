@@ -7,7 +7,7 @@ use crate::objects::{ReceiverExt, SceneObject};
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
-use color::Color;
+use color::{Color, LightWave};
 use geometry::offset_ray_towards;
 
 pub struct SpectralPath {
@@ -32,15 +32,12 @@ impl Integrator for SpectralPath {
         sampler: &dyn Sampler,
         depth: u32,
     ) -> Spectrum {
-        let mut hit = intersection.clone();
-        let mut specular = false;
-
         let mut illumination = Spectrum::new_const(0.0);
-        let mut light_waves = Spectrum::new_const(100.0).as_light_waves();
 
         for light_wave_index in 0..Spectrum::size() {
-            let light_wave = &mut light_waves[light_wave_index];
+            let mut hit = intersection.clone();
 
+            let mut specular = false;
             let mut bounce = 0;
             let mut specular_bounce = 0;
             let mut throughput = 1.0;
@@ -61,7 +58,7 @@ impl Integrator for SpectralPath {
                 bounce_illum +=
                     direct_illumination_light_wave(scene, sampler, &hit, &bsdf, light_wave_index);
 
-                illumination[light_wave_index] += throughput * bounce_illum * light_wave.intensity;
+                illumination[light_wave_index] += throughput * bounce_illum;
 
                 let sample = sampler.get_sample();
                 if let Some(bxdf_sample) = bsdf.sample_light_wave(
@@ -69,7 +66,6 @@ impl Integrator for SpectralPath {
                     &outgoing,
                     BxDFType::ALL,
                     &sample,
-                    light_wave,
                     light_wave_index,
                 ) {
                     if bxdf_sample.pdf == 0.0 || bxdf_sample.spectrum == 0.0 {

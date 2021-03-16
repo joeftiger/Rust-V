@@ -64,7 +64,7 @@ impl<T> RenderJob<T> {
 /// This struct is responsible to keep track of a pixel's color.
 struct RenderPixel {
     pixel: UVec2,
-    spectrum: Spectrum,
+    pub average: Spectrum,
     samples: usize,
 }
 
@@ -74,19 +74,12 @@ impl RenderPixel {
     /// # Arguments
     /// * `spectrum` - The spectrum to add
     pub fn add(&mut self, spectrum: Spectrum) {
-        self.spectrum += spectrum;
+        let mut avg = self.average * self.samples as f32;
+        avg += spectrum;
         self.samples += 1;
-    }
+        avg /= self.samples as f32;
 
-    /// Computes the average of this pixel.
-    ///
-    /// # Returns
-    /// * Spectrum average
-    fn average(&self) -> Spectrum {
-        match self.samples {
-            0 => self.spectrum,
-            _ => self.spectrum / self.samples as f32,
-        }
+        self.average = avg;
     }
 }
 
@@ -101,7 +94,7 @@ impl From<UVec2> for RenderPixel {
     fn from(pixel: UVec2) -> Self {
         Self {
             pixel,
-            spectrum: Spectrum::new_const(0.0),
+            average: Spectrum::new_const(0.0),
             samples: 0,
         }
     }
@@ -337,7 +330,7 @@ impl Renderer {
 
             lock.pixels
                 .iter()
-                .for_each(|px| buffer.put_pixel(px.pixel.x, px.pixel.y, px.average().into()));
+                .for_each(|px| buffer.put_pixel(px.pixel.x, px.pixel.y, px.average.into()));
         });
 
         buffer
@@ -353,7 +346,7 @@ impl Renderer {
 
             lock.pixels
                 .iter()
-                .for_each(|px| buffer.put_pixel(px.pixel.x, px.pixel.y, px.average().into()));
+                .for_each(|px| buffer.put_pixel(px.pixel.x, px.pixel.y, px.average.into()));
         });
 
         buffer

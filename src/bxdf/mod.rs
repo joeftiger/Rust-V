@@ -413,7 +413,6 @@ pub trait BxDF: Send + Sync {
         &self,
         outgoing: &Vec3,
         sample: &Vec2,
-        _light_wave: &LightWave,
         light_wave_index: usize,
     ) -> Option<BxDFSample<f32>> {
         debug_assert!(is_normalized(outgoing));

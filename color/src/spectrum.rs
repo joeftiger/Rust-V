@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::cie::xyz_of;
-use crate::spectral_data::{blue, green, red, white, yellow, LAMBDA_NUM, LAMBDA_START};
+use crate::spectral_data::*;
 use crate::*;
 use image::Rgb;
 
@@ -12,6 +12,24 @@ impl Spectrum {
 
     pub fn as_srgb(self) -> Srgb {
         self.into()
+    }
+}
+
+impl Spectrum {
+    pub fn blue_sky() -> Self {
+        Self::new(blue_sky::SPECTRUM)
+    }
+
+    pub fn dark_skin() -> Self {
+        Self::new(dark_skin::SPECTRUM)
+    }
+
+    pub fn foliage() -> Self {
+        Self::new(foliage::SPECTRUM)
+    }
+
+    pub fn light_skin() -> Self {
+        Self::new(light_skin::SPECTRUM)
     }
 }
 

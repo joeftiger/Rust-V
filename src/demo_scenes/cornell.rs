@@ -181,7 +181,7 @@ fn create_emitter() -> SceneObject {
 
     let bsdf = BSDF::empty();
 
-    let emission = Spectrum::white() * 15.0;
+    let emission = Spectrum::white() * 2.0;
     let emitter = Emitter::new(sphere, bsdf, emission);
     SceneObject::new_emitter(emitter)
 }
