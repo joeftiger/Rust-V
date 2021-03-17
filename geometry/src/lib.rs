@@ -1,5 +1,6 @@
 mod bubble;
 pub mod bvh;
+mod composite;
 mod cube;
 mod cylinder;
 mod debug_util;
@@ -12,13 +13,14 @@ mod sphere;
 use ultraviolet::Vec3;
 
 use crate::debug_util::{in_range_incl, is_finite, is_normalized};
-pub use bubble::Bubble;
-pub use cube::Aabb;
-pub use cylinder::Cylinder;
-pub use mesh::{Mesh, ShadingMode};
-pub use point::Point;
-pub use ray::Ray;
-pub use sphere::Sphere;
+pub use bubble::*;
+pub use composite::*;
+pub use cube::*;
+pub use cylinder::*;
+pub use mesh::*;
+pub use point::*;
+pub use ray::*;
+pub use sphere::*;
 use std::f32::consts::{PI, TAU};
 use utility::floats::BIG_EPSILON;
 
