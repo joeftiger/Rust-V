@@ -1,6 +1,8 @@
 use crate::{Aabb, Boundable, Container, Intersectable, Intersection, Ray, Sphere};
+use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 
+#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BiconvexLens {
     pub sphere0: Sphere,
     pub sphere1: Sphere,

@@ -9,5 +9,8 @@ edition = "2018"
 [dependencies]
 ultraviolet = ""
 image = ""
+serde = { version = "", features = ["derive"] }
+serde_derive = ""
+serde-big-array = ""
 
 utility = { path = "../utility" }

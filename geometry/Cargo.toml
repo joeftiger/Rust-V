@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 tobj = ""
-ultraviolet = ""
+ultraviolet = { version = "", features = ["serde"] }
+serde = { version = "", features = ["derive"] }
 
 utility = { path = "../utility" }

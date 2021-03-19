@@ -3,11 +3,12 @@ use crate::ray::Ray;
 #[cfg(test)]
 use crate::UNIT_VECTORS;
 use crate::{Aabb, Boundable, Container, Intersectable, Intersection};
+use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 use utility::math::solve_quadratic;
 
 /// A sphere consists of a center and a radius.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,

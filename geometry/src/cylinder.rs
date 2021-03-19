@@ -1,8 +1,10 @@
 use crate::debug_util::is_finite;
 use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 use utility::math::solve_quadratic;
 
+#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Cylinder {
     caps: (Vec3, Vec3),
     radius: f32,
@@ -86,22 +88,22 @@ impl Intersectable for Cylinder {
         let center = self.center();
 
         let filter = |t: f32| {
-            if ray.contains(t_min) {
-                let point = ray.at(t_min);
-                let diff = point - center;
-                let z = diff.dot(axis);
+            if ray.contains(t) {
+                let point = ray.at(t);
+                let center_to_point = point - center;
+                let z = center_to_point.dot(axis);
 
                 if 2.0 * z.abs() < height {
-                    return Some((t, point, diff));
+                    return Some((t, point, center_to_point));
                 }
             }
 
             None
         };
 
-        let (t, point, diff) = filter(t_min).or_else(|| filter(t_max))?;
+        let (t, point, center_to_point) = filter(t_min).or_else(|| filter(t_max))?;
 
-        let mut normal = diff / self.radius;
+        let mut normal = center_to_point / self.radius;
         normal -= normal.dot(axis) * axis;
 
         if normal.dot(dir) > 0.0 {
@@ -124,7 +126,24 @@ impl Intersectable for Cylinder {
         let c = oc.dot(oc) - oc_parallel * oc_parallel - self.radius * self.radius;
 
         if let Some((t_min, t_max)) = solve_quadratic(a, b, c) {
-            ray.contains(t_min) || ray.contains(t_max)
+            let center = self.center();
+            let height = self.height();
+
+            let filter = |t: f32| {
+                if ray.contains(t) {
+                    let point = ray.at(t);
+                    let center_to_point = point - center;
+                    let z = center_to_point.dot(axis);
+
+                    if 2.0 * z.abs() < height {
+                        return true;
+                    }
+                }
+
+                false
+            };
+
+            filter(t_min) || filter(t_max)
         } else {
             false
         }

@@ -2,12 +2,13 @@ use crate::ray::Ray;
 #[cfg(test)]
 use crate::UNIT_VECTORS;
 use crate::{Boundable, Container, Intersectable, Intersection};
+use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 use utility::floats::BIG_EPSILON;
 
 /// A cube represents an axis-aligned bounding box in 3 dimension. It is very efficient using only
 /// 2 coordinates to represent such a box.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Aabb {
     pub min: Vec3,
     pub max: Vec3,

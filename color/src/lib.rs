@@ -3,6 +3,13 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, 
 
 use std::fmt::Debug;
 use ultraviolet::{Lerp, Mat3, Vec3};
+use serde::{Deserialize, Serialize};
+
+use serde_big_array::big_array;
+big_array! {
+    ColorArray;
+    +3, LAMBDA_NUM
+}
 
 pub mod cie;
 pub mod spectral_data;
@@ -15,13 +22,15 @@ pub use srgb::Srgb;
 pub use xyz::Xyz;
 
 use spectral_data::{LAMBDA_END, LAMBDA_START};
+use crate::spectral_data::LAMBDA_NUM;
 
 #[macro_export]
 macro_rules! color {
     ($($name:ident => $storage:ident, $size:expr), +) => {
         $(
-            #[derive(Clone, Copy, Debug)]
+            #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
             pub struct $name {
+                #[serde(with = "ColorArray")]
                 data: [$storage; $size],
             }
 

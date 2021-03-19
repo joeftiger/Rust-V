@@ -39,7 +39,7 @@ where
     T: Deref<Target = dyn Intersectable>,
 {
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
-        let mut min_ray = ray.clone();
+        let mut min_ray = *ray;
 
         self.content
             .iter()
@@ -51,7 +51,7 @@ where
             })
             .min_by(|a, b| fast_cmp(a.t, b.t))
             .map(|mut i| {
-                i.ray = ray.clone();
+                i.ray = *ray;
                 i
             })
     }

@@ -1,6 +1,7 @@
 use crate::bvh::Tree;
 use crate::debug_util::{is_finite, is_normalized};
 use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use serde::{Deserialize, Serialize};
 use std::mem::swap;
 use tobj::Mesh as TobjMesh;
 use ultraviolet::{Mat3, Rotor3, Vec3};
@@ -8,7 +9,7 @@ use utility::floats::fast_clamp;
 
 /// The shading mode defines the shading of normals. In `Flat` mode, the surface of triangles will
 /// appear flat. In `Phong` however, they will be interpolated to create a smooth looking surface.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum ShadingMode {
     Flat,
     Phong,

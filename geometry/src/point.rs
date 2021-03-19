@@ -1,8 +1,9 @@
 use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 
 /// Represents a point in space.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Point(pub Vec3);
 
 impl Boundable for Point {

@@ -1,7 +1,9 @@
 use crate::debug_util::is_finite;
 use crate::{Aabb, Boundable, Container, Intersectable, Intersection, Ray, Sphere};
+use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 
+#[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct Bubble {
     pub inner: Sphere,
     pub outer: Sphere,
