@@ -33,6 +33,7 @@ ultraviolet = { version = "", features= ["int"] }
 # De-/Serialization
 serde = { version = "", features = ["derive", "rc"] }
 typetag = ""
+ron = ""
 
 color = { path = "./color" }
 geometry = { path = "./geometry" }
