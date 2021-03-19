@@ -1,11 +1,12 @@
-use crate::bxdf::{cos_phi, cos_theta, sin_phi, sin_theta, BxDF, BxDFType};
+use crate::bxdf::{cos_phi, cos_theta, sin_phi, sin_theta, BxDF, Type};
 use crate::Spectrum;
+use serde::{Deserialize, Serialize};
 use std::f32::consts::FRAC_1_PI;
 use ultraviolet::Vec3;
 use utility::floats::{in_range_incl_left, EPSILON};
 
 /// The Oren-Nayar reflectance model describes rough opaque diffuse surfaces where each facet is lambertian (diffuse).
-#[derive(Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct OrenNayar {
     r: Spectrum,
     a: f32,
@@ -37,8 +38,8 @@ impl OrenNayar {
 }
 
 impl BxDF for OrenNayar {
-    fn get_type(&self) -> BxDFType {
-        BxDFType::DIFFUSE | BxDFType::REFLECTION
+    fn get_type(&self) -> Type {
+        Type::DIFFUSE | Type::REFLECTION
     }
 
     fn evaluate(&self, incident: &Vec3, outgoing: &Vec3) -> Spectrum {

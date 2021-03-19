@@ -1,18 +1,13 @@
-use crate::bxdf::{same_hemisphere, world_to_bxdf, BxDF, BxDFSample, BxDFType};
+use crate::bxdf::{same_hemisphere, world_to_bxdf, BSDFType, BxDF, BxDFSample, Type};
 use crate::debug_utils::is_normalized;
 use crate::sampler::Sample;
 use crate::Spectrum;
-use std::ops::Deref;
+use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 
+#[derive(Serialize, Deserialize)]
 pub struct BSDF {
-    bxdfs: Vec<Box<dyn BxDF>>,
-}
-
-impl From<Vec<Box<dyn BxDF>>> for BSDF {
-    fn from(bxdfs: Vec<Box<dyn BxDF>>) -> Self {
-        Self { bxdfs }
-    }
+    bxdfs: Vec<BSDFType>,
 }
 
 impl BSDF {
@@ -20,7 +15,7 @@ impl BSDF {
         Self::new(vec![])
     }
 
-    pub fn new(bxdfs: Vec<Box<dyn BxDF>>) -> Self {
+    pub fn new(bxdfs: Vec<BSDFType>) -> Self {
         Self { bxdfs }
     }
 
@@ -32,22 +27,18 @@ impl BSDF {
         self.size() == 0
     }
 
-    pub fn num_types(&self, t: BxDFType) -> usize {
+    pub fn num_types(&self, t: Type) -> usize {
         self.bxdfs.iter().filter(|bxdf| bxdf.is_type(t)).count()
     }
 
-    fn random_matching_bxdf(&self, t: BxDFType, rand: f32) -> Option<&dyn BxDF> {
+    fn random_matching_bxdf(&self, t: Type, rand: f32) -> Option<&BSDFType> {
         let count = self.num_types(t);
         if count == 0 {
             return None;
         }
 
         let index = (rand * count as f32) as usize;
-        self.bxdfs
-            .iter()
-            .filter(|bxdf| bxdf.is_type(t))
-            .nth(index)
-            .map(|boxed| boxed.deref())
+        self.bxdfs.iter().filter(|bxdf| bxdf.is_type(t)).nth(index)
     }
 
     pub fn evaluate(
@@ -55,7 +46,7 @@ impl BSDF {
         normal: &Vec3,
         incident_world: &Vec3,
         outgoing_world: &Vec3,
-        mut types: BxDFType,
+        mut types: Type,
     ) -> Spectrum {
         let rotation = world_to_bxdf(normal);
         let incident = rotation * *incident_world;
@@ -63,9 +54,9 @@ impl BSDF {
 
         // transmission or reflection
         if same_hemisphere(&incident, &outgoing) {
-            types &= !BxDFType::TRANSMISSION;
+            types &= !Type::TRANSMISSION;
         } else {
-            types &= !BxDFType::REFLECTION;
+            types &= !Type::REFLECTION;
         }
 
         self.bxdfs
@@ -85,7 +76,7 @@ impl BSDF {
         normal: &Vec3,
         incident_world: &Vec3,
         outgoing_world: &Vec3,
-        mut types: BxDFType,
+        mut types: Type,
         light_wave_index: usize,
     ) -> f32 {
         let rotation = world_to_bxdf(normal);
@@ -94,9 +85,9 @@ impl BSDF {
 
         // transmission or reflection
         if same_hemisphere(&incident, &outgoing) {
-            types &= !BxDFType::TRANSMISSION;
+            types &= !Type::TRANSMISSION;
         } else {
-            types &= !BxDFType::REFLECTION;
+            types &= !Type::REFLECTION;
         }
 
         self.bxdfs
@@ -115,7 +106,7 @@ impl BSDF {
         &self,
         normal: &Vec3,
         outgoing_world: &Vec3,
-        types: BxDFType,
+        types: Type,
         sample: &Sample,
     ) -> Option<BxDFSample<Spectrum>> {
         debug_assert!(is_normalized(normal));
@@ -139,7 +130,7 @@ impl BSDF {
         &self,
         normal: &Vec3,
         outgoing_world: &Vec3,
-        types: BxDFType,
+        types: Type,
         sample: &Sample,
         light_wave_index: usize,
     ) -> Option<BxDFSample<f32>> {
@@ -166,7 +157,7 @@ impl BSDF {
         normal: &Vec3,
         incident_world: &Vec3,
         outgoing_world: &Vec3,
-        types: BxDFType,
+        types: Type,
     ) -> f32 {
         let rotation = world_to_bxdf(normal);
         let incident = rotation * *incident_world;

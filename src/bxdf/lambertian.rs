@@ -1,9 +1,11 @@
-use crate::bxdf::{BxDF, BxDFType};
+use crate::bxdf::{BxDF, Type};
 use crate::Spectrum;
+use serde::{Deserialize, Serialize};
 use std::f32::consts::FRAC_1_PI;
 use ultraviolet::Vec3;
 
 /// The lambertian reflection reflects equally into all directions of the hemisphere.
+#[derive(Serialize, Deserialize)]
 pub struct LambertianReflection {
     r: Spectrum,
 }
@@ -23,8 +25,8 @@ impl LambertianReflection {
 }
 
 impl BxDF for LambertianReflection {
-    fn get_type(&self) -> BxDFType {
-        BxDFType::DIFFUSE | BxDFType::REFLECTION
+    fn get_type(&self) -> Type {
+        Type::DIFFUSE | Type::REFLECTION
     }
 
     fn evaluate(&self, _: &Vec3, _: &Vec3) -> Spectrum {
@@ -37,6 +39,7 @@ impl BxDF for LambertianReflection {
 }
 
 /// The lambertian transmission transmits equally into all directions of the hemisphere.
+#[derive(Serialize, Deserialize)]
 pub struct LambertianTransmission {
     t: Spectrum,
 }
@@ -55,8 +58,8 @@ impl LambertianTransmission {
 }
 
 impl BxDF for LambertianTransmission {
-    fn get_type(&self) -> BxDFType {
-        BxDFType::DIFFUSE | BxDFType::TRANSMISSION
+    fn get_type(&self) -> Type {
+        Type::DIFFUSE | Type::TRANSMISSION
     }
 
     fn evaluate(&self, _: &Vec3, _: &Vec3) -> Spectrum {

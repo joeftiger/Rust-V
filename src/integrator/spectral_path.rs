@@ -1,7 +1,7 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
-use crate::bxdf::BxDFType;
+use crate::bxdf::Type;
 use crate::integrator::{direct_illumination_light_wave, Integrator};
 use crate::objects::{ReceiverExt, SceneObject};
 use crate::sampler::Sampler;
@@ -61,13 +61,9 @@ impl Integrator for SpectralPath {
                 illumination[light_wave_index] += throughput * bounce_illum;
 
                 let sample = sampler.get_sample();
-                if let Some(bxdf_sample) = bsdf.sample_light_wave(
-                    &normal,
-                    &outgoing,
-                    BxDFType::ALL,
-                    &sample,
-                    light_wave_index,
-                ) {
+                if let Some(bxdf_sample) =
+                    bsdf.sample_light_wave(&normal, &outgoing, Type::ALL, &sample, light_wave_index)
+                {
                     if bxdf_sample.pdf == 0.0 || bxdf_sample.spectrum == 0.0 {
                         break;
                     }

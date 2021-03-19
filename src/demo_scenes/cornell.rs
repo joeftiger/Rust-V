@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::bxdf::{FresnelSpecular, OrenNayar, BSDF};
+use crate::bxdf::{BSDFType, FresnelSpecular, OrenNayar, BSDF};
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
 use crate::objects::{Emitter, Receiver, SceneObject};
@@ -44,6 +44,26 @@ impl Wall {
     }
 }
 
+impl DemoScene for CornellScene {
+    fn create(resolution: UVec2) -> (Scene, Arc<dyn Camera>) {
+        let camera = create_camera(resolution);
+
+        let mut scene = Scene::default();
+
+        Wall::list().iter().for_each(|wall| {
+            scene.add(create_wall(wall));
+        });
+
+        // scene.add(create_sphere());
+        // scene.add(create_buddha());
+        // scene.add(create_biconvex_lens());
+        // scene.add(create_bubble());
+        scene.add(create_emitter());
+
+        (scene, camera)
+    }
+}
+
 fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
     let position = Vec3::new(X_CENTER, Y_CENTER, FRONT + DIMENSION / 2.0);
     let target = Vec3::new(X_CENTER, Y_CENTER, Z_CENTER);
@@ -53,35 +73,34 @@ fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
     Arc::new(camera)
 }
 
-fn create_bunny() -> SceneObject {
-    let file_name = "./meshes/bunny.obj";
-    let (model, _) = tobj::load_obj(file_name, true).expect("Could not load bunny file");
+fn create_buddha() -> SceneObject {
+    let file_name = "./meshes/buddha.obj";
+    let (model, _) = tobj::load_obj(file_name, true).expect("Could not load buddha file");
 
-    let mut bunny = Mesh::load(&model[0].mesh, ShadingMode::Phong);
+    let mut buddha = Mesh::load(&model[0].mesh, ShadingMode::Phong);
 
-    // bunny.translate(-bunny.bounds().center());
-    // bunny.scale(Vec3::broadcast(3.0));
+    buddha.scale(Vec3::broadcast(3.0));
 
     // translation + scale + rotation
-    let bounds = bunny.bounds();
+    let bounds = buddha.bounds();
     let center = bounds.center();
     let center_floor = Vec3::new(center.x, bounds.min.y, center.z);
 
     let translation = Vec3::new(X_CENTER, FLOOR + 0.01, Z_CENTER) - center_floor;
-    bunny.rotate(Rotor3::from_rotation_xz(PI / -8.0));
-    bunny.translate(translation);
-    bunny.build_bvh();
+    buddha.rotate(Rotor3::from_rotation_xz(PI + 1.0 / -8.0));
+    buddha.translate(translation);
+    buddha.build_bvh();
 
     let specular = FresnelSpecular::new(
         Spectrum::new_const(1.0),
         Spectrum::new_const(1.0),
-        RefractiveType::AIR,
-        RefractiveType::GLASS,
+        RefractiveType::Air,
+        RefractiveType::Glass,
     );
 
-    let bsdf = BSDF::new(vec![Box::new(specular)]);
+    let bsdf = BSDF::new(vec![BSDFType::SFresnel(specular)]);
 
-    let receiver = Arc::new(Receiver::new(bunny, bsdf));
+    let receiver = Arc::new(Receiver::new(buddha, bsdf));
 
     SceneObject::Receiver(receiver)
 }
@@ -93,11 +112,11 @@ fn create_sphere() -> SceneObject {
     let specular = FresnelSpecular::new(
         Spectrum::new_const(1.0),
         Spectrum::new_const(1.0),
-        RefractiveType::AIR,
-        RefractiveType::GLASS,
+        RefractiveType::Air,
+        RefractiveType::Glass,
     );
     // let reflection = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
-    let bsdf = BSDF::new(vec![Box::new(specular)]);
+    let bsdf = BSDF::new(vec![BSDFType::SFresnel(specular)]);
 
     let receiver = Arc::new(Receiver::new(sphere, bsdf));
     SceneObject::Receiver(receiver)
@@ -111,10 +130,10 @@ fn create_bubble() -> SceneObject {
     let specular = FresnelSpecular::new(
         Spectrum::new_const(1.0),
         Spectrum::new_const(1.0),
-        RefractiveType::AIR,
-        RefractiveType::GLASS,
+        RefractiveType::Air,
+        RefractiveType::Glass,
     );
-    let bsdf = BSDF::new(vec![Box::new(specular)]);
+    let bsdf = BSDF::new(vec![BSDFType::SFresnel(specular)]);
 
     let receiver = Arc::new(Receiver::new(bubble, bsdf));
     SceneObject::Receiver(receiver)
@@ -132,10 +151,10 @@ fn create_biconvex_lens() -> SceneObject {
     let specular = FresnelSpecular::new(
         Spectrum::new_const(1.0),
         Spectrum::new_const(1.0),
-        RefractiveType::AIR,
-        RefractiveType::GLASS,
+        RefractiveType::Air,
+        RefractiveType::Glass,
     );
-    let bsdf = BSDF::new(vec![Box::new(specular)]);
+    let bsdf = BSDF::new(vec![BSDFType::SFresnel(specular)]);
 
     let receiver = Arc::new(Receiver::new(lens, bsdf));
     SceneObject::Receiver(receiver)
@@ -166,8 +185,8 @@ fn create_wall(wall: &Wall) -> SceneObject {
         Wall::Right => Spectrum::green() * 0.75,
     };
 
-    let lambertian = Box::new(OrenNayar::new(spectrum, SIGMA));
-    let bsdf = BSDF::new(vec![lambertian]);
+    let oren_nayar = OrenNayar::new(spectrum, SIGMA);
+    let bsdf = BSDF::new(vec![BSDFType::OrenNayar(oren_nayar)]);
 
     let receiver = Arc::new(Receiver::new(cube, bsdf));
     SceneObject::Receiver(receiver)
@@ -182,24 +201,4 @@ fn create_emitter() -> SceneObject {
     let emission = Spectrum::white() * 2.0;
     let emitter = Arc::new(Emitter::new(sphere, bsdf, emission));
     SceneObject::Emitter(emitter)
-}
-
-impl DemoScene for CornellScene {
-    fn create(resolution: UVec2) -> (Scene, Arc<dyn Camera>) {
-        let camera = create_camera(resolution);
-
-        let mut scene = Scene::default();
-
-        Wall::list().iter().for_each(|wall| {
-            scene.add(create_wall(wall));
-        });
-
-        // scene.add(create_sphere());
-        // scene.add(create_bunny());
-        // scene.add(create_biconvex_lens());
-        scene.add(create_bubble());
-        scene.add(create_emitter());
-
-        (scene, camera)
-    }
 }

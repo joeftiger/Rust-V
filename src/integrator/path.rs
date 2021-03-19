@@ -1,4 +1,4 @@
-use crate::bxdf::BxDFType;
+use crate::bxdf::Type;
 use crate::integrator::{direct_illumination, Integrator};
 use crate::objects::{ReceiverExt, SceneObject};
 use crate::sampler::Sampler;
@@ -49,7 +49,7 @@ impl Integrator for Path {
             illumination += throughput * bounce_illum;
 
             let sample = sampler.get_sample();
-            if let Some(bxdf_sample) = bsdf.sample(&normal, &outgoing, BxDFType::ALL, &sample) {
+            if let Some(bxdf_sample) = bsdf.sample(&normal, &outgoing, Type::ALL, &sample) {
                 if bxdf_sample.pdf == 0.0 || bxdf_sample.spectrum.is_black() {
                     break;
                 }

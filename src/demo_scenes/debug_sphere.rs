@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::bxdf::{FresnelSpecular, LambertianReflection, BSDF};
+use crate::bxdf::{BSDFType, FresnelSpecular, LambertianReflection, BSDF};
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY};
 use crate::objects::{Emitter, Receiver, SceneObject};
@@ -37,7 +37,7 @@ fn ground() -> SceneObject {
     let cube = Aabb::new(min, max);
 
     let lambertian = LambertianReflection::new(Spectrum::new_const(1.0));
-    let bsdf = BSDF::new(vec![Box::new(lambertian)]);
+    let bsdf = BSDF::new(vec![BSDFType::LReflection(lambertian)]);
 
     let receiver = Arc::new(Receiver::new(cube, bsdf));
 
@@ -66,13 +66,13 @@ fn prism() -> SceneObject {
     let specular = FresnelSpecular::new(
         Spectrum::new_const(1.0),
         Spectrum::new_const(1.0),
-        RefractiveType::AIR,
-        RefractiveType::GLASS,
+        RefractiveType::Air,
+        RefractiveType::Glass,
     );
 
-    let bsdf = BSDF::new(vec![Box::new(specular)]);
-    let receiver = Arc::new(Receiver::new(prism, bsdf));
+    let bsdf = BSDF::new(vec![BSDFType::SFresnel(specular)]);
 
+    let receiver = Arc::new(Receiver::new(prism, bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -93,7 +93,9 @@ fn light_bulb_rectifier() -> SceneObject {
 
     let rectifier = Cylinder::new((left_end, right_end), 0.51);
 
-    let bsdf = BSDF::new(vec![Box::new(LambertianReflection::new(Spectrum::grey()))]);
+    let bsdf = BSDF::new(vec![BSDFType::LReflection(LambertianReflection::new(
+        Spectrum::grey(),
+    ))]);
 
     let receiver = Arc::new(Receiver::new(rectifier, bsdf));
     SceneObject::Receiver(receiver)

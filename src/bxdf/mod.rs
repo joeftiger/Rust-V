@@ -3,17 +3,20 @@ mod fresnel;
 mod lambertian;
 mod oren_nayar;
 mod specular;
+mod types;
+pub use types::*;
 
 pub use bsdf::BSDF;
 
-pub use fresnel::{Fresnel, FresnelDielectric, FresnelNoOp};
-pub use lambertian::{LambertianReflection, LambertianTransmission};
-pub use oren_nayar::OrenNayar;
-pub use specular::{FresnelSpecular, SpecularReflection, SpecularTransmission};
+pub use fresnel::*;
+pub use lambertian::*;
+pub use oren_nayar::*;
+pub use specular::*;
 
 use crate::debug_utils::{is_finite, is_normalized, within_01};
 use crate::mc::sample_unit_hemisphere;
 use crate::Spectrum;
+use serde::{Deserialize, Serialize};
 use std::f32::consts::{FRAC_1_PI, PI};
 use ultraviolet::{Rotor3, Vec2, Vec3};
 
@@ -224,7 +227,7 @@ bitflags! {
     /// `specular` or be any mixture in between.
     ///
     /// This type allows bit-flagging these properties at will.
-    pub struct BxDFType: u8 {
+    pub struct Type: u8 {
         const NONE = 1 << 0;
         const REFLECTION = 1 << 1;
         const TRANSMISSION = 1 << 2;
@@ -235,7 +238,7 @@ bitflags! {
     }
 }
 
-impl BxDFType {
+impl Type {
     /// Returns whether this type is `reflective`.
     ///
     /// # Returns
@@ -281,12 +284,12 @@ impl BxDFType {
 /// * `spectrum` - An evaluated scaling spectrum
 /// * `incident` - An evaluated incident direction
 /// * `pdf` - An evaluated pdf
-/// * `typ` - The sampled `BxDFType`
+/// * `typ` - The sampled `Type`
 pub struct BxDFSample<T> {
     pub spectrum: T,
     pub incident: Vec3,
     pub pdf: f32,
-    pub typ: BxDFType,
+    pub typ: Type,
 }
 
 impl<T> BxDFSample<T>
@@ -306,7 +309,7 @@ where
     ///
     /// # Returns
     /// * Self
-    pub fn new(spectrum: T, incident: Vec3, pdf: f32, typ: BxDFType) -> Self {
+    pub fn new(spectrum: T, incident: Vec3, pdf: f32, typ: Type) -> Self {
         debug_assert!(is_normalized(&incident));
 
         Self {
@@ -331,7 +334,7 @@ where
         let spectrum = Default::default();
         let incident = Vec3::zero();
         let pdf = 0.0;
-        let typ = BxDFType::NONE;
+        let typ = Type::NONE;
 
         Self {
             spectrum,
@@ -350,13 +353,13 @@ pub trait BxDF: Send + Sync {
     ///
     /// # Results
     /// * The type of this BxDF
-    fn get_type(&self) -> BxDFType;
+    fn get_type(&self) -> Type;
 
     /// Allows matching the user-supplied type to this BxDF.
     ///
     /// # Results
     /// * Whether the type matches.
-    fn is_type(&self, t: BxDFType) -> bool {
+    fn is_type(&self, t: Type) -> bool {
         let st = self.get_type();
         (st & t) == st
     }
@@ -453,12 +456,13 @@ pub trait BxDF: Send + Sync {
 
 /// This special BxDF scales all spectrum outputs of another one, effectively wrapping around
 /// some `BxDF` with a `scale`.
-pub struct ScaledBxDF<'a> {
-    bxdf: &'a dyn BxDF,
+#[derive(Serialize, Deserialize)]
+pub struct ScaledBxDF {
+    bxdf: BSDFType,
     scale: Spectrum,
 }
 
-impl<'a> ScaledBxDF<'a> {
+impl ScaledBxDF {
     /// Creates a new scaled `BxDF`.
     ///
     /// # Arguments
@@ -467,13 +471,13 @@ impl<'a> ScaledBxDF<'a> {
     ///
     /// # Returns
     /// * Self
-    pub fn new(bxdf: &'a dyn BxDF, scale: Spectrum) -> Self {
+    pub fn new(bxdf: BSDFType, scale: Spectrum) -> Self {
         Self { bxdf, scale }
     }
 }
 
-impl BxDF for ScaledBxDF<'_> {
-    fn get_type(&self) -> BxDFType {
+impl BxDF for ScaledBxDF {
+    fn get_type(&self) -> Type {
         self.bxdf.get_type()
     }
 

@@ -1,4 +1,4 @@
-use crate::bxdf::BxDFType;
+use crate::bxdf::Type;
 use crate::integrator::{direct_illumination, Integrator};
 use crate::objects::{ReceiverExt, SceneObject};
 use crate::sampler::Sampler;
@@ -25,7 +25,7 @@ impl Whitted {
         Self { max_depth }
     }
 
-    /// Computes a specific `BxDFType` at the given scene intersection, calling
+    /// Computes a specific `Type` at the given scene intersection, calling
     /// `illumination()` with a newly generated reflected ray.
     ///
     /// # Arguments
@@ -43,7 +43,7 @@ impl Whitted {
         intersection: &SceneIntersection,
         sampler: &dyn Sampler,
         depth: u32,
-        typ: BxDFType,
+        typ: Type,
     ) -> Spectrum {
         debug_assert!(depth < self.max_depth);
 
@@ -107,8 +107,8 @@ impl Integrator for Whitted {
 
         let new_depth = depth + 1;
         if new_depth < self.max_depth {
-            let reflection = BxDFType::SPECULAR | BxDFType::REFLECTION;
-            let transmission = BxDFType::SPECULAR | BxDFType::TRANSMISSION;
+            let reflection = Type::SPECULAR | Type::REFLECTION;
+            let transmission = Type::SPECULAR | Type::TRANSMISSION;
             let both = reflection | transmission;
             illumination +=
                 self.illumination_target(scene, intersection, sampler, new_depth, reflection);

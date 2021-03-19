@@ -28,7 +28,7 @@ pub use path_enhanced::PathEnhanced;
 pub use spectral_path::SpectralPath;
 pub use whitted::Whitted;
 
-use crate::bxdf::{BxDFType, BSDF};
+use crate::bxdf::{Type, BSDF};
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
@@ -102,7 +102,7 @@ fn direct_illumination(
                 &intersection.normal,
                 &emitter_sample.incident,
                 &outgoing_world,
-                BxDFType::ALL,
+                Type::ALL,
             );
 
             if !bsdf_spectrum.is_black() {
@@ -146,7 +146,7 @@ fn direct_illumination_light_wave(
                 &intersection.normal,
                 &emitter_sample.incident,
                 &outgoing_world,
-                BxDFType::ALL,
+                Type::ALL,
                 light_wave_index,
             );
 

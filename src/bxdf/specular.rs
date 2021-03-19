@@ -2,19 +2,21 @@
 
 use crate::bxdf::fresnel::fresnel_dielectric;
 use crate::bxdf::{
-    bxdf_incident_to, bxdf_normal, cos_theta, refract, BxDF, BxDFSample, BxDFType, Fresnel,
-    FresnelDielectric,
+    bxdf_incident_to, bxdf_normal, cos_theta, refract, BxDF, BxDFSample, Fresnel,
+    FresnelDielectric, FresnelType, Type,
 };
 use crate::debug_utils::{is_normalized, within_01};
 use crate::refractive_index::RefractiveType;
 use crate::Spectrum;
 use color::{Color, IndexSpectral};
+use serde::{Deserialize, Serialize};
 use ultraviolet::{Vec2, Vec3};
 
 /// Describes a specular reflection
+#[derive(Serialize, Deserialize)]
 pub struct SpecularReflection {
     r: Spectrum,
-    fresnel: Box<dyn Fresnel>,
+    fresnel: FresnelType,
 }
 
 impl SpecularReflection {
@@ -26,14 +28,14 @@ impl SpecularReflection {
     ///
     /// # Returns
     /// * Self
-    pub fn new(r: Spectrum, fresnel: Box<dyn Fresnel>) -> Self {
+    pub fn new(r: Spectrum, fresnel: FresnelType) -> Self {
         Self { r, fresnel }
     }
 }
 
 impl BxDF for SpecularReflection {
-    fn get_type(&self) -> BxDFType {
-        BxDFType::REFLECTION | BxDFType::SPECULAR
+    fn get_type(&self) -> Type {
+        Type::REFLECTION | Type::SPECULAR
     }
 
     /// No scattering for specular reflection.
@@ -75,6 +77,7 @@ impl BxDF for SpecularReflection {
 }
 
 /// Describes a specular transmission.
+#[derive(Serialize, Deserialize)]
 pub struct SpecularTransmission {
     t: Spectrum,
     eta_i: RefractiveType,
@@ -105,8 +108,8 @@ impl SpecularTransmission {
 }
 
 impl BxDF for SpecularTransmission {
-    fn get_type(&self) -> BxDFType {
-        BxDFType::SPECULAR | BxDFType::TRANSMISSION
+    fn get_type(&self) -> Type {
+        Type::SPECULAR | Type::TRANSMISSION
     }
 
     /// No scattering for specular transmission.
@@ -161,6 +164,7 @@ impl BxDF for SpecularTransmission {
 }
 
 /// Combines specular reflection and transmission for better efficiency.
+#[derive(Serialize, Deserialize)]
 pub struct FresnelSpecular {
     r: Spectrum,
     t: Spectrum,
@@ -194,8 +198,8 @@ impl FresnelSpecular {
 }
 
 impl BxDF for FresnelSpecular {
-    fn get_type(&self) -> BxDFType {
-        BxDFType::REFLECTION | BxDFType::SPECULAR | BxDFType::TRANSMISSION
+    fn get_type(&self) -> Type {
+        Type::REFLECTION | Type::SPECULAR | Type::TRANSMISSION
     }
 
     /// No scattering for specular reflection/transmission.
@@ -234,14 +238,14 @@ impl BxDF for FresnelSpecular {
                 let cos_i = cos_theta(&incident);
 
                 let spectrum = self.t * (Spectrum::new_const(1.0) - self.fresnel.evaluate(cos_i));
-                let typ = BxDFType::SPECULAR | BxDFType::TRANSMISSION;
+                let typ = Type::SPECULAR | Type::TRANSMISSION;
 
                 return Some(BxDFSample::new(spectrum, incident, 1.0 - f, typ));
             }
         }
 
         let incident = bxdf_incident_to(outgoing);
-        let typ = BxDFType::REFLECTION | BxDFType::SPECULAR;
+        let typ = Type::REFLECTION | Type::SPECULAR;
         let spectrum = self.r * f;
 
         Some(BxDFSample::new(spectrum, incident, f, typ))
@@ -277,7 +281,7 @@ impl BxDF for FresnelSpecular {
 
                 let intensity = self.t.index_spectral(light_wave_index)
                     * (1.0 - self.fresnel.evaluate_lambda(lambda, cos_i));
-                let typ = BxDFType::SPECULAR | BxDFType::TRANSMISSION;
+                let typ = Type::SPECULAR | Type::TRANSMISSION;
 
                 return Some(BxDFSample::new(intensity, incident, 1.0 - f, typ));
             }
@@ -285,7 +289,7 @@ impl BxDF for FresnelSpecular {
 
         let intensity = self.r.index_spectral(light_wave_index) * f;
         let incident = bxdf_incident_to(outgoing);
-        let typ = BxDFType::REFLECTION | BxDFType::SPECULAR;
+        let typ = Type::REFLECTION | Type::SPECULAR;
 
         Some(BxDFSample::new(intensity, incident, f, typ))
     }

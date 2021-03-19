@@ -3,8 +3,34 @@
 use crate::refractive_index::RefractiveType;
 use crate::Spectrum;
 use color::Color;
+use serde::{Deserialize, Serialize};
 use std::mem::swap;
 use utility::floats::fast_clamp;
+
+#[derive(Serialize, Deserialize)]
+pub enum FresnelType {
+    /// A `Fresnel` implementation for dielectric materials.
+    Dielectric(FresnelDielectric),
+    /// A no-operation `Fresnel` implementation that returns 100% reflection for all incoming directions.
+    /// Although this is physically implausible, it is a convenient capability to have available.
+    NoOp,
+}
+
+impl Fresnel for FresnelType {
+    fn evaluate(&self, cos_i: f32) -> Spectrum {
+        match self {
+            FresnelType::Dielectric(t) => t.evaluate(cos_i),
+            FresnelType::NoOp => Spectrum::new_const(1.0),
+        }
+    }
+
+    fn evaluate_lambda(&self, lambda: f32, cos_i: f32) -> f32 {
+        match self {
+            FresnelType::Dielectric(t) => t.evaluate_lambda(lambda, cos_i),
+            FresnelType::NoOp => 1.0,
+        }
+    }
+}
 
 /// Computes the fraction of reflected light for parallel polarized light.
 ///
@@ -91,6 +117,7 @@ pub trait Fresnel: Send + Sync {
 }
 
 /// An implementation of `Fresnel` for dielectric materials.
+#[derive(Serialize, Deserialize)]
 pub struct FresnelDielectric {
     eta_i: RefractiveType,
     eta_t: RefractiveType,
@@ -119,26 +146,5 @@ impl Fresnel for FresnelDielectric {
 
     fn evaluate_lambda(&self, lambda: f32, cos_i: f32) -> f32 {
         fresnel_dielectric(cos_i, self.eta_i.n(lambda), self.eta_t.n(lambda))
-    }
-}
-
-/// A `Fresnel` implementation that returns 100% reflection for all incoming directions.
-/// Although this is physically implausible, it is a convenient capability to have available.
-pub struct FresnelNoOp;
-
-impl Fresnel for FresnelNoOp {
-    /// Returns full 100% reflection.
-    ///
-    /// # Arguments
-    /// Ignored
-    ///
-    /// # Returns
-    /// * `1.0` spectrum
-    fn evaluate(&self, _: f32) -> Spectrum {
-        Spectrum::new_const(1.0)
-    }
-
-    fn evaluate_lambda(&self, _: f32, _: f32) -> f32 {
-        1.0
     }
 }

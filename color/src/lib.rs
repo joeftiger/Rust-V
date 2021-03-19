@@ -1,9 +1,9 @@
 use std::iter::Sum;
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign};
 
+use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use ultraviolet::{Lerp, Mat3, Vec3};
-use serde::{Deserialize, Serialize};
 
 use serde_big_array::big_array;
 big_array! {
@@ -21,8 +21,8 @@ pub use spectrum::Spectrum;
 pub use srgb::Srgb;
 pub use xyz::Xyz;
 
-use spectral_data::{LAMBDA_END, LAMBDA_START};
 use crate::spectral_data::LAMBDA_NUM;
+use spectral_data::{LAMBDA_END, LAMBDA_START};
 
 #[macro_export]
 macro_rules! color {

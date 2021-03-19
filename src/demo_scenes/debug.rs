@@ -2,7 +2,7 @@
 #![allow(unused_variables)]
 
 use crate::bxdf::{
-    FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
+    BSDFType, FresnelType, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
 };
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY};
@@ -44,7 +44,7 @@ fn ground() -> SceneObject {
     let cube = Aabb::new(min, max);
 
     let lambertian = LambertianReflection::new(Spectrum::new_const(1.0));
-    let bsdf = BSDF::new(vec![Box::new(lambertian)]);
+    let bsdf = BSDF::new(vec![BSDFType::LReflection(lambertian)]);
 
     let receiver = Arc::new(Receiver::new(cube, bsdf));
 
@@ -57,12 +57,9 @@ fn cylinder() -> SceneObject {
 
     let cylinder = Cylinder::new((bot, top), RADIUS);
 
-    let reflection = Box::new(SpecularReflection::new(
-        Spectrum::new_const(1.0),
-        Box::new(FresnelNoOp),
-    ));
+    let reflection = SpecularReflection::new(Spectrum::new_const(1.0), FresnelType::NoOp);
 
-    let bsdf = BSDF::new(vec![reflection]);
+    let bsdf = BSDF::new(vec![BSDFType::SReflection(reflection)]);
 
     let receiver = Arc::new(Receiver::new(cylinder, bsdf));
     SceneObject::Receiver(receiver)
@@ -72,21 +69,13 @@ fn sphere() -> SceneObject {
     let center = Vec3::new(-RADIUS * 1.25, RADIUS, 0.0);
     let sphere = Sphere::new(center, RADIUS);
 
-    let _transmission = Box::new(SpecularTransmission::new(
+    let transmission = SpecularTransmission::new(
         Spectrum::new_const(1.0),
-        RefractiveType::AIR,
-        RefractiveType::GLASS,
-    ));
-    let reflection = Box::new(SpecularTransmission::new(
-        Spectrum::new_const(1.0),
-        RefractiveType::AIR,
-        RefractiveType::GLASS,
-    ));
+        RefractiveType::Air,
+        RefractiveType::Glass,
+    );
 
-    let bsdf = BSDF::new(vec![
-        // transmission,
-        reflection,
-    ]);
+    let bsdf = BSDF::new(vec![BSDFType::STransmission(transmission)]);
 
     let receiver = Arc::new(Receiver::new(sphere, bsdf));
     SceneObject::Receiver(receiver)

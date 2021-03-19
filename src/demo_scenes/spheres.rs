@@ -2,7 +2,7 @@
 #![allow(unused_variables)]
 
 use crate::bxdf::{
-    FresnelNoOp, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
+    BSDFType, FresnelType, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
 };
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY};
@@ -40,7 +40,7 @@ fn ground() -> SceneObject {
     let cube = Aabb::new(min, max);
 
     let lambertian = LambertianReflection::new(Spectrum::white());
-    let bsdf = BSDF::new(vec![Box::new(lambertian)]);
+    let bsdf = BSDF::new(vec![BSDFType::LReflection(lambertian)]);
 
     let receiver = Arc::new(Receiver::new(cube, bsdf));
 
@@ -52,7 +52,7 @@ fn sky() -> SceneObject {
     let sphere = Sphere::new(center, SKY_RADIUS);
 
     let lambertian = LambertianReflection::new(Spectrum::blue() + Spectrum::white() * 0.2);
-    let bsdf = BSDF::new(vec![Box::new(lambertian)]);
+    let bsdf = BSDF::new(vec![BSDFType::LReflection(lambertian)]);
 
     let receiver = Arc::new(Receiver::new(sphere, bsdf));
     SceneObject::Receiver(receiver)
@@ -88,24 +88,19 @@ fn random_bsdf(color: Spectrum) -> (bool, BSDF) {
             out = true;
             BSDF::empty()
         } else if rand < 0.8 {
-            let specular = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
-            BSDF::new(vec![Box::new(specular)])
+            let specular = SpecularReflection::new(Spectrum::new_const(1.0), FresnelType::NoOp);
+            BSDF::new(vec![BSDFType::SReflection(specular)])
         } else {
             let transmission = SpecularTransmission::new(
                 Spectrum::new_const(1.0),
-                RefractiveType::AIR,
-                RefractiveType::GLASS,
+                RefractiveType::Air,
+                RefractiveType::Glass,
             );
-            let reflection =
-                SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
-            BSDF::new(vec![
-                Box::new(transmission),
-                // Box::new(reflection),
-            ])
+            BSDF::new(vec![BSDFType::STransmission(transmission)])
         }
     } else {
         let lambertian = LambertianReflection::new(color);
-        BSDF::new(vec![Box::new(lambertian)])
+        BSDF::new(vec![BSDFType::LReflection(lambertian)])
     };
 
     (out, bsdf)

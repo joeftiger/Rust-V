@@ -29,6 +29,7 @@ show-image = { version = "", features = ["image", "save"], optional = true }
 tobj = ""
 # linear algebra
 ultraviolet = { version = "", features= ["int"] }
+serde = ""
 
 color = { path = "./color" }
 geometry = { path = "./geometry" }

@@ -3,6 +3,8 @@ A Rust-written ray tracer for my B.Sc. thesis. \
 The _V_ stands for a ray reflection, and therefore figuratively for ray tracing.
 
 ## *NOTICE*
+As of 2021-03-19 rust **nightly** is required, this is
+
 This project is WIP and actively being worked on.
 
 Some demo scenes are available, but nothing "fancy" as of now.

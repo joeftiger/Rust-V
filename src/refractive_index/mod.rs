@@ -1,5 +1,6 @@
 #![allow(clippy::excessive_precision)]
 
+use serde::{Deserialize, Serialize};
 ///! In optics, the **refractive index** of a material is a dimensionless number that describes
 ///! how fast light travels through the material.
 ///!
@@ -17,28 +18,28 @@ pub mod glass;
 pub mod sapphire;
 pub mod water;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Serialize, Deserialize)]
 pub enum RefractiveType {
-    AIR,
-    VACUUM,
-    WATER,
-    GLASS,
-    SAPPHIRE,
+    Air,
+    Vacuum,
+    Water,
+    Glass,
+    Sapphire,
 }
 
 impl RefractiveType {
-    /// Returns the refractive index (inaccurate for different wavelengths).y
+    /// Returns the refractive index (inaccurate for different wavelengths).
     ///
     /// # Returns
     /// * The refractive index
     #[inline(always)]
     pub fn n_uniform(&self) -> f32 {
         match self {
-            RefractiveType::AIR => 1.00029,
-            RefractiveType::VACUUM => 1.0,
-            RefractiveType::WATER => 1.3325,
-            RefractiveType::GLASS => 1.5168,
-            RefractiveType::SAPPHIRE => 1.7490,
+            RefractiveType::Air => 1.00029,
+            RefractiveType::Vacuum => 1.0,
+            RefractiveType::Water => 1.3325,
+            RefractiveType::Glass => 1.5168,
+            RefractiveType::Sapphire => 1.7490,
         }
     }
 
@@ -50,11 +51,11 @@ impl RefractiveType {
     #[inline(always)]
     pub fn k_uniform(&self) -> Option<f32> {
         match self {
-            RefractiveType::AIR => None,
-            RefractiveType::VACUUM => None,
-            RefractiveType::WATER => Some(7.2792e-9),
-            RefractiveType::GLASS => Some(9.7525e-9),
-            RefractiveType::SAPPHIRE => Some(0.020900),
+            RefractiveType::Air => None,
+            RefractiveType::Vacuum => None,
+            RefractiveType::Water => Some(7.2792e-9),
+            RefractiveType::Glass => Some(9.7525e-9),
+            RefractiveType::Sapphire => Some(0.020900),
         }
     }
 
@@ -68,11 +69,11 @@ impl RefractiveType {
     pub fn n(&self, lambda: f32) -> f32 {
         match self {
             // RefractiveType::AIR => search_and_get(&air::INDEX, &air::N, lambda),
-            RefractiveType::AIR => air::sellmeier_n(lambda),
-            RefractiveType::VACUUM => 1.0,
-            RefractiveType::WATER => search_and_lerp(&water::INDEX, &water::N, lambda),
-            RefractiveType::GLASS => glass::sellmeier_n(lambda),
-            RefractiveType::SAPPHIRE => sapphire::sellmeier_n(lambda),
+            RefractiveType::Air => air::sellmeier_n(lambda),
+            RefractiveType::Vacuum => 1.0,
+            RefractiveType::Water => search_and_lerp(&water::INDEX, &water::N, lambda),
+            RefractiveType::Glass => glass::sellmeier_n(lambda),
+            RefractiveType::Sapphire => sapphire::sellmeier_n(lambda),
         }
     }
 
@@ -86,11 +87,11 @@ impl RefractiveType {
     /// * `None`
     pub fn k(&self, lambda: f32) -> Option<f32> {
         match self {
-            RefractiveType::AIR => None,
-            RefractiveType::VACUUM => None,
-            RefractiveType::WATER => Some(search_and_lerp(&water::INDEX, &water::K, lambda)),
-            RefractiveType::GLASS => Some(search_and_lerp(&glass::INDEX_K, &glass::K, lambda)),
-            RefractiveType::SAPPHIRE => {
+            RefractiveType::Air => None,
+            RefractiveType::Vacuum => None,
+            RefractiveType::Water => Some(search_and_lerp(&water::INDEX, &water::K, lambda)),
+            RefractiveType::Glass => Some(search_and_lerp(&glass::INDEX_K, &glass::K, lambda)),
+            RefractiveType::Sapphire => {
                 Some(search_and_lerp(&sapphire::INDEX_K, &sapphire::K, lambda))
             }
         }
