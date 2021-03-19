@@ -18,3 +18,7 @@
 
 # Module-based project format
 **/*.iml
+
+## Big meshes
+/meshes/buddha.obj
+/meshes/dragon.obj
