@@ -1,4 +1,4 @@
-use crate::{Aabb, Boundable, Container, Intersectable, Intersection, Ray, Sphere};
+use crate::{Aabb, Boundable, Container, Geometry, Intersectable, Intersection, Ray, Sphere};
 use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 
@@ -64,3 +64,6 @@ impl Intersectable for BiconvexLens {
         self.sphere0.intersects(ray) && self.sphere1.intersects(ray)
     }
 }
+
+#[typetag::serde]
+impl Geometry for BiconvexLens {}

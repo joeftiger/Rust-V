@@ -1,6 +1,6 @@
 use crate::bxdf::Type;
 use crate::integrator::{direct_illumination, Integrator};
-use crate::objects::{ReceiverExt, SceneObject};
+use crate::objects::SceneObject;
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
@@ -40,7 +40,7 @@ impl Integrator for Path {
 
             if bounce == 0 || specular {
                 if let SceneObject::Emitter(e) = &hit.object {
-                    bounce_illum += e.emission(); //e.radiance(&outgoing, &normal);
+                    bounce_illum += e.emission; //e.radiance(&outgoing, &normal);
                 }
             }
 

@@ -1,5 +1,5 @@
 use crate::debug_util::is_finite;
-use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 use utility::math::solve_quadratic;
@@ -149,3 +149,6 @@ impl Intersectable for Cylinder {
         }
     }
 }
+
+#[typetag::serde]
+impl Geometry for Cylinder {}

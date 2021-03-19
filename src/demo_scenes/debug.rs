@@ -46,7 +46,7 @@ fn ground() -> SceneObject {
     let lambertian = LambertianReflection::new(Spectrum::new_const(1.0));
     let bsdf = BSDF::new(vec![BSDFType::LReflection(lambertian)]);
 
-    let receiver = Arc::new(Receiver::new(cube, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(cube), bsdf));
 
     SceneObject::Receiver(receiver)
 }
@@ -61,7 +61,7 @@ fn cylinder() -> SceneObject {
 
     let bsdf = BSDF::new(vec![BSDFType::SReflection(reflection)]);
 
-    let receiver = Arc::new(Receiver::new(cylinder, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(cylinder), bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -77,7 +77,7 @@ fn sphere() -> SceneObject {
 
     let bsdf = BSDF::new(vec![BSDFType::STransmission(transmission)]);
 
-    let receiver = Arc::new(Receiver::new(sphere, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(sphere), bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -88,7 +88,11 @@ fn sphere_emitter() -> SceneObject {
 
     let bsdf = BSDF::empty();
 
-    let emitter = Arc::new(Emitter::new(sphere, bsdf, Spectrum::new_const(1.0)));
+    let emitter = Arc::new(Emitter::new(
+        Box::new(sphere),
+        bsdf,
+        Spectrum::new_const(1.0),
+    ));
     SceneObject::Emitter(emitter)
 }
 
@@ -97,7 +101,11 @@ fn create_emitter() -> SceneObject {
     let point = Point(position);
 
     let bsdf = BSDF::empty();
-    let emitter = Arc::new(Emitter::new(point, bsdf, Spectrum::new_const(0.1)));
+    let emitter = Arc::new(Emitter::new(
+        Box::new(point),
+        bsdf,
+        Spectrum::new_const(0.1),
+    ));
     SceneObject::Emitter(emitter)
 }
 

@@ -2,6 +2,7 @@ use crate::objects::emitter::{Sampleable, SurfaceSample};
 use geometry::Point;
 use ultraviolet::{Vec2, Vec3};
 
+#[typetag::serde]
 impl Sampleable for Point {
     /// A point has no surface area
     ///

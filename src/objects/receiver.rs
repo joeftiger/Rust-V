@@ -1,22 +1,15 @@
 use crate::bxdf::BSDF;
 use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
-
-/// A receiver is a geometry that also has a bsdf.
-pub trait ReceiverExt: Geometry + Send + Sync {
-    /// Returns the BSDF of this receiver.
-    ///
-    /// # Returns
-    /// * A BSDF
-    fn bsdf(&self) -> &BSDF;
-}
+use serde::{Deserialize, Serialize};
 
 /// A receiver consists of a geometry and a BSDF.
-pub struct Receiver<T> {
-    geometry: T,
-    bsdf: BSDF,
+#[derive(Serialize, Deserialize)]
+pub struct Receiver {
+    geometry: Box<dyn Geometry>,
+    pub bsdf: BSDF,
 }
 
-impl<T> Receiver<T> {
+impl Receiver {
     /// Creates a new receiver.
     ///
     /// # Arguments
@@ -25,33 +18,18 @@ impl<T> Receiver<T> {
     ///
     /// # Returns
     /// * Self
-    pub fn new(geometry: T, bsdf: BSDF) -> Self {
+    pub fn new(geometry: Box<dyn Geometry>, bsdf: BSDF) -> Self {
         Self { geometry, bsdf }
     }
 }
 
-impl<T> ReceiverExt for Receiver<T>
-where
-    T: Geometry + Send + Sync,
-{
-    fn bsdf(&self) -> &BSDF {
-        &self.bsdf
-    }
-}
-
-impl<T> Boundable for Receiver<T>
-where
-    T: Boundable,
-{
+impl Boundable for Receiver {
     fn bounds(&self) -> Aabb {
         self.geometry.bounds()
     }
 }
 
-impl<T> Intersectable for Receiver<T>
-where
-    T: Intersectable,
-{
+impl Intersectable for Receiver {
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         self.geometry.intersect(ray)
     }

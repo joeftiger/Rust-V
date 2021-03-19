@@ -1,6 +1,6 @@
 use crate::bxdf::Type;
 use crate::integrator::{direct_illumination, Integrator};
-use crate::objects::{ReceiverExt, SceneObject};
+use crate::objects::SceneObject;
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
@@ -100,7 +100,7 @@ impl Integrator for Whitted {
         let mut illumination = Spectrum::black();
 
         if let SceneObject::Emitter(e) = object {
-            illumination += e.emission(); //e.radiance(&outgoing, &normal);
+            illumination += e.emission; //e.radiance(&outgoing, &normal);
         }
 
         illumination += direct_illumination(scene, sampler, intersection, bsdf);

@@ -1,7 +1,7 @@
+mod aabb;
 mod bubble;
 pub mod bvh;
 mod composite;
-mod cube;
 mod cylinder;
 mod debug_util;
 mod lenses;
@@ -13,9 +13,9 @@ mod sphere;
 use ultraviolet::Vec3;
 
 use crate::debug_util::{in_range_incl, is_finite, is_normalized};
+pub use aabb::*;
 pub use bubble::*;
 pub use composite::*;
-pub use cube::*;
 pub use cylinder::*;
 pub use lenses::*;
 pub use mesh::*;
@@ -516,9 +516,8 @@ pub trait Intersectable {
 }
 
 /// A super-trait to combine `Boundable` and `Intersectable`, therefore giving a valid geometry.
-pub trait Geometry: Boundable + Intersectable {}
-
-impl<T> Geometry for T where T: Boundable + Intersectable {}
+#[typetag::serde]
+pub trait Geometry: Boundable + Intersectable + Send + Sync {}
 
 pub trait ContainerGeometry: Container + Intersectable {
     fn contains_or_intersects(&self, ray: &Ray) -> bool {

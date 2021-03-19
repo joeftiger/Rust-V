@@ -39,7 +39,7 @@ fn ground() -> SceneObject {
     let lambertian = LambertianReflection::new(Spectrum::new_const(1.0));
     let bsdf = BSDF::new(vec![BSDFType::LReflection(lambertian)]);
 
-    let receiver = Arc::new(Receiver::new(cube, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(cube), bsdf));
 
     SceneObject::Receiver(receiver)
 }
@@ -72,7 +72,7 @@ fn prism() -> SceneObject {
 
     let bsdf = BSDF::new(vec![BSDFType::SFresnel(specular)]);
 
-    let receiver = Arc::new(Receiver::new(prism, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(prism), bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -82,7 +82,11 @@ fn light_bulb() -> SceneObject {
 
     let bsdf = BSDF::empty();
 
-    let emitter = Arc::new(Emitter::new(light_bulb, bsdf, Spectrum::white() * 10.0));
+    let emitter = Arc::new(Emitter::new(
+        Box::new(light_bulb),
+        bsdf,
+        Spectrum::white() * 10.0,
+    ));
     SceneObject::Emitter(emitter)
 }
 
@@ -97,7 +101,7 @@ fn light_bulb_rectifier() -> SceneObject {
         Spectrum::grey(),
     ))]);
 
-    let receiver = Arc::new(Receiver::new(rectifier, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(rectifier), bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -105,7 +109,11 @@ fn global_light() -> SceneObject {
     let point = Point(Vec3::unit_y() * 100.0);
     let bsdf = BSDF::empty();
 
-    let emitter = Arc::new(Emitter::new(point, bsdf, Spectrum::white() * 0.01));
+    let emitter = Arc::new(Emitter::new(
+        Box::new(point),
+        bsdf,
+        Spectrum::white() * 0.01,
+    ));
     SceneObject::Emitter(emitter)
 }
 

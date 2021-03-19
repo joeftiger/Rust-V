@@ -1,7 +1,7 @@
 use crate::ray::Ray;
 #[cfg(test)]
 use crate::UNIT_VECTORS;
-use crate::{Boundable, Container, Intersectable, Intersection};
+use crate::{Boundable, Container, Geometry, Intersectable, Intersection};
 use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 use utility::floats::BIG_EPSILON;
@@ -143,6 +143,9 @@ impl Intersectable for Aabb {
         t_min <= t_max && (ray.contains(t_min) || ray.contains(t_max))
     }
 }
+
+#[typetag::serde]
+impl Geometry for Aabb {}
 
 impl Default for Aabb {
     /// Constructs the default cube spanning the 3 dimensional space of `[-1, 1]`.

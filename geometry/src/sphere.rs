@@ -2,7 +2,7 @@ use crate::debug_util::is_finite;
 use crate::ray::Ray;
 #[cfg(test)]
 use crate::UNIT_VECTORS;
-use crate::{Aabb, Boundable, Container, Intersectable, Intersection};
+use crate::{Aabb, Boundable, Container, Geometry, Intersectable, Intersection};
 use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 use utility::math::solve_quadratic;
@@ -98,6 +98,9 @@ impl Intersectable for Sphere {
         }
     }
 }
+
+#[typetag::serde]
+impl Geometry for Sphere {}
 
 impl Default for Sphere {
     /// Constructs the default sphere of radius `1.0` around the zero point.

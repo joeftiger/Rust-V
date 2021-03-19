@@ -29,7 +29,10 @@ show-image = { version = "", features = ["image", "save"], optional = true }
 tobj = ""
 # linear algebra
 ultraviolet = { version = "", features= ["int"] }
-serde = ""
+
+# De-/Serialization
+serde = { version = "", features = ["derive", "rc"] }
+typetag = ""
 
 color = { path = "./color" }
 geometry = { path = "./geometry" }
@@ -47,9 +50,9 @@ default = []
 live-window = ["show-image"]
 
 [profile.release]
-codegen-units = 1
+#codegen-units = 1
 opt-level = 3
-lto = true
+#lto = true
 incremental = true
 
 [profile.dev]

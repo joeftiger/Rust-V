@@ -12,10 +12,7 @@ mod node;
 mod plane;
 mod side;
 
-pub struct Tree<T>
-where
-    T: Clone,
-{
+pub struct Tree<T> {
     root: Node<T>,
     space: Aabb,
 }
@@ -24,15 +21,6 @@ impl<T> Tree<T>
 where
     T: Clone,
 {
-    pub fn empty() -> Self {
-        Self {
-            root: Node::Leaf {
-                items: HashSet::new(),
-            },
-            space: Aabb::empty(),
-        }
-    }
-
     pub fn new<F: Fn(&T) -> Aabb>(values: Vec<T>, f: F) -> Self {
         let mut space = Aabb::empty();
         let n = values.len();
@@ -62,6 +50,17 @@ where
             items.iter().map(|i| i.value.clone()).collect()
         } else {
             vec![]
+        }
+    }
+}
+
+impl<T> Default for Tree<T> {
+    fn default() -> Self {
+        Self {
+            root: Node::Leaf {
+                items: HashSet::new(),
+            },
+            space: Aabb::empty(),
         }
     }
 }

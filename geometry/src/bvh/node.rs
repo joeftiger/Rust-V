@@ -10,10 +10,7 @@ const K_T: f32 = 15.;
 const K_I: f32 = 20.;
 
 #[derive(Clone)]
-pub struct InternalNode<T>
-where
-    T: Clone,
-{
+pub struct InternalNode<T> {
     left_space: Aabb,
     left_node: Node<T>,
     right_space: Aabb,
@@ -35,10 +32,7 @@ where
 }
 
 #[derive(Clone)]
-pub enum Node<T>
-where
-    T: Clone,
-{
+pub enum Node<T> {
     Leaf { items: HashSet<Arc<Item<T>>> },
     Node { node: Box<InternalNode<T>> },
 }

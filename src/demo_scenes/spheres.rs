@@ -42,7 +42,7 @@ fn ground() -> SceneObject {
     let lambertian = LambertianReflection::new(Spectrum::white());
     let bsdf = BSDF::new(vec![BSDFType::LReflection(lambertian)]);
 
-    let receiver = Arc::new(Receiver::new(cube, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(cube), bsdf));
 
     SceneObject::Receiver(receiver)
 }
@@ -54,7 +54,7 @@ fn sky() -> SceneObject {
     let lambertian = LambertianReflection::new(Spectrum::blue() + Spectrum::white() * 0.2);
     let bsdf = BSDF::new(vec![BSDFType::LReflection(lambertian)]);
 
-    let receiver = Arc::new(Receiver::new(sphere, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(sphere), bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -114,7 +114,7 @@ fn create_emitter() -> SceneObject {
     let mut emission = Spectrum::white() + Spectrum::green() + Spectrum::red();
     emission /= 2.0;
 
-    let emitter = Arc::new(Emitter::new(point, bsdf, emission));
+    let emitter = Arc::new(Emitter::new(Box::new(point), bsdf, emission));
     SceneObject::Emitter(emitter)
 }
 
@@ -130,10 +130,10 @@ fn create_scene() -> Scene {
             let (emitting, bsdf) = random_bsdf(color);
 
             let obj = if emitting {
-                let emitter = Arc::new(Emitter::new(sphere, bsdf, color * 2.0));
+                let emitter = Arc::new(Emitter::new(Box::new(sphere), bsdf, color * 2.0));
                 SceneObject::Emitter(emitter)
             } else {
-                let receiver = Arc::new(Receiver::new(sphere, bsdf));
+                let receiver = Arc::new(Receiver::new(Box::new(sphere), bsdf));
                 SceneObject::Receiver(receiver)
             };
 

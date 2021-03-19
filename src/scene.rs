@@ -1,5 +1,6 @@
-use crate::objects::{EmitterExt, SceneObject};
+use crate::objects::{Emitter, SceneObject};
 use geometry::{Aabb, Boundable, ContainerGeometry, Intersectable, Intersection, Ray};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use ultraviolet::Vec3;
 
@@ -35,9 +36,10 @@ impl SceneIntersection {
 }
 
 /// A scene consists of scene objects and lights.
+#[derive(Serialize, Deserialize)]
 pub struct Scene {
     bounding_box: Aabb,
-    pub lights: Vec<Arc<dyn EmitterExt>>,
+    pub lights: Vec<Arc<Emitter>>,
     objects: Vec<SceneObject>,
 }
 
@@ -61,6 +63,20 @@ impl Scene {
         self.bounding_box = self.bounding_box.join(&obj.bounds());
 
         self
+    }
+
+    /// Recollects all emitters into a cached list.
+    pub fn collect_emitters(&mut self) {
+        self.lights.clear();
+
+        for o in &self.objects {
+            match o {
+                SceneObject::Emitter(e) => self.lights.push(e.clone()),
+                SceneObject::Receiver(_) => {}
+            }
+        }
+
+        self.lights.shrink_to_fit();
     }
 
     /// Intersects the scene with the given ray.
@@ -130,3 +146,10 @@ impl Default for Scene {
         }
     }
 }
+
+// impl Serialize for Scene {
+//     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
+//         S: Serializer {
+//         self.objects.serialize(serializer)
+//     }
+// }

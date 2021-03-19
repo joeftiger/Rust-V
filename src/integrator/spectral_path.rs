@@ -3,7 +3,7 @@
 
 use crate::bxdf::Type;
 use crate::integrator::{direct_illumination_light_wave, Integrator};
-use crate::objects::{ReceiverExt, SceneObject};
+use crate::objects::SceneObject;
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;

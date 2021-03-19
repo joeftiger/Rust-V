@@ -1,6 +1,6 @@
 use crate::bvh::Tree;
 use crate::debug_util::{is_finite, is_normalized};
-use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 use serde::{Deserialize, Serialize};
 use std::mem::swap;
 use tobj::Mesh as TobjMesh;
@@ -31,7 +31,7 @@ fn max_index(v: &Vec3) -> usize {
 
 /// A vertex consists of a position and normal vector, which possibly influences the shading of
 /// [`triangles`](Triangle).
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Serialize, Deserialize)]
 struct Vertex {
     position: Vec3,
     normal: Vec3,
@@ -73,7 +73,7 @@ impl Vertex {
 ///
 /// In order to query a triangle for an intersection, it is therefore needed to pass it the proper
 /// [`Mesh`](Mesh) it resides in.
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 struct Triangle {
     a: u32,
     b: u32,
@@ -197,35 +197,6 @@ impl Triangle {
             return None;
         }
 
-        // let edge1 = vertex1.position - vertex0.position;
-        // let edge2 = vertex2.position - vertex0.position;
-        // let p_vec = ray.direction.cross(edge2);
-        //
-        // let det = edge1.dot(p_vec);
-        // if det < EPSILON {
-        //     return None;
-        // }
-        //
-        // let t_vec = ray.origin - vertex0.position;
-        //
-        // let u = t_vec.dot(p_vec);
-        // if u < 0.0 || u > det {
-        //     return None;
-        // }
-        //
-        // let q_vec = t_vec.cross(edge1);
-        //
-        // let v = ray.direction.dot(q_vec);
-        // if v < 0.0 || u + v > det {
-        //     return None;
-        // }
-        //
-        // let inv_det = 1.0 / det;
-        // let t = inv_det * edge2.dot(q_vec);
-        // if !ray.contains(t) {
-        //     return None;
-        // }
-
         let point = ray.at(t);
 
         let normal = match mesh.shading_mode {
@@ -326,45 +297,19 @@ impl Triangle {
         let t = (u * az + v * bz + w * cz) * inv_det;
 
         ray.contains(t)
-
-        // let a = mesh.vertices[self.a as usize].position;
-        // let b = mesh.vertices[self.b as usize].position;
-        // let c = mesh.vertices[self.c as usize].position;
-        //
-        // let a_to_b = b - a;
-        // let a_to_c = c - a;
-        // let part0 = ray.direction.cross(a_to_c);
-        //
-        // let det = a_to_b.dot(part0);
-        // if det < EPSILON {
-        //     return false;
-        // }
-        //
-        // let part1 = ray.origin - a;
-        // let beta = part1.dot(part0) / det;
-        // if !(0.0..=1.0).contains(&beta) {
-        //     return false;
-        // }
-        //
-        // let part2 = part1.cross(a_to_b);
-        // let gamma = ray.direction.dot(part2) / det;
-        // if gamma < 0.0 || beta + gamma > 1.0 {
-        //     return false;
-        // }
-        //
-        // let t = a_to_c.dot(part2) / det;
-        // ray.contains(t)
     }
 }
 
 /// A mesh consists of vertices and triangles, allowing queries for intersections.
 /// Depending on the [`MeshMode`](MeshMode), the intersection normals will be interpolated.
+#[derive(Serialize, Deserialize)]
 pub struct Mesh {
     vertices: Vec<Vertex>,
     normals: Vec<Vec3>,
     triangles: Vec<Triangle>,
     bounds: Aabb,
     shading_mode: ShadingMode,
+    #[serde(skip_serializing, skip_deserializing)]
     bvh: Tree<Triangle>,
 }
 
@@ -382,7 +327,7 @@ impl Mesh {
             triangles,
             bounds,
             shading_mode,
-            bvh: Tree::empty(),
+            bvh: Tree::default(),
         }
     }
 
@@ -560,11 +505,6 @@ impl Mesh {
             v.normal.normalize();
         }
 
-        // self.vertices.iter_mut().for_each(|v| {
-        //     v.position *= scale;
-        //     v.normal *= scale;
-        //     v.normal.normalize();
-        // });
         self.bounds.min *= scale;
         self.bounds.max *= scale;
 
@@ -662,3 +602,6 @@ impl Intersectable for Mesh {
         hits.iter().any(|t| t.intersects(self, ray))
     }
 }
+
+#[typetag::serde]
+impl Geometry for Mesh {}

@@ -10,5 +10,6 @@ edition = "2018"
 tobj = ""
 ultraviolet = { version = "", features = ["serde"] }
 serde = { version = "", features = ["derive"] }
+typetag = ""
 
 utility = { path = "../utility" }

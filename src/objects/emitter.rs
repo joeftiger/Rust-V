@@ -1,23 +1,46 @@
 use crate::bxdf::BSDF;
 
 use crate::debug_utils::{is_finite, is_normalized, within_01};
-use crate::objects::receiver::ReceiverExt;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use color::{Color, IndexSpectral};
 use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
+use serde::{Deserialize, Serialize};
 use ultraviolet::{Vec2, Vec3};
 use utility::floats::BIG_EPSILON;
 
-/// An emitter is a receiver that also emits light.
-pub trait EmitterExt: ReceiverExt {
-    /// Returns the emission of this emitter.
+/// An emitter is similar to a receiver, consisting of a geometry and a BSDF. Additionally, the
+/// emitter also has an emission.
+#[derive(Serialize, Deserialize)]
+pub struct Emitter {
+    geometry: Box<dyn Sampleable>,
+    pub bsdf: BSDF,
+    pub emission: Spectrum,
+}
+
+impl Emitter {
+    /// Creates a new emitter.
+    ///
+    /// # Arguments
+    /// * `geometry` - The geometry of the emitter
+    /// * `bsdf` - The BSDF of the emitter
+    /// * `emission` - The emission of the emitter
     ///
     /// # Returns
-    /// * The emission
-    fn emission(&self) -> Spectrum;
+    /// * Self
+    pub fn new(geometry: Box<dyn Sampleable>, bsdf: BSDF, emission: Spectrum) -> Self {
+        Self {
+            geometry,
+            bsdf,
+            emission,
+        }
+    }
 
-    fn emission_light_wave(&self, light_wave_index: usize) -> f32;
+    pub fn emission_light_wave(&self, light_wave_index: usize) -> f32 {
+        debug_assert!(light_wave_index < Spectrum::size());
+
+        self.emission.index_spectral(light_wave_index)
+    }
 
     /// Returns the radiance of this emitter, comparing the incident and normal vector.
     ///
@@ -34,7 +57,7 @@ pub trait EmitterExt: ReceiverExt {
     /// # Returns
     /// * The radiated spectrum
     #[inline]
-    fn radiance(&self, incident: &Vec3, normal: &Vec3) -> Spectrum {
+    pub fn radiance(&self, incident: &Vec3, normal: &Vec3) -> Spectrum {
         debug_assert!(is_finite(incident));
         debug_assert!(is_normalized(incident));
         debug_assert!(is_finite(normal));
@@ -43,13 +66,18 @@ pub trait EmitterExt: ReceiverExt {
         let dot = incident.dot(*normal);
 
         if dot > 0.0 {
-            self.emission()
+            self.emission
         } else {
             Spectrum::new_const(0.0)
         }
     }
 
-    fn radiance_light_wave(&self, incident: &Vec3, normal: &Vec3, light_wave_index: usize) -> f32 {
+    pub fn radiance_light_wave(
+        &self,
+        incident: &Vec3,
+        normal: &Vec3,
+        light_wave_index: usize,
+    ) -> f32 {
         debug_assert!(is_finite(incident));
         debug_assert!(is_normalized(incident));
         debug_assert!(is_finite(normal));
@@ -76,58 +104,7 @@ pub trait EmitterExt: ReceiverExt {
     ///
     /// # Returns
     /// * An emitter sample
-    fn sample(&self, point: &Vec3, sample: &Vec2) -> EmitterSample<Spectrum>;
-
-    fn sample_light_wave(
-        &self,
-        point: &Vec3,
-        sample: &Vec2,
-        light_wave_index: usize,
-    ) -> EmitterSample<f32>;
-}
-
-/// An emitter is similar to a receiver, consisting of a geometry and a BSDF. Additionally, the
-/// emitter also has an emission.
-pub struct Emitter<T> {
-    geometry: T,
-    bsdf: BSDF,
-    emission: Spectrum,
-}
-
-impl<T> Emitter<T> {
-    /// Creates a new emitter.
-    ///
-    /// # Arguments
-    /// * `geometry` - The geometry of the emitter
-    /// * `bsdf` - The BSDF of the emitter
-    /// * `emission` - The emission of the emitter
-    ///
-    /// # Returns
-    /// * Self
-    pub fn new(geometry: T, bsdf: BSDF, emission: Spectrum) -> Self {
-        Self {
-            geometry,
-            bsdf,
-            emission,
-        }
-    }
-}
-
-impl<T> EmitterExt for Emitter<T>
-where
-    T: Sampleable,
-{
-    fn emission(&self) -> Spectrum {
-        self.emission
-    }
-
-    fn emission_light_wave(&self, light_wave_index: usize) -> f32 {
-        debug_assert!(light_wave_index < Spectrum::size());
-
-        self.emission.index_spectral(light_wave_index)
-    }
-
-    fn sample(&self, point: &Vec3, sample: &Vec2) -> EmitterSample<Spectrum> {
+    pub fn sample(&self, point: &Vec3, sample: &Vec2) -> EmitterSample<Spectrum> {
         debug_assert!(is_finite(point));
         debug_assert!(within_01(sample));
 
@@ -141,7 +118,7 @@ where
         EmitterSample::new(radiance, incident, surface_sample.pdf, occlusion_tester)
     }
 
-    fn sample_light_wave(
+    pub fn sample_light_wave(
         &self,
         point: &Vec3,
         sample: &Vec2,
@@ -163,28 +140,13 @@ where
     }
 }
 
-impl<T> ReceiverExt for Emitter<T>
-where
-    T: Geometry + Send + Sync,
-{
-    fn bsdf(&self) -> &BSDF {
-        &self.bsdf
-    }
-}
-
-impl<T> Boundable for Emitter<T>
-where
-    T: Boundable,
-{
+impl Boundable for Emitter {
     fn bounds(&self) -> Aabb {
         self.geometry.bounds()
     }
 }
 
-impl<T> Intersectable for Emitter<T>
-where
-    T: Intersectable,
-{
+impl Intersectable for Emitter {
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         self.geometry.intersect(ray)
     }
@@ -236,7 +198,7 @@ impl<T> EmitterSample<T> {
 
 /// A simple occlusion tester to test a ray against a scene.
 pub struct OcclusionTester {
-    pub(crate) ray: Ray,
+    ray: Ray,
 }
 
 impl OcclusionTester {
@@ -336,6 +298,7 @@ impl SurfaceSample {
 }
 
 /// Allows geometries to be sampled for a surface point.
+#[typetag::serde]
 pub trait Sampleable: Geometry + Send + Sync {
     /// Returns the surface area of this object.
     ///

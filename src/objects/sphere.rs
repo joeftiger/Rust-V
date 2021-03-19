@@ -14,6 +14,7 @@ fn sample_surface_inside(sphere: &Sphere, sample: &Vec2) -> SurfaceSample {
     SurfaceSample::new(point, normal, pdf)
 }
 
+#[typetag::serde]
 impl Sampleable for Sphere {
     fn surface_area(&self) -> f32 {
         2.0 * TAU * self.radius * self.radius

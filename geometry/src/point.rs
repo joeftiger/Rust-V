@@ -1,4 +1,4 @@
-use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 
@@ -35,3 +35,6 @@ impl Intersectable for Point {
         false
     }
 }
+
+#[typetag::serde]
+impl Geometry for Point {}

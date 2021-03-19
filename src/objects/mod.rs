@@ -8,19 +8,20 @@ mod sphere;
 use crate::bxdf::BSDF;
 pub use emitter::*;
 pub use receiver::*;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum SceneObject {
-    Emitter(Arc<dyn EmitterExt>),
-    Receiver(Arc<dyn ReceiverExt>),
+    Emitter(Arc<Emitter>),
+    Receiver(Arc<Receiver>),
 }
 
-impl ReceiverExt for SceneObject {
-    fn bsdf(&self) -> &BSDF {
+impl SceneObject {
+    pub fn bsdf(&self) -> &BSDF {
         match self {
-            SceneObject::Emitter(e) => e.bsdf(),
-            SceneObject::Receiver(r) => r.bsdf(),
+            SceneObject::Emitter(e) => &e.bsdf,
+            SceneObject::Receiver(r) => &r.bsdf,
         }
     }
 }
