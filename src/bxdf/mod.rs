@@ -14,7 +14,6 @@ pub use specular::{FresnelSpecular, SpecularReflection, SpecularTransmission};
 use crate::debug_utils::{is_finite, is_normalized, within_01};
 use crate::mc::sample_unit_hemisphere;
 use crate::Spectrum;
-use color::LightWave;
 use std::f32::consts::{FRAC_1_PI, PI};
 use ultraviolet::{Rotor3, Vec2, Vec3};
 

@@ -35,9 +35,7 @@ use crate::Spectrum;
 use color::Color;
 use geometry::Ray;
 
-pub trait IntegratorAverage<> {
-
-}
+pub trait IntegratorAverage {}
 
 /// An integrator to calculate the color of a pixel / ray.
 ///

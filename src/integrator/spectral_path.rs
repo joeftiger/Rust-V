@@ -7,7 +7,7 @@ use crate::objects::{ReceiverExt, SceneObject};
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
-use color::{Color, LightWave};
+use color::Color;
 use geometry::offset_ray_towards;
 
 pub struct SpectralPath {

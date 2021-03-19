@@ -2,7 +2,6 @@ use crate::bxdf::{same_hemisphere, world_to_bxdf, BxDF, BxDFSample, BxDFType};
 use crate::debug_utils::is_normalized;
 use crate::sampler::Sample;
 use crate::Spectrum;
-use color::LightWave;
 use std::ops::Deref;
 use ultraviolet::Vec3;
 
@@ -152,8 +151,7 @@ impl BSDF {
 
         let bxdf = self.random_matching_bxdf(types, sample.one_d)?;
 
-        if let Some(mut sample) =
-            bxdf.sample_light_wave(&outgoing, &sample.two_d, light_wave_index)
+        if let Some(mut sample) = bxdf.sample_light_wave(&outgoing, &sample.two_d, light_wave_index)
         {
             sample.incident = rotation.reversed() * sample.incident;
 

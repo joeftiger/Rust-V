@@ -3,14 +3,12 @@
 use crate::bxdf::{FresnelSpecular, OrenNayar, BSDF};
 use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
-use crate::objects::Receiver;
-use crate::objects::{Emitter, SceneObject};
+use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::refractive_index::RefractiveType;
 use crate::scene::Scene;
 use crate::Spectrum;
 use color::{Color, Colors};
-use geometry::lenses::BiconvexLens;
-use geometry::{Aabb, Boundable, Bubble, Mesh, ShadingMode, Sphere};
+use geometry::{Aabb, BiconvexLens, Boundable, Bubble, Mesh, ShadingMode, Sphere};
 use std::f32::consts::PI;
 use std::sync::Arc;
 use ultraviolet::{Rotor3, UVec2, Vec3};
@@ -83,9 +81,9 @@ fn create_bunny() -> SceneObject {
 
     let bsdf = BSDF::new(vec![Box::new(specular)]);
 
-    let receiver = Receiver::new(bunny, bsdf);
+    let receiver = Arc::new(Receiver::new(bunny, bsdf));
 
-    SceneObject::new_receiver(receiver)
+    SceneObject::Receiver(receiver)
 }
 
 fn create_sphere() -> SceneObject {
@@ -101,8 +99,8 @@ fn create_sphere() -> SceneObject {
     // let reflection = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
     let bsdf = BSDF::new(vec![Box::new(specular)]);
 
-    let receiver = Receiver::new(sphere, bsdf);
-    SceneObject::new_receiver(receiver)
+    let receiver = Arc::new(Receiver::new(sphere, bsdf));
+    SceneObject::Receiver(receiver)
 }
 
 fn create_bubble() -> SceneObject {
@@ -118,8 +116,8 @@ fn create_bubble() -> SceneObject {
     );
     let bsdf = BSDF::new(vec![Box::new(specular)]);
 
-    let receiver = Receiver::new(bubble, bsdf);
-    SceneObject::new_receiver(receiver)
+    let receiver = Arc::new(Receiver::new(bubble, bsdf));
+    SceneObject::Receiver(receiver)
 }
 
 fn create_biconvex_lens() -> SceneObject {
@@ -139,8 +137,8 @@ fn create_biconvex_lens() -> SceneObject {
     );
     let bsdf = BSDF::new(vec![Box::new(specular)]);
 
-    let receiver = Receiver::new(lens, bsdf);
-    SceneObject::new_receiver(receiver)
+    let receiver = Arc::new(Receiver::new(lens, bsdf));
+    SceneObject::Receiver(receiver)
 }
 
 fn create_wall(wall: &Wall) -> SceneObject {
@@ -171,8 +169,8 @@ fn create_wall(wall: &Wall) -> SceneObject {
     let lambertian = Box::new(OrenNayar::new(spectrum, SIGMA));
     let bsdf = BSDF::new(vec![lambertian]);
 
-    let receiver = Receiver::new(cube, bsdf);
-    SceneObject::new_receiver(receiver)
+    let receiver = Arc::new(Receiver::new(cube, bsdf));
+    SceneObject::Receiver(receiver)
 }
 
 fn create_emitter() -> SceneObject {
@@ -182,8 +180,8 @@ fn create_emitter() -> SceneObject {
     let bsdf = BSDF::empty();
 
     let emission = Spectrum::white() * 2.0;
-    let emitter = Emitter::new(sphere, bsdf, emission);
-    SceneObject::new_emitter(emitter)
+    let emitter = Arc::new(Emitter::new(sphere, bsdf, emission));
+    SceneObject::Emitter(emitter)
 }
 
 impl DemoScene for CornellScene {
