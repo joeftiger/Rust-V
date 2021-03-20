@@ -15,18 +15,18 @@ use ultraviolet::{UVec2, Vec3};
 pub struct DebugSphereScene;
 
 impl DemoScene for DebugSphereScene {
-    fn create(resolution: UVec2) -> (Scene, Arc<dyn Camera>) {
+    fn create(resolution: UVec2) -> Scene {
         let mut scene = Scene::default();
 
         scene.add(ground()).add(prism());
 
         // light
-        scene.add(light_bulb());
-        // scene.add(global_light());
+        scene.add(light_bulb()); //.add(light_bulb_rectifier());
+                                 // scene.add(global_light());
 
-        let camera = create_camera(resolution);
+        scene.camera = create_camera(resolution);
 
-        (scene, camera)
+        scene
     }
 }
 
@@ -67,7 +67,7 @@ fn prism() -> SceneObject {
         Spectrum::new_const(1.0),
         Spectrum::new_const(1.0),
         RefractiveType::Air,
-        RefractiveType::Glass,
+        RefractiveType::Sapphire,
     );
 
     let bsdf = BSDF::new(vec![BSDFType::SFresnel(specular)]);
@@ -77,7 +77,7 @@ fn prism() -> SceneObject {
 }
 
 fn light_bulb() -> SceneObject {
-    let center = Vec3::new(-4.0, 1.5, 0.0);
+    let center = Vec3::new(-2.0, 1.5, 0.0);
     let light_bulb = Sphere::new(center, 0.5);
 
     let bsdf = BSDF::empty();
@@ -85,7 +85,7 @@ fn light_bulb() -> SceneObject {
     let emitter = Arc::new(Emitter::new(
         Box::new(light_bulb),
         bsdf,
-        Spectrum::white() * 10.0,
+        Spectrum::white() * 2.0,
     ));
     SceneObject::Emitter(emitter)
 }

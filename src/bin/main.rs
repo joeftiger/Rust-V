@@ -3,6 +3,7 @@ extern crate clap;
 
 use clap::App;
 
+use ron::from_str;
 use rust_v::demo_scenes::{CornellScene, DebugScene, DebugSphereScene, DemoScene, SphereScene};
 use rust_v::integrator::{DebugNormals, Integrator, Path, PathEnhanced, SpectralPath, Whitted};
 use rust_v::renderer::Renderer;
@@ -41,14 +42,14 @@ fn create_config() -> MainConfig {
 
     let (demo_type, matches) = match app_matches.subcommand() {
         (name, Some(m)) => {
-            let typ: DemoType = match name.try_into() {
+            let typ: SceneType = match name.try_into() {
                 Ok(t) => t,
                 Err(err) => panic!("Cannot parse demo type: {}", err),
             };
 
             (typ, m)
         }
-        (_, None) => panic!("No subcommand given"),
+        _ => (SceneType::Custom, &app_matches),
     };
 
     let verbose = matches.is_present(VERBOSE);
@@ -94,6 +95,15 @@ fn create_config() -> MainConfig {
         Ok(integrator) => integrator,
         Err(err) => panic!("Cannot parse integrator backend: {}", err),
     };
+    let input = match demo_type {
+        SceneType::Custom => Some(
+            matches
+                .value_of(INPUT)
+                .expect("No input file given")
+                .to_string(),
+        ),
+        _ => None,
+    };
 
     let output = if let Some(o) = matches.value_of(OUTPUT) {
         o.to_string()
@@ -118,6 +128,7 @@ fn create_config() -> MainConfig {
         render_config,
         verbose,
         live,
+        input,
         output,
         pixel_type,
         integrator_type,
@@ -130,19 +141,23 @@ struct MainConfig {
     pub render_config: RenderConfig,
     pub verbose: bool,
     pub live: bool,
+    pub input: Option<String>,
     pub output: Option<String>,
     pub pixel_type: PixelType,
     pub integrator_type: IntegratorType,
-    pub demo_type: DemoType,
+    pub demo_type: SceneType,
 }
 
 impl MainConfig {
     fn create_renderer(&self) -> Renderer {
-        let (scene, camera) = match self.demo_type {
-            DemoType::SphereScene => SphereScene::create(self.render_config.resolution),
-            DemoType::CornellScene => CornellScene::create(self.render_config.resolution),
-            DemoType::DebugScene => DebugScene::create(self.render_config.resolution),
-            DemoType::DebugSphereScene => DebugSphereScene::create(self.render_config.resolution),
+        let scene = match self.demo_type {
+            SceneType::SphereScene => SphereScene::create(self.render_config.resolution),
+            SceneType::CornellScene => CornellScene::create(self.render_config.resolution),
+            SceneType::DebugScene => DebugScene::create(self.render_config.resolution),
+            SceneType::DebugSphereScene => DebugSphereScene::create(self.render_config.resolution),
+            SceneType::Custom => {
+                from_str(self.input.as_ref().unwrap().as_str()).expect("Could not parse scene file")
+            }
         };
 
         let integrator: Arc<dyn Integrator> = match self.integrator_type {
@@ -164,7 +179,7 @@ impl MainConfig {
             _ => Arc::new(RandomSampler::default()),
         };
 
-        Renderer::new(scene, camera, sampler, integrator, self.render_config)
+        Renderer::new(scene, sampler, integrator, self.render_config)
     }
 
     fn save_image(&self, renderer: &Renderer) -> Result<(), String> {
@@ -264,24 +279,25 @@ impl TryInto<IntegratorType> for &str {
     }
 }
 
-/// Represents a demo scene to load.
+/// Represents a scene type to load.
 #[derive(Debug, Clone)]
-pub enum DemoType {
+pub enum SceneType {
     SphereScene,
     CornellScene,
     DebugScene,
     DebugSphereScene,
+    Custom,
 }
 
-impl TryInto<DemoType> for &str {
+impl TryInto<SceneType> for &str {
     type Error = String;
 
-    fn try_into(self) -> Result<DemoType, Self::Error> {
+    fn try_into(self) -> Result<SceneType, Self::Error> {
         match self.to_lowercase().as_str() {
-            "spheres" => Ok(DemoType::SphereScene),
-            "cornell" => Ok(DemoType::CornellScene),
-            "debug" => Ok(DemoType::DebugScene),
-            "debugsphere" => Ok(DemoType::DebugSphereScene),
+            "spheres" => Ok(SceneType::SphereScene),
+            "cornell" => Ok(SceneType::CornellScene),
+            "debug" => Ok(SceneType::DebugScene),
+            "debugsphere" => Ok(SceneType::DebugSphereScene),
             _ => Err(self.to_string()),
         }
     }

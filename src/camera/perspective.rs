@@ -1,10 +1,12 @@
 use crate::camera::Camera;
 use crate::debug_utils::{is_finite, is_normalized, within_01};
 use geometry::Ray;
+use serde::{Deserialize, Serialize};
 use ultraviolet::{UVec2, Vec2, Vec3};
 use utility::floats::in_range;
 
 /// A perspective camera with a fov somewhere in space, looking at a target.
+#[derive(Serialize, Deserialize)]
 pub struct PerspectiveCamera {
     position: Vec3,
     resolution: UVec2,
@@ -66,6 +68,7 @@ impl PerspectiveCamera {
     }
 }
 
+#[typetag::serde]
 impl Camera for PerspectiveCamera {
     fn primary_ray(&self, pixel: &UVec2, sample: &Vec2) -> Ray {
         debug_assert!(*pixel == pixel.min_by_component(self.resolution));

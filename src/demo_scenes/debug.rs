@@ -21,7 +21,7 @@ const RADIUS: f32 = 0.5;
 pub struct DebugScene;
 
 impl DemoScene for DebugScene {
-    fn create(resolution: UVec2) -> (Scene, Arc<dyn Camera>) {
+    fn create(resolution: UVec2) -> Scene {
         let mut scene = Scene::default();
 
         // scene.add(ground()).add(sphere()).add(sphere_emitter());
@@ -31,9 +31,9 @@ impl DemoScene for DebugScene {
         scene.add(sphere_emitter());
         scene.add(create_emitter());
 
-        let camera = create_camera(resolution);
+        scene.camera = create_camera(resolution);
 
-        (scene, camera)
+        scene
     }
 }
 

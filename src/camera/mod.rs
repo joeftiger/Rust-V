@@ -4,8 +4,10 @@ pub mod perspective_simone;
 pub use perspective::PerspectiveCamera;
 
 use geometry::Ray;
+use serde::{Deserialize, Serialize};
 use ultraviolet::{UVec2, Vec2};
 
+#[typetag::serde]
 pub trait Camera: Send + Sync {
     /// Creates a new primary ray of the given pixel.
     ///
@@ -20,4 +22,14 @@ pub trait Camera: Send + Sync {
     /// # Returns
     /// * A ray
     fn primary_ray(&self, pixel: &UVec2, sample: &Vec2) -> Ray;
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct DummyCamera;
+
+#[typetag::serde]
+impl Camera for DummyCamera {
+    fn primary_ray(&self, _: &UVec2, _: &Vec2) -> Ray {
+        unimplemented!()
+    }
 }

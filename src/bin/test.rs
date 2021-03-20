@@ -5,7 +5,7 @@ use rust_v::scene::Scene;
 use ultraviolet::UVec2;
 
 fn main() {
-    let (scene, _) = CornellScene::create(UVec2::zero());
+    let scene = CornellScene::create(UVec2::zero());
 
     let config = PrettyConfig::default();
 

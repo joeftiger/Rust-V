@@ -28,7 +28,8 @@ show-image = { version = "", features = ["image", "save"], optional = true }
 # .obj files
 tobj = ""
 # linear algebra
-ultraviolet = { version = "", features= ["int"] }
+#ultraviolet = { version = "", features= ["int", "serde"] }
+ultraviolet = { path = "../ultraviolet", features= ["int", "serde"] }
 
 # De-/Serialization
 serde = { version = "", features = ["derive", "rc"] }

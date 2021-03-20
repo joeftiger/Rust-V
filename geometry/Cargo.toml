@@ -8,7 +8,8 @@ edition = "2018"
 
 [dependencies]
 tobj = ""
-ultraviolet = { version = "", features = ["serde"] }
+#ultraviolet = { version = "", features = ["serde"] }
+ultraviolet = { path = "../../ultraviolet", features= ["int", "serde"] }
 serde = { version = "", features = ["derive"] }
 typetag = ""
 

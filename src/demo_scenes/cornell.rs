@@ -45,9 +45,7 @@ impl Wall {
 }
 
 impl DemoScene for CornellScene {
-    fn create(resolution: UVec2) -> (Scene, Arc<dyn Camera>) {
-        let camera = create_camera(resolution);
-
+    fn create(resolution: UVec2) -> Scene {
         let mut scene = Scene::default();
 
         Wall::list().iter().for_each(|wall| {
@@ -57,10 +55,11 @@ impl DemoScene for CornellScene {
         // scene.add(create_sphere());
         // scene.add(create_buddha());
         // scene.add(create_biconvex_lens());
-        // scene.add(create_bubble());
+        scene.add(create_bubble());
         scene.add(create_emitter());
+        scene.camera = create_camera(resolution);
 
-        (scene, camera)
+        scene
     }
 }
 

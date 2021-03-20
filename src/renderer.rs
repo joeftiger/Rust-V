@@ -1,4 +1,3 @@
-use crate::camera::Camera;
 use crate::configuration::RenderConfig;
 use crate::grid::{Grid, GridBlock};
 use crate::integrator::Integrator;
@@ -126,7 +125,6 @@ impl From<&GridBlock> for RenderBlock {
 #[derive(Clone)]
 pub struct Renderer {
     scene: Arc<Scene>,
-    camera: Arc<dyn Camera>,
     sampler: Arc<dyn Sampler>,
     integrator: Arc<dyn Integrator>,
     config: RenderConfig,
@@ -150,7 +148,6 @@ impl Renderer {
     /// * An initialized renderer
     pub fn new(
         scene: Scene,
-        camera: Arc<dyn Camera>,
         sampler: Arc<dyn Sampler>,
         integrator: Arc<dyn Integrator>,
         config: RenderConfig,
@@ -178,7 +175,6 @@ impl Renderer {
 
         Self {
             scene: Arc::new(scene),
-            camera,
             sampler,
             integrator,
             config,
@@ -234,7 +230,7 @@ impl Renderer {
         debug_assert!(pixel == pixel.min_by_component(self.config.resolution));
 
         let sample = self.sampler.get_2d();
-        let ray = self.camera.primary_ray(&pixel, &sample);
+        let ray = self.scene.camera.primary_ray(&pixel, &sample);
 
         self.integrator.integrate(&self.scene, &ray, &*self.sampler)
     }

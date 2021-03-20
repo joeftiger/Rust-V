@@ -1,7 +1,9 @@
 use crate::camera::Camera;
 use geometry::Ray;
+use serde::{Deserialize, Serialize};
 use ultraviolet::{Mat4, UVec2, Vec2, Vec3};
 
+#[derive(Serialize, Deserialize)]
 pub struct PerspectiveCamera {
     look_at: Mat4,
     bottom_left: Vec2,
@@ -30,6 +32,7 @@ impl PerspectiveCamera {
     }
 }
 
+#[typetag::serde]
 impl Camera for PerspectiveCamera {
     fn primary_ray(&self, pixel: &UVec2, sample: &Vec2) -> Ray {
         let dir_2d = self.bottom_left

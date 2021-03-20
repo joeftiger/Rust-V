@@ -1,3 +1,4 @@
+use crate::camera::{Camera, DummyCamera};
 use crate::objects::{Emitter, SceneObject};
 use geometry::{Aabb, Boundable, ContainerGeometry, Intersectable, Intersection, Ray};
 use serde::{Deserialize, Serialize};
@@ -42,6 +43,7 @@ pub struct Scene {
     #[serde(skip_serializing, skip_deserializing)]
     pub lights: Vec<Arc<Emitter>>,
     objects: Vec<SceneObject>,
+    pub camera: Arc<dyn Camera>,
 }
 
 impl Scene {
@@ -144,6 +146,7 @@ impl Default for Scene {
             bounding_box: Aabb::empty(),
             lights: Vec::default(),
             objects: Vec::default(),
+            camera: Arc::new(DummyCamera),
         }
     }
 }

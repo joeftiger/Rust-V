@@ -25,12 +25,12 @@ const NUM_SPHERES_IN_DIMENSION: u32 = 5;
 pub struct SphereScene;
 
 impl DemoScene for SphereScene {
-    fn create(resolution: UVec2) -> (Scene, Arc<dyn Camera>) {
+    fn create(resolution: UVec2) -> Scene {
         fastrand::seed(0);
-        let scene = create_scene();
-        let camera = create_camera(resolution);
+        let mut scene = create_scene();
+        scene.camera = create_camera(resolution);
 
-        (scene, camera)
+        scene
     }
 }
 
