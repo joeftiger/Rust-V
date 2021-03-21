@@ -1,8 +1,8 @@
-use crate::camera::{Camera, DummyCamera};
+use crate::camera::CameraType;
 use crate::objects::{Emitter, SceneObject};
 use geometry::{Aabb, Boundable, ContainerGeometry, Intersectable, Intersection, Ray};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use ultraviolet::Vec3;
 
 /// A scene intersection is a more detailed `Intersection`, also containing a reference to the
@@ -43,7 +43,7 @@ pub struct Scene {
     #[serde(skip_serializing, skip_deserializing)]
     pub lights: Vec<Arc<Emitter>>,
     objects: Vec<SceneObject>,
-    pub camera: Arc<dyn Camera>,
+    pub camera: Mutex<CameraType>,
 }
 
 impl Scene {
@@ -146,7 +146,7 @@ impl Default for Scene {
             bounding_box: Aabb::empty(),
             lights: Vec::default(),
             objects: Vec::default(),
-            camera: Arc::new(DummyCamera),
+            camera: Mutex::new(CameraType::Dummy),
         }
     }
 }

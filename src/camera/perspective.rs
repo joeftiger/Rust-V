@@ -1,13 +1,15 @@
 use crate::camera::Camera;
-use crate::debug_utils::{is_finite, is_normalized, within_01};
+use crate::debug_utils::{is_finite, is_normalized};
+use crate::sampler::pixel_samplers::{PixelSampler, PixelSamplerType};
 use geometry::Ray;
 use serde::{Deserialize, Serialize};
-use ultraviolet::{UVec2, Vec2, Vec3};
+use ultraviolet::{UVec2, Vec3};
 use utility::floats::in_range;
 
 /// A perspective camera with a fov somewhere in space, looking at a target.
 #[derive(Serialize, Deserialize)]
 pub struct PerspectiveCamera {
+    sampler: PixelSamplerType,
     position: Vec3,
     resolution: UVec2,
     x_dir: Vec3,
@@ -34,7 +36,14 @@ impl PerspectiveCamera {
     ///
     /// # Returns
     /// * Self
-    pub fn new(position: Vec3, target: Vec3, up: Vec3, fov_y: f32, resolution: UVec2) -> Self {
+    pub fn new(
+        sampler: PixelSamplerType,
+        position: Vec3,
+        target: Vec3,
+        up: Vec3,
+        fov_y: f32,
+        resolution: UVec2,
+    ) -> Self {
         debug_assert!(is_finite(&position));
         debug_assert!(is_finite(&target));
         debug_assert!(is_finite(&up));
@@ -59,6 +68,7 @@ impl PerspectiveCamera {
         let lower_left = target - 0.5 * w * x_dir - 0.5 * h * y_dir;
 
         Self {
+            sampler,
             position,
             resolution,
             x_dir,
@@ -68,11 +78,11 @@ impl PerspectiveCamera {
     }
 }
 
-#[typetag::serde]
 impl Camera for PerspectiveCamera {
-    fn primary_ray(&self, pixel: &UVec2, sample: &Vec2) -> Ray {
-        debug_assert!(*pixel == pixel.min_by_component(self.resolution));
-        debug_assert!(within_01(sample));
+    fn primary_ray(&mut self, pixel: UVec2) -> Ray {
+        debug_assert!(pixel == pixel.min_by_component(self.resolution));
+
+        let sample = self.sampler.sample(pixel);
 
         let direction = self.lower_left
             + (pixel.x as f32 + sample.x) * self.x_dir

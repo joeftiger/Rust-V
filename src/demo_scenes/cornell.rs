@@ -1,16 +1,17 @@
 #![allow(dead_code)]
 
 use crate::bxdf::{BSDFType, FresnelSpecular, OrenNayar, BSDF};
-use crate::camera::{Camera, PerspectiveCamera};
+use crate::camera::{CameraType, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
 use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::refractive_index::RefractiveType;
+use crate::sampler::pixel_samplers::PixelSamplerType;
 use crate::scene::Scene;
 use crate::Spectrum;
 use color::{Color, Colors};
 use geometry::{Aabb, BiconvexLens, Boundable, Bubble, Mesh, ShadingMode, Sphere};
 use std::f32::consts::PI;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use ultraviolet::{Rotor3, UVec2, Vec3};
 
 const DIMENSION: f32 = 4.0;
@@ -57,19 +58,26 @@ impl DemoScene for CornellScene {
         // scene.add(create_biconvex_lens());
         scene.add(create_bubble());
         scene.add(create_emitter());
-        scene.camera = create_camera(resolution);
+        scene.camera = Mutex::new(create_camera(resolution));
 
         scene
     }
 }
 
-fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
+fn create_camera(resolution: UVec2) -> CameraType {
     let position = Vec3::new(X_CENTER, Y_CENTER, FRONT + DIMENSION / 2.0);
     let target = Vec3::new(X_CENTER, Y_CENTER, Z_CENTER);
 
-    let camera = PerspectiveCamera::new(position, target, Vec3::unit_y(), FOVY, resolution);
+    let camera = PerspectiveCamera::new(
+        PixelSamplerType::Random,
+        position,
+        target,
+        Vec3::unit_y(),
+        FOVY,
+        resolution,
+    );
 
-    Arc::new(camera)
+    CameraType::Perspective(camera)
 }
 
 fn create_buddha() -> SceneObject {

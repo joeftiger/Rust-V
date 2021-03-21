@@ -1,3 +1,4 @@
+use crate::camera::Camera;
 use crate::configuration::RenderConfig;
 use crate::grid::{Grid, GridBlock};
 use crate::integrator::Integrator;
@@ -226,11 +227,13 @@ impl Renderer {
     ///
     /// # Returns
     /// * The computed pixel spectrum
-    fn render_pixel(&self, pixel: UVec2) -> Spectrum {
+    fn render_pixel(&mut self, pixel: UVec2) -> Spectrum {
         debug_assert!(pixel == pixel.min_by_component(self.config.resolution));
 
-        let sample = self.sampler.get_2d();
-        let ray = self.scene.camera.primary_ray(&pixel, &sample);
+        let ray = {
+            let mut camera = self.scene.camera.lock().expect("Camera lock poisoned");
+            camera.primary_ray(pixel)
+        };
 
         self.integrator.integrate(&self.scene, &ray, &*self.sampler)
     }
@@ -274,7 +277,7 @@ impl Renderer {
 
         let should_stop = Arc::new(AtomicBool::default());
         for i in 0..num_threads {
-            let this = self.clone();
+            let mut this = self.clone();
             let this_should_stop = should_stop.clone();
 
             // each thread loops and gets the next block unless it should stop or has finished.

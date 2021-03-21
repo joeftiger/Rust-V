@@ -5,31 +5,33 @@ pub use perspective::PerspectiveCamera;
 
 use geometry::Ray;
 use serde::{Deserialize, Serialize};
-use ultraviolet::{UVec2, Vec2};
+use ultraviolet::UVec2;
 
-#[typetag::serde]
+#[derive(Serialize, Deserialize)]
+pub enum CameraType {
+    Dummy,
+    Perspective(PerspectiveCamera),
+}
+
+impl Camera for CameraType {
+    fn primary_ray(&mut self, pixel: UVec2) -> Ray {
+        match self {
+            CameraType::Dummy => unimplemented!(),
+            CameraType::Perspective(c) => c.primary_ray(pixel),
+        }
+    }
+}
+
 pub trait Camera: Send + Sync {
     /// Creates a new primary ray of the given pixel.
     ///
     /// # Constraints
     /// * `pixel` - Should be within the camera's resolution.
-    /// * `sample` - Should be within `[0, 1)`.
     ///
     /// # Arguments
     /// * `pixel` - The pixel to generate the ray from
-    /// * `sample` - A random sample to "fine-tune" where in the pixel
     ///
     /// # Returns
     /// * A ray
-    fn primary_ray(&self, pixel: &UVec2, sample: &Vec2) -> Ray;
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct DummyCamera;
-
-#[typetag::serde]
-impl Camera for DummyCamera {
-    fn primary_ray(&self, _: &UVec2, _: &Vec2) -> Ray {
-        unimplemented!()
-    }
+    fn primary_ray(&mut self, pixel: UVec2) -> Ray;
 }

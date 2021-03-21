@@ -4,15 +4,16 @@
 use crate::bxdf::{
     BSDFType, FresnelType, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
 };
-use crate::camera::{Camera, PerspectiveCamera};
+use crate::camera::{CameraType, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY};
 use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::refractive_index::RefractiveType;
+use crate::sampler::pixel_samplers::PixelSamplerType;
 use crate::scene::Scene;
 use crate::Spectrum;
 use color::Color;
 use geometry::{Aabb, Cylinder, Point, Sphere};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use ultraviolet::{UVec2, Vec3};
 
 const FLOOR: f32 = 0.0;
@@ -31,7 +32,7 @@ impl DemoScene for DebugScene {
         scene.add(sphere_emitter());
         scene.add(create_emitter());
 
-        scene.camera = create_camera(resolution);
+        scene.camera = Mutex::new(create_camera(resolution));
 
         scene
     }
@@ -110,10 +111,18 @@ fn create_emitter() -> SceneObject {
 }
 
 //noinspection DuplicatedCode
-fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
+fn create_camera(resolution: UVec2) -> CameraType {
     let position = Vec3::new(0.0, 2.0, 5.0);
     let target = Vec3::new(0.0, RADIUS, 0.0);
 
-    let camera = PerspectiveCamera::new(position, target, Vec3::unit_y(), FOVY / 2.0, resolution);
-    Arc::new(camera)
+    let camera = PerspectiveCamera::new(
+        PixelSamplerType::Random,
+        position,
+        target,
+        Vec3::unit_y(),
+        FOVY / 2.0,
+        resolution,
+    );
+
+    CameraType::Perspective(camera)
 }

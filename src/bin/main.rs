@@ -49,7 +49,7 @@ fn create_config() -> MainConfig {
 
             (typ, m)
         }
-        _ => (SceneType::Custom, &app_matches),
+        _ => unimplemented!(),
     };
 
     let verbose = matches.is_present(VERBOSE);
@@ -96,7 +96,7 @@ fn create_config() -> MainConfig {
         Err(err) => panic!("Cannot parse integrator backend: {}", err),
     };
     let input = match demo_type {
-        SceneType::Custom => Some(
+        SceneType::CustomScene => Some(
             matches
                 .value_of(INPUT)
                 .expect("No input file given")
@@ -155,7 +155,7 @@ impl MainConfig {
             SceneType::CornellScene => CornellScene::create(self.render_config.resolution),
             SceneType::DebugScene => DebugScene::create(self.render_config.resolution),
             SceneType::DebugSphereScene => DebugSphereScene::create(self.render_config.resolution),
-            SceneType::Custom => {
+            SceneType::CustomScene => {
                 from_str(self.input.as_ref().unwrap().as_str()).expect("Could not parse scene file")
             }
         };
@@ -286,7 +286,7 @@ pub enum SceneType {
     CornellScene,
     DebugScene,
     DebugSphereScene,
-    Custom,
+    CustomScene,
 }
 
 impl TryInto<SceneType> for &str {
@@ -298,6 +298,7 @@ impl TryInto<SceneType> for &str {
             "cornell" => Ok(SceneType::CornellScene),
             "debug" => Ok(SceneType::DebugScene),
             "debugsphere" => Ok(SceneType::DebugSphereScene),
+            "scene" => Ok(SceneType::DebugSphereScene),
             _ => Err(self.to_string()),
         }
     }
