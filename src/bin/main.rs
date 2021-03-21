@@ -8,6 +8,7 @@ use rust_v::demo_scenes::{CornellScene, DebugScene, DebugSphereScene, DemoScene,
 use rust_v::integrator::{DebugNormals, Integrator, Path, PathEnhanced, SpectralPath, Whitted};
 use rust_v::renderer::Renderer;
 use rust_v::sampler::{NoOpSampler, RandomSampler, Sampler};
+use rust_v::scene::Scene;
 use rust_v::RenderConfig;
 #[cfg(feature = "live-window")]
 use rust_v::RenderWindow;
@@ -156,7 +157,15 @@ impl MainConfig {
             SceneType::DebugScene => DebugScene::create(self.render_config.resolution),
             SceneType::DebugSphereScene => DebugSphereScene::create(self.render_config.resolution),
             SceneType::CustomScene => {
-                from_str(self.input.as_ref().unwrap().as_str()).expect("Could not parse scene file")
+                if let Some(path) = &self.input {
+                    let content = std::fs::read_to_string(path).expect("Could not read scene file");
+                    let mut s: Scene =
+                        from_str(content.as_str()).expect("Could not parse scene file");
+                    s.collect_emitters();
+                    s
+                } else {
+                    panic!("No input scene file given!")
+                }
             }
         };
 
@@ -298,7 +307,7 @@ impl TryInto<SceneType> for &str {
             "cornell" => Ok(SceneType::CornellScene),
             "debug" => Ok(SceneType::DebugScene),
             "debugsphere" => Ok(SceneType::DebugSphereScene),
-            "scene" => Ok(SceneType::DebugSphereScene),
+            "scene" => Ok(SceneType::CustomScene),
             _ => Err(self.to_string()),
         }
     }

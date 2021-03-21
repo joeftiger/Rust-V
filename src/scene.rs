@@ -40,7 +40,7 @@ impl SceneIntersection {
 #[derive(Serialize, Deserialize)]
 pub struct Scene {
     bounding_box: Aabb,
-    #[serde(skip_serializing, skip_deserializing)]
+    #[serde(skip)]
     pub lights: Vec<Arc<Emitter>>,
     objects: Vec<SceneObject>,
     pub camera: Mutex<CameraType>,

@@ -48,12 +48,14 @@ args:
           long: format
           help: "The output pixel format. (Default = u8)"
           possible_values: [ u8, u16 ]
+          takes_value: true
           global: true
     - INTEGRATOR_BACKEND:
           short: i
           long: integrator
           help: "The integrator backend to use. Debug renders surface normals. (Default = Whitted)"
           possible_values: [ Debug, Whitted, Path, PathEnhanced, SpectralPath ]
+          takes_value: true
           global: true
     - THREADS:
           short: t

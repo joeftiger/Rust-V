@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
-use crate::bxdf::{BSDFType, FresnelSpecular, LambertianReflection, BSDF};
+use crate::bxdf::{BSDFType, FresnelSpecular, LambertianReflection, OrenNayar, BSDF};
 use crate::camera::{CameraType, PerspectiveCamera};
-use crate::demo_scenes::{DemoScene, FOVY};
+use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
 use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::refractive_index::RefractiveType;
 use crate::sampler::pixel_samplers::PixelSamplerType;
@@ -37,8 +37,8 @@ fn ground() -> SceneObject {
     let max = Vec3::new(100.0, 0.0, 100.0);
     let cube = Aabb::new(min, max);
 
-    let lambertian = LambertianReflection::new(Spectrum::new_const(1.0));
-    let bsdf = BSDF::new(vec![BSDFType::LReflection(lambertian)]);
+    let on = OrenNayar::new(Spectrum::white(), SIGMA);
+    let bsdf = BSDF::new(vec![BSDFType::OrenNayar(on)]);
 
     let receiver = Arc::new(Receiver::new(Box::new(cube), bsdf));
 
