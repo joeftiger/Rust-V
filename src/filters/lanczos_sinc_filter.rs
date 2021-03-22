@@ -1,17 +1,28 @@
 use crate::filters::Filter;
+use serde::{Deserialize, Serialize};
 use ultraviolet::Vec2;
 use utility::math::sinc;
 
+/// Sample weights considered with a combination of `sinc()` calls.
+///
+/// Suffers a bit from ringing, but less blurring.
+#[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct LanczosSincFilter {
-    radius: Vec2,
+    pub radius: Vec2,
+    pub inv_radius: Vec2,
     tau: f32,
 }
 
 impl LanczosSincFilter {
     pub fn new(radius: Vec2, tau: f32) -> Self {
-        Self { radius, tau }
+        Self {
+            radius,
+            inv_radius: Vec2::one() / radius,
+            tau,
+        }
     }
 
+    #[inline]
     fn windowed_sinc(&self, mut x: f32, radius: f32) -> f32 {
         x = x.abs();
 

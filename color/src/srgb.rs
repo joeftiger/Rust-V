@@ -20,7 +20,7 @@ impl Srgb {
     }
 }
 
-impl IndexSpectral for Srgb {
+impl IndexSpectral<f32> for Srgb {
     fn index_spectral(&self, index: usize) -> f32 {
         match index {
             0 => 0.645,

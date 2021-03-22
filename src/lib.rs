@@ -18,6 +18,7 @@ pub mod scene;
 pub use configuration::RenderConfig;
 
 pub mod filters;
+pub mod new;
 pub mod refractive_index;
 pub mod sensor;
 #[cfg(feature = "live-window")]

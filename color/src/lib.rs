@@ -12,14 +12,16 @@ big_array! {
 }
 
 pub mod cie;
+mod int_spectrum;
 pub mod spectral_data;
 mod spectrum;
 mod srgb;
 mod xyz;
 
-pub use spectrum::Spectrum;
-pub use srgb::Srgb;
-pub use xyz::Xyz;
+pub use int_spectrum::*;
+pub use spectrum::*;
+pub use srgb::*;
+pub use xyz::*;
 
 use crate::spectral_data::LAMBDA_NUM;
 use spectral_data::{LAMBDA_END, LAMBDA_START};
@@ -391,8 +393,8 @@ pub trait Color<T = f32>:
     fn component_max(&self) -> T;
 }
 
-pub trait IndexSpectral {
-    fn index_spectral(&self, index: usize) -> f32;
+pub trait IndexSpectral<T> {
+    fn index_spectral(&self, index: usize) -> T;
 }
 
 /// A trait allowing colors to return known colors:

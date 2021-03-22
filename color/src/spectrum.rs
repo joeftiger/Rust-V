@@ -5,6 +5,10 @@ use crate::spectral_data::*;
 use crate::*;
 use image::Rgb;
 
+color!(
+    Spectrum => f32, LAMBDA_NUM
+);
+
 impl Spectrum {
     pub fn as_xyz(self) -> Xyz {
         self.into()
@@ -33,7 +37,7 @@ impl Spectrum {
     }
 }
 
-impl IndexSpectral for Spectrum {
+impl IndexSpectral<f32> for Spectrum {
     fn index_spectral(&self, index: usize) -> f32 {
         self.data[index]
     }
@@ -111,6 +115,38 @@ impl Into<Rgb<f32>> for Spectrum {
     }
 }
 
-color!(
-    Spectrum => f32, LAMBDA_NUM
-);
+impl Mul<IntSpectrum> for Spectrum {
+    type Output = Self;
+
+    fn mul(mut self, rhs: IntSpectrum) -> Self::Output {
+        self *= rhs;
+        self
+    }
+}
+
+impl MulAssign<IntSpectrum> for Spectrum {
+    fn mul_assign(&mut self, rhs: IntSpectrum) {
+        self.data
+            .iter_mut()
+            .zip(rhs.data.iter())
+            .for_each(|(l, h)| *l *= *h as f32)
+    }
+}
+
+impl Div<IntSpectrum> for Spectrum {
+    type Output = Self;
+
+    fn div(mut self, rhs: IntSpectrum) -> Self::Output {
+        self /= rhs;
+        self
+    }
+}
+
+impl DivAssign<IntSpectrum> for Spectrum {
+    fn div_assign(&mut self, rhs: IntSpectrum) {
+        self.data
+            .iter_mut()
+            .zip(rhs.data.iter())
+            .for_each(|(l, h)| *l /= *h as f32)
+    }
+}

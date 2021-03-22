@@ -1,17 +1,26 @@
 use crate::filters::Filter;
+use serde::{Deserialize, Serialize};
 use ultraviolet::Vec2;
 
+/// Sample weights considered with a parameterized filter function.
+///
+/// Has a good trade off between ringing and blurring.
+#[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct MitchellFilter {
-    inv_radius: Vec2,
+    pub radius: Vec2,
+    pub inv_radius: Vec2,
     b: f32,
     c: f32,
 }
 
 impl MitchellFilter {
     pub fn new(radius: Vec2, b: f32, c: f32) -> Self {
-        let inv_radius = Vec2::broadcast(1.0) / radius;
-
-        Self { inv_radius, b, c }
+        Self {
+            radius,
+            inv_radius: Vec2::one() / radius,
+            b,
+            c,
+        }
     }
 
     fn mitchell_1d(&self, mut x: f32) -> f32 {
