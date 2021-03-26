@@ -59,6 +59,40 @@ macro_rules! color {
             }
 
             impl Color<$storage> for $name {
+                fn mul_add(&self, a: Self, b: Self) -> Self {
+                    let mut data = self.data.clone();
+                    data.iter_mut()
+                        .zip(a.data.iter())
+                        .zip(b.data.iter())
+                        .for_each(|((a, b), c)| *a = a.mul_add(*b, *c));
+
+                    Self::new(data)
+                }
+
+                fn mul_add_assign(&mut self, a: Self, b: Self) {
+                    self.data.iter_mut()
+                        .zip(a.data.iter())
+                        .zip(b.data.iter())
+                        .for_each(|((a, b), c)| *a = a.mul_add(*b, *c));
+                }
+
+                fn add_mul(&self, a: Self, b: Self) -> Self {
+                    let mut data = self.data.clone();
+                    data.iter_mut()
+                        .zip(a.data.iter())
+                        .zip(b.data.iter())
+                        .for_each(|((a, b), c)| *a = b.mul_add(*c, *a));
+
+                    Self::new(data)
+                }
+
+                fn add_mul_assign(&mut self, a: Self, b: Self) {
+                    self.data.iter_mut()
+                        .zip(a.data.iter())
+                        .zip(b.data.iter())
+                        .for_each(|((a, b), c)| *a = b.mul_add(*c, *a));
+                }
+
                 fn new_const(value: $storage) -> Self {
                     Self::new([value; $size])
                 }
@@ -323,6 +357,15 @@ pub trait Color<T = f32>:
     + Debug
     + Sum
 {
+    /// self * a + b
+    fn mul_add(&self, a: Self, b: Self) -> Self;
+    /// self * a + b
+    fn mul_add_assign(&mut self, a: Self, b: Self);
+    /// self + a * b
+    fn add_mul(&self, a: Self, b: Self) -> Self;
+    /// self + a * b
+    fn add_mul_assign(&mut self, a: Self, b: Self);
+
     /// Creates a new color with the given value assigned on the whole color spectrum.
     ///
     /// # Argumetns
@@ -432,7 +475,7 @@ pub trait Colors<T = f32>: Color<T> {
 /// # Returns
 /// * Conversion matrix
 #[allow(clippy::excessive_precision)]
-#[inline(always)]
+#[inline]
 pub fn xyz_to_srgb_mat() -> Mat3 {
     // https://en.wikipedia.org/wiki/SRGB#The_forward_transformation_(CIE_XYZ_to_sRGB)
     Mat3::new(
@@ -447,7 +490,7 @@ pub fn xyz_to_srgb_mat() -> Mat3 {
 /// # Returns
 /// * Conversion matrix
 #[allow(clippy::excessive_precision)]
-#[inline(always)]
+#[inline]
 pub fn srgb_to_xyz_mat() -> Mat3 {
     // https://en.wikipedia.org/wiki/SRGB#The_reverse_transformation
     Mat3::new(
@@ -468,7 +511,7 @@ pub fn srgb_to_xyz_mat() -> Mat3 {
 /// # Returns
 /// * Linear `Srgb` value
 #[allow(clippy::excessive_precision)]
-#[inline(always)]
+#[inline]
 pub fn srgb_to_linear(val: f32) -> f32 {
     // assert!(val >= 0.0);
     // assert!(val <= 1.0);
@@ -490,7 +533,7 @@ pub fn srgb_to_linear(val: f32) -> f32 {
 ///
 /// # Returns
 /// * Linear `Srgb` vector
-#[inline(always)]
+#[inline]
 pub fn srgbs_to_linear(val: Vec3) -> Vec3 {
     val.map(srgb_to_linear)
 }
@@ -506,7 +549,7 @@ pub fn srgbs_to_linear(val: Vec3) -> Vec3 {
 /// # Returns
 /// * `Srgb` value
 #[allow(clippy::excessive_precision)]
-#[inline(always)]
+#[inline]
 pub fn linear_to_srgb(val: f32) -> f32 {
     // assert!(val >= 0.0);
     // assert!(val <= 1.0);
@@ -528,7 +571,7 @@ pub fn linear_to_srgb(val: f32) -> f32 {
 ///
 /// # Returns
 /// * `Srgb` vector
-#[inline(always)]
+#[inline]
 pub fn linears_to_srgb(val: Vec3) -> Vec3 {
     val.map(linear_to_srgb)
 }
