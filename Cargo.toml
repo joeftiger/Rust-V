@@ -24,12 +24,10 @@ indicatif = ""
 # num of logical / physical cpus
 num_cpus = ""
 # live image of rendering
-show-image = { version = "", features = ["image", "save"], optional = true }
-# .obj files
-tobj = ""
+show-image = { version = "0.6.5", features = ["image", "save"], optional = true }
 # linear algebra
 #ultraviolet = { version = "", features= ["int", "serde"] }
-ultraviolet = { path = "../ultraviolet", features= ["int", "serde"] }
+ultraviolet = { path = "./ultraviolet", features= ["int", "serde"] }
 
 # De-/Serialization
 serde = { version = "", features = ["derive", "rc"] }
@@ -54,7 +52,7 @@ live-window = ["show-image"]
 [profile.release]
 #codegen-units = 1
 opt-level = 3
-#lto = true
+lto = true
 incremental = true
 
 [profile.dev]
