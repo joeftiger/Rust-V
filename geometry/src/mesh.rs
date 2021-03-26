@@ -3,11 +3,9 @@ use crate::debug_util::{is_finite, is_normalized};
 use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 use serde::{Deserialize, Serialize, de, Deserializer, Serializer};
 use std::mem::swap;
-use tobj::Mesh as TobjMesh;
 use ultraviolet::{Mat3, Rotor3, Vec3};
 use utility::floats::fast_clamp;
-use serde::de::{Visitor, SeqAccess, MapAccess};
-use std::error::Error;
+use serde::de::{Visitor, SeqAccess, MapAccess, Error};
 use std::fmt;
 use serde::ser::SerializeStruct;
 
@@ -306,14 +304,12 @@ impl Triangle {
 
 /// A mesh consists of vertices and triangles, allowing queries for intersections.
 /// Depending on the [`MeshMode`](MeshMode), the intersection normals will be interpolated.
-#[derive(Serialize, Deserialize)]
 pub struct Mesh {
     vertices: Vec<Vertex>,
     normals: Vec<Vec3>,
     triangles: Vec<Triangle>,
     bounds: Aabb,
     shading_mode: ShadingMode,
-    #[serde(skip_serializing, skip_deserializing)]
     bvh: Tree<Triangle>,
 }
 
