@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 use ultraviolet::{Mat4, UVec2, Vec2, Vec3};
 
 #[derive(Serialize, Deserialize)]
-pub struct PerspectiveCamera {
+pub struct PerspectiveCameraSimone {
+    resolution: UVec2,
     sampler: PixelSamplerType,
     look_at: Mat4,
     bottom_left: Vec2,
@@ -13,7 +14,7 @@ pub struct PerspectiveCamera {
     inv_resolution: Vec2,
 }
 
-impl PerspectiveCamera {
+impl PerspectiveCameraSimone {
     pub fn new(
         sampler: PixelSamplerType,
         position: Vec3,
@@ -33,6 +34,7 @@ impl PerspectiveCamera {
         let inv_resolution = Vec2::new(1.0 / resolution.x as f32, 1.0 / resolution.y as f32);
 
         Self {
+            resolution,
             sampler,
             look_at,
             bottom_left,
@@ -42,7 +44,12 @@ impl PerspectiveCamera {
     }
 }
 
-impl Camera for PerspectiveCamera {
+#[typetag::serde]
+impl Camera for PerspectiveCameraSimone {
+    fn resolution(&self) -> UVec2 {
+        self.resolution
+    }
+
     fn primary_ray(&mut self, pixel: UVec2) -> Ray {
         let dir_2d = self.bottom_left
             + (self.top_right - self.bottom_left)

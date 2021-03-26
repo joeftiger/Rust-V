@@ -78,7 +78,12 @@ impl PerspectiveCamera {
     }
 }
 
+#[typetag::serde]
 impl Camera for PerspectiveCamera {
+    fn resolution(&self) -> UVec2 {
+        self.resolution
+    }
+
     fn primary_ray(&mut self, pixel: UVec2) -> Ray {
         debug_assert!(pixel == pixel.min_by_component(self.resolution));
 

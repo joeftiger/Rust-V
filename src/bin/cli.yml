@@ -29,18 +29,6 @@ args:
       help: "The depth of recursive ray tracing. (Default = 6)"
       takes_value: true
       value_name: u32
-  - WIDTH:
-      short: w
-      long: width
-      help: "The width of the rendering in pixels. (Default = 900)"
-      takes_value: true
-      value_name: u32
-  - HEIGHT:
-      short: h
-      long: height
-      help: "The height of the rendering in pixels. (Default = 900)"
-      takes_value: true
-      value_name: u32
   - FORMAT:
       short: f
       long: format

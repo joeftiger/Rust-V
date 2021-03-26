@@ -4,7 +4,7 @@
 use crate::bxdf::{
     FresnelType, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
 };
-use crate::camera::{CameraType, PerspectiveCamera};
+use crate::camera::{PerspectiveCamera, Camera};
 use crate::demo_scenes::{DemoScene, FOVY};
 use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::refractive_index::RefractiveType;
@@ -160,7 +160,7 @@ fn create_scene() -> Scene {
 }
 
 //noinspection DuplicatedCode
-fn create_camera(resolution: UVec2) -> CameraType {
+fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
     let position = Vec3::new(0.0, 5.0, 10.0);
     let target = Vec3::new(0.0, 1.0, 0.0);
 
@@ -174,5 +174,5 @@ fn create_camera(resolution: UVec2) -> CameraType {
     );
     // let camera = crate::camera::perspective_simone::PerspectiveCamera::new(position, target, Vec3::unit_y(), FOVY, resolution);
 
-    CameraType::Perspective(camera)
+    Box::new(camera)
 }

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::bxdf::{FresnelSpecular, OrenNayar, BSDF};
-use crate::camera::{CameraType, PerspectiveCamera};
+use crate::camera::{PerspectiveCamera, Camera};
 use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
 use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::refractive_index::RefractiveType;
@@ -64,7 +64,7 @@ impl DemoScene for CornellScene {
     }
 }
 
-fn create_camera(resolution: UVec2) -> CameraType {
+fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
     let position = Vec3::new(X_CENTER, Y_CENTER, FRONT + DIMENSION / 2.0);
     let target = Vec3::new(X_CENTER, Y_CENTER, Z_CENTER);
 
@@ -77,7 +77,7 @@ fn create_camera(resolution: UVec2) -> CameraType {
         resolution,
     );
 
-    CameraType::Perspective(camera)
+    Box::new(camera)
 }
 
 fn create_buddha() -> SceneObject {

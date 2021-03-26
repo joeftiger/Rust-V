@@ -1,4 +1,3 @@
-use crate::camera::Camera;
 use crate::configuration::RenderConfig;
 use crate::grid::{Grid, GridBlock};
 use crate::integrator::Integrator;
@@ -154,7 +153,12 @@ impl Renderer {
         config: RenderConfig,
     ) -> Self {
         let render_blocks = {
-            let grid = Grid::new(&config.resolution, config.block_size);
+            let resolution = {
+                let lock = scene.camera.lock().expect("camera lock poisoned");
+                lock.resolution()
+            };
+
+            let grid = Grid::new(&resolution, config.block_size);
             let blocks = grid
                 .blocks
                 .iter()
@@ -228,7 +232,9 @@ impl Renderer {
     /// # Returns
     /// * The computed pixel spectrum
     fn render_pixel(&mut self, pixel: UVec2) -> Spectrum {
-        debug_assert!(pixel == pixel.min_by_component(self.config.resolution));
+        debug_assert!(pixel == pixel.min_by_component({
+            self.scene.camera.lock().expect("camera poisoned").resolution()
+        }));
 
         let ray = {
             let mut camera = self.scene.camera.lock().expect("Camera lock poisoned");
@@ -321,7 +327,9 @@ impl Renderer {
 
     //noinspection DuplicatedCode
     pub fn get_image_u8(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-        let res = self.config.resolution;
+        let res = {
+            self.scene.camera.lock().expect("camera poisoned").resolution()
+        };
         let mut buffer = ImageBuffer::new(res.x, res.y);
 
         self.render_blocks.iter().for_each(|block| {
@@ -337,7 +345,9 @@ impl Renderer {
 
     //noinspection DuplicatedCode
     pub fn get_image_u16(&self) -> ImageBuffer<Rgb<u16>, Vec<u16>> {
-        let res = self.config.resolution;
+        let res = {
+            self.scene.camera.lock().expect("camera poisoned").resolution()
+        };
         let mut buffer = ImageBuffer::new(res.x, res.y);
 
         self.render_blocks.iter().for_each(|block| {

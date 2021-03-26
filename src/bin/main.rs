@@ -22,8 +22,6 @@ const OUTPUT: &str = "OUTPUT";
 const PASSES: &str = "PASSES";
 const BLOCK_SIZE: &str = "BLOCK_SIZE";
 const DEPTH: &str = "DEPTH";
-const WIDTH: &str = "WIDTH";
-const HEIGHT: &str = "HEIGHT";
 const FORMAT: &str = "FORMAT";
 const INTEGRATOR_BACKEND: &str = "INTEGRATOR_BACKEND";
 const THREADS: &str = "THREADS";
@@ -43,15 +41,6 @@ fn create_config() -> MainConfig {
     let input = matches.value_of(INPUT).expect("No scene file given!");
 
     let verbose = matches.is_present(VERBOSE);
-
-    let width = match matches.value_of(WIDTH).unwrap_or("900").parse() {
-        Ok(width) => width,
-        Err(err) => panic!("Cannot parse width: {}", err),
-    };
-    let height = match matches.value_of(HEIGHT).unwrap_or("900").parse() {
-        Ok(height) => height,
-        Err(err) => panic!("Cannot parse height: {}", err),
-    };
     let depth = match matches.value_of(DEPTH).unwrap_or("6").parse() {
         Ok(depth) => depth,
         Err(err) => panic!("Cannot parse depth: {}", err),
@@ -103,7 +92,7 @@ fn create_config() -> MainConfig {
         Some(output)
     };
 
-    let render_config = RenderConfig::new(width, height, depth, passes, block_size, threads);
+    let render_config = RenderConfig::new(depth, passes, block_size, threads);
 
     MainConfig {
         render_config,

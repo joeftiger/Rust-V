@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::bxdf::{FresnelSpecular, LambertianReflection, OrenNayar, BSDF};
-use crate::camera::{CameraType, PerspectiveCamera};
+use crate::camera::{PerspectiveCamera, Camera};
 use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
 use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::refractive_index::RefractiveType;
@@ -119,7 +119,7 @@ fn global_light() -> SceneObject {
 }
 
 //noinspection DuplicatedCode
-fn create_camera(resolution: UVec2) -> CameraType {
+fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
     let position = Vec3::new(0.0, 3.0, 10.0);
     let target = Vec3::new(0.0, 0.0, 0.0);
 
@@ -132,5 +132,5 @@ fn create_camera(resolution: UVec2) -> CameraType {
         resolution,
     );
 
-    CameraType::Perspective(camera)
+    Box::new(camera)
 }
