@@ -4,7 +4,6 @@ extern crate clap;
 use clap::App;
 
 use ron::from_str;
-use rust_v::demo_scenes::{CornellScene, DebugScene, DebugSphereScene, DemoScene, SphereScene};
 use rust_v::integrator::{DebugNormals, Integrator, Path, PathEnhanced, SpectralPath, Whitted};
 use rust_v::renderer::Renderer;
 use rust_v::sampler::{NoOpSampler, RandomSampler, Sampler};
@@ -39,19 +38,9 @@ fn create_config() -> MainConfig {
     #[cfg(feature = "live-window")]
     let yaml = load_yaml!("cli-live.yml");
 
-    let app_matches = App::from_yaml(yaml).get_matches();
+    let matches = App::from_yaml(yaml).get_matches();
 
-    let (demo_type, matches) = match app_matches.subcommand() {
-        (name, Some(m)) => {
-            let typ: SceneType = match name.try_into() {
-                Ok(t) => t,
-                Err(err) => panic!("Cannot parse demo type: {}", err),
-            };
-
-            (typ, m)
-        }
-        _ => unimplemented!(),
-    };
+    let input = matches.value_of(INPUT).expect("No scene file given!");
 
     let verbose = matches.is_present(VERBOSE);
 
@@ -96,15 +85,6 @@ fn create_config() -> MainConfig {
         Ok(integrator) => integrator,
         Err(err) => panic!("Cannot parse integrator backend: {}", err),
     };
-    let input = match demo_type {
-        SceneType::CustomScene => Some(
-            matches
-                .value_of(INPUT)
-                .expect("No input file given")
-                .to_string(),
-        ),
-        _ => None,
-    };
 
     let output = if let Some(o) = matches.value_of(OUTPUT) {
         o.to_string()
@@ -129,11 +109,10 @@ fn create_config() -> MainConfig {
         render_config,
         verbose,
         live,
-        input,
+        input: input.to_owned(),
         output,
         pixel_type,
         integrator_type,
-        demo_type,
     }
 }
 
@@ -142,32 +121,17 @@ struct MainConfig {
     pub render_config: RenderConfig,
     pub verbose: bool,
     pub live: bool,
-    pub input: Option<String>,
+    pub input: String,
     pub output: Option<String>,
     pub pixel_type: PixelType,
     pub integrator_type: IntegratorType,
-    pub demo_type: SceneType,
 }
 
 impl MainConfig {
     fn create_renderer(&self) -> Renderer {
-        let scene = match self.demo_type {
-            SceneType::SphereScene => SphereScene::create(self.render_config.resolution),
-            SceneType::CornellScene => CornellScene::create(self.render_config.resolution),
-            SceneType::DebugScene => DebugScene::create(self.render_config.resolution),
-            SceneType::DebugSphereScene => DebugSphereScene::create(self.render_config.resolution),
-            SceneType::CustomScene => {
-                if let Some(path) = &self.input {
-                    let content = std::fs::read_to_string(path).expect("Could not read scene file");
-                    let mut s: Scene =
-                        from_str(content.as_str()).expect("Could not parse scene file");
-                    s.collect_emitters();
-                    s
-                } else {
-                    panic!("No input scene file given!")
-                }
-            }
-        };
+        let content = std::fs::read_to_string(&self.input).expect("Could not read scene file");
+        let mut scene: Scene = from_str(content.as_str()).expect("Could not parse scene file");
+        scene.init();
 
         let integrator: Arc<dyn Integrator> = match self.integrator_type {
             IntegratorType::Debug => Arc::new(DebugNormals),
@@ -224,17 +188,15 @@ impl MainConfig {
         let mut renderer = self.create_renderer();
 
         #[cfg(feature = "live-window")]
-        {
-            if self.live {
-                let mut window = RenderWindow::new("Rust-V".to_string(), renderer)?;
-                window.render();
+        if self.live {
+            let mut window = RenderWindow::new("Rust-V".to_string(), renderer)?;
+            window.render();
 
-                if self.verbose {
-                    println!("Closed window");
-                }
-
-                return Ok(());
+            if self.verbose {
+                println!("Closed window");
             }
+
+            return Ok(());
         }
 
         let job = renderer.render();
@@ -283,31 +245,6 @@ impl TryInto<IntegratorType> for &str {
             "path" => Ok(IntegratorType::Path),
             "pathenhanced" => Ok(IntegratorType::PathEnhanced),
             "spectralpath" => Ok(IntegratorType::SpectralPath),
-            _ => Err(self.to_string()),
-        }
-    }
-}
-
-/// Represents a scene type to load.
-#[derive(Debug, Clone)]
-pub enum SceneType {
-    SphereScene,
-    CornellScene,
-    DebugScene,
-    DebugSphereScene,
-    CustomScene,
-}
-
-impl TryInto<SceneType> for &str {
-    type Error = String;
-
-    fn try_into(self) -> Result<SceneType, Self::Error> {
-        match self.to_lowercase().as_str() {
-            "spheres" => Ok(SceneType::SphereScene),
-            "cornell" => Ok(SceneType::CornellScene),
-            "debug" => Ok(SceneType::DebugScene),
-            "debugsphere" => Ok(SceneType::DebugSphereScene),
-            "scene" => Ok(SceneType::CustomScene),
             _ => Err(self.to_string()),
         }
     }

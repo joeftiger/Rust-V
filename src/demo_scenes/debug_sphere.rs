@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::bxdf::{BSDFType, FresnelSpecular, LambertianReflection, OrenNayar, BSDF};
+use crate::bxdf::{FresnelSpecular, LambertianReflection, OrenNayar, BSDF};
 use crate::camera::{CameraType, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
 use crate::objects::{Emitter, Receiver, SceneObject};
@@ -37,19 +37,19 @@ fn ground() -> SceneObject {
     let max = Vec3::new(100.0, 0.0, 100.0);
     let cube = Aabb::new(min, max);
 
-    let on = OrenNayar::new(Spectrum::white(), SIGMA);
-    let bsdf = BSDF::new(vec![BSDFType::OrenNayar(on)]);
+    let oren_nayar = OrenNayar::new(Spectrum::white(), SIGMA);
+    let bxdf = Box::new(oren_nayar);
 
-    let receiver = Arc::new(Receiver::new(Box::new(cube), bsdf));
+    let bsdf = BSDF::new(vec![bxdf]);
+    let geometry = Box::new(cube);
+
+    let receiver = Arc::new(Receiver::new(geometry, bsdf));
 
     SceneObject::Receiver(receiver)
 }
 
 fn prism() -> SceneObject {
-    let file_name = "./meshes/prism.obj";
-    let (model, _) = tobj::load_obj(file_name, true).expect("Could not load bunny file");
-
-    let mut prism = Mesh::load(&model[0].mesh, ShadingMode::Flat);
+    let mut prism = Mesh::load("./meshes/prism.obj".to_string(), ShadingMode::Flat);
 
     {
         let bounds = prism.bounds();
@@ -70,10 +70,12 @@ fn prism() -> SceneObject {
         RefractiveType::Air,
         RefractiveType::Sapphire,
     );
+    let bxdf = Box::new(specular);
 
-    let bsdf = BSDF::new(vec![BSDFType::SFresnel(specular)]);
+    let bsdf = BSDF::new(vec![bxdf]);
+    let geometry = Box::new(prism);
 
-    let receiver = Arc::new(Receiver::new(Box::new(prism), bsdf));
+    let receiver = Arc::new(Receiver::new(geometry, bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -82,12 +84,9 @@ fn light_bulb() -> SceneObject {
     let light_bulb = Sphere::new(center, 0.5);
 
     let bsdf = BSDF::empty();
+    let geometry = Box::new(light_bulb);
 
-    let emitter = Arc::new(Emitter::new(
-        Box::new(light_bulb),
-        bsdf,
-        Spectrum::white() * 2.0,
-    ));
+    let emitter = Arc::new(Emitter::new(geometry, bsdf, Spectrum::white() * 2.0));
     SceneObject::Emitter(emitter)
 }
 
@@ -98,23 +97,21 @@ fn light_bulb_rectifier() -> SceneObject {
 
     let rectifier = Cylinder::new((left_end, right_end), 0.51);
 
-    let bsdf = BSDF::new(vec![BSDFType::LReflection(LambertianReflection::new(
-        Spectrum::grey(),
-    ))]);
+    let lambertian = LambertianReflection::new(Spectrum::grey());
+    let bxdf = Box::new(lambertian);
 
-    let receiver = Arc::new(Receiver::new(Box::new(rectifier), bsdf));
+    let bsdf = BSDF::new(vec![bxdf]);
+    let geometry = Box::new(rectifier);
+
+    let receiver = Arc::new(Receiver::new(geometry, bsdf));
     SceneObject::Receiver(receiver)
 }
 
 fn global_light() -> SceneObject {
-    let point = Point(Vec3::unit_y() * 100.0);
+    let point = Box::new(Point(Vec3::unit_y() * 100.0));
     let bsdf = BSDF::empty();
 
-    let emitter = Arc::new(Emitter::new(
-        Box::new(point),
-        bsdf,
-        Spectrum::white() * 0.01,
-    ));
+    let emitter = Arc::new(Emitter::new(point, bsdf, Spectrum::white() * 0.01));
     SceneObject::Emitter(emitter)
 }
 

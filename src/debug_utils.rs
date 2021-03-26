@@ -5,22 +5,22 @@ use utility::floats::BIG_EPSILON;
 
 pub use utility::floats::{in_range, in_range_incl, in_range_incl_left};
 
-#[inline(always)]
+#[inline]
 pub fn is_finite(v: &Vec3) -> bool {
     v.x.is_finite() && v.y.is_finite() && v.z.is_finite()
 }
 
-#[inline(always)]
+#[inline]
 pub fn is_not_nan(v: &Vec3) -> bool {
     !(v.x.is_nan() && v.y.is_nan() && v.z.is_nan())
 }
 
-#[inline(always)]
+#[inline]
 pub fn is_normalized(v: &Vec3) -> bool {
     in_range(v.mag(), 1.0 - BIG_EPSILON, 1.0 + BIG_EPSILON)
 }
 
-#[inline(always)]
+#[inline]
 pub fn within_01(v: &Vec2) -> bool {
     in_range_incl_left(v.x, 0.0, 1.0) && in_range_incl_left(v.y, 0.0, 1.0)
 }

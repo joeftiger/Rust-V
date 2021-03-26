@@ -2,7 +2,7 @@
 #![allow(unused_variables)]
 
 use crate::bxdf::{
-    BSDFType, FresnelType, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
+    FresnelType, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
 };
 use crate::camera::{CameraType, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY};
@@ -41,9 +41,12 @@ fn ground() -> SceneObject {
     let cube = Aabb::new(min, max);
 
     let lambertian = LambertianReflection::new(Spectrum::white());
-    let bsdf = BSDF::new(vec![BSDFType::LReflection(lambertian)]);
+    let bxdf = Box::new(lambertian);
 
-    let receiver = Arc::new(Receiver::new(Box::new(cube), bsdf));
+    let bsdf = BSDF::new(vec![bxdf]);
+    let geometry = Box::new(cube);
+
+    let receiver = Arc::new(Receiver::new(geometry, bsdf));
 
     SceneObject::Receiver(receiver)
 }
@@ -53,9 +56,12 @@ fn sky() -> SceneObject {
     let sphere = Sphere::new(center, SKY_RADIUS);
 
     let lambertian = LambertianReflection::new(Spectrum::blue() + Spectrum::white() * 0.2);
-    let bsdf = BSDF::new(vec![BSDFType::LReflection(lambertian)]);
+    let bxdf = Box::new(lambertian);
 
-    let receiver = Arc::new(Receiver::new(Box::new(sphere), bsdf));
+    let bsdf = BSDF::new(vec![bxdf]);
+    let geometry = Box::new(sphere);
+
+    let receiver = Arc::new(Receiver::new(geometry, bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -90,18 +96,24 @@ fn random_bsdf(color: Spectrum) -> (bool, BSDF) {
             BSDF::empty()
         } else if rand < 0.8 {
             let specular = SpecularReflection::new(Spectrum::new_const(1.0), FresnelType::NoOp);
-            BSDF::new(vec![BSDFType::SReflection(specular)])
+            let bxdf = Box::new(specular);
+
+            BSDF::new(vec![bxdf])
         } else {
-            let transmission = SpecularTransmission::new(
+            let specular = SpecularTransmission::new(
                 Spectrum::new_const(1.0),
                 RefractiveType::Air,
                 RefractiveType::Glass,
             );
-            BSDF::new(vec![BSDFType::STransmission(transmission)])
+            let bxdf = Box::new(specular);
+
+            BSDF::new(vec![bxdf])
         }
     } else {
         let lambertian = LambertianReflection::new(color);
-        BSDF::new(vec![BSDFType::LReflection(lambertian)])
+        let bxdf = Box::new(lambertian);
+
+        BSDF::new(vec![bxdf])
     };
 
     (out, bsdf)
@@ -114,8 +126,9 @@ fn create_emitter() -> SceneObject {
     let bsdf = BSDF::empty();
     let mut emission = Spectrum::white() + Spectrum::green() + Spectrum::red();
     emission /= 2.0;
+    let geometry = Box::new(point);
 
-    let emitter = Arc::new(Emitter::new(Box::new(point), bsdf, emission));
+    let emitter = Arc::new(Emitter::new(geometry, bsdf, emission));
     SceneObject::Emitter(emitter)
 }
 
@@ -126,15 +139,16 @@ fn create_scene() -> Scene {
         for _ in 0..NUM_SPHERES_IN_DIMENSION {
             let center = random_pos();
             let sphere = Sphere::new(center, RADIUS);
+            let geometry = Box::new(sphere);
 
             let color = random_color();
             let (emitting, bsdf) = random_bsdf(color);
 
             let obj = if emitting {
-                let emitter = Arc::new(Emitter::new(Box::new(sphere), bsdf, color * 2.0));
+                let emitter = Arc::new(Emitter::new(geometry, bsdf, color * 2.0));
                 SceneObject::Emitter(emitter)
             } else {
-                let receiver = Arc::new(Receiver::new(Box::new(sphere), bsdf));
+                let receiver = Arc::new(Receiver::new(geometry, bsdf));
                 SceneObject::Receiver(receiver)
             };
 

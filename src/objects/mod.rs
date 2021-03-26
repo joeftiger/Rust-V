@@ -1,15 +1,17 @@
-use geometry::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use std::sync::Arc;
 
-mod emitter;
-mod point;
-mod receiver;
-mod sphere;
+use serde::{Deserialize, Serialize};
+
+pub use emitter::*;
+use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
+pub use receiver::*;
 
 use crate::bxdf::BSDF;
-pub use emitter::*;
-pub use receiver::*;
-use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+
+mod emitter;
+mod receiver;
+mod sampleables;
+pub use sampleables::*;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum SceneObject {

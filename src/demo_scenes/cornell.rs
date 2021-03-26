@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::bxdf::{BSDFType, FresnelSpecular, OrenNayar, BSDF};
+use crate::bxdf::{FresnelSpecular, OrenNayar, BSDF};
 use crate::camera::{CameraType, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
 use crate::objects::{Emitter, Receiver, SceneObject};
@@ -81,10 +81,7 @@ fn create_camera(resolution: UVec2) -> CameraType {
 }
 
 fn create_buddha() -> SceneObject {
-    let file_name = "./meshes/buddha.obj";
-    let (model, _) = tobj::load_obj(file_name, true).expect("Could not load buddha file");
-
-    let mut buddha = Mesh::load(&model[0].mesh, ShadingMode::Phong);
+    let mut buddha = Mesh::load("./meshes/buddha.obj".to_string(), ShadingMode::Phong);
 
     buddha.scale(Vec3::broadcast(3.0));
 
@@ -105,9 +102,12 @@ fn create_buddha() -> SceneObject {
         RefractiveType::Glass,
     );
 
-    let bsdf = BSDF::new(vec![BSDFType::SFresnel(specular)]);
+    let bxdf = Box::new(specular);
 
-    let receiver = Arc::new(Receiver::new(Box::new(buddha), bsdf));
+    let bsdf = BSDF::new(vec![bxdf]);
+    let geometry = Box::new(buddha);
+
+    let receiver = Arc::new(Receiver::new(geometry, bsdf));
 
     SceneObject::Receiver(receiver)
 }
@@ -122,10 +122,13 @@ fn create_sphere() -> SceneObject {
         RefractiveType::Air,
         RefractiveType::Glass,
     );
-    // let reflection = SpecularReflection::new(Spectrum::new_const(1.0), Box::new(FresnelNoOp));
-    let bsdf = BSDF::new(vec![BSDFType::SFresnel(specular)]);
 
-    let receiver = Arc::new(Receiver::new(Box::new(sphere), bsdf));
+    let bxdf = Box::new(specular);
+
+    let bsdf = BSDF::new(vec![bxdf]);
+    let geometry = Box::new(sphere);
+
+    let receiver = Arc::new(Receiver::new(geometry, bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -140,9 +143,13 @@ fn create_bubble() -> SceneObject {
         RefractiveType::Air,
         RefractiveType::Glass,
     );
-    let bsdf = BSDF::new(vec![BSDFType::SFresnel(specular)]);
 
-    let receiver = Arc::new(Receiver::new(Box::new(bubble), bsdf));
+    let bxdf = Box::new(specular);
+
+    let bsdf = BSDF::new(vec![bxdf]);
+    let geometry = Box::new(bubble);
+
+    let receiver = Arc::new(Receiver::new(geometry, bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -161,9 +168,13 @@ fn create_biconvex_lens() -> SceneObject {
         RefractiveType::Air,
         RefractiveType::Glass,
     );
-    let bsdf = BSDF::new(vec![BSDFType::SFresnel(specular)]);
 
-    let receiver = Arc::new(Receiver::new(Box::new(lens), bsdf));
+    let bxdf = Box::new(specular);
+
+    let bsdf = BSDF::new(vec![bxdf]);
+    let geometry = Box::new(lens);
+
+    let receiver = Arc::new(Receiver::new(geometry, bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -193,9 +204,12 @@ fn create_wall(wall: &Wall) -> SceneObject {
     };
 
     let oren_nayar = OrenNayar::new(spectrum, SIGMA);
-    let bsdf = BSDF::new(vec![BSDFType::OrenNayar(oren_nayar)]);
+    let bxdf = Box::new(oren_nayar);
 
-    let receiver = Arc::new(Receiver::new(Box::new(cube), bsdf));
+    let bsdf = BSDF::new(vec![bxdf]);
+    let geometry = Box::new(cube);
+
+    let receiver = Arc::new(Receiver::new(geometry, bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -204,8 +218,9 @@ fn create_emitter() -> SceneObject {
     let sphere = Sphere::new(center, RADIUS);
 
     let bsdf = BSDF::empty();
-
     let emission = Spectrum::white() * 2.0;
-    let emitter = Arc::new(Emitter::new(Box::new(sphere), bsdf, emission));
+    let geometry = Box::new(sphere);
+
+    let emitter = Arc::new(Emitter::new(geometry, bsdf, emission));
     SceneObject::Emitter(emitter)
 }

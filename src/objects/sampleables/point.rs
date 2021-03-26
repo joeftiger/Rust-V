@@ -1,4 +1,5 @@
-use crate::objects::emitter::{Sampleable, SurfaceSample};
+use crate::objects::emitter::SurfaceSample;
+use crate::objects::Sampleable;
 use geometry::Point;
 use ultraviolet::{Vec2, Vec3};
 

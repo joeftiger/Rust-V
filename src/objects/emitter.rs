@@ -1,6 +1,7 @@
 use crate::bxdf::BSDF;
 
 use crate::debug_utils::{is_finite, is_normalized, within_01};
+use crate::objects::Sampleable;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use color::{Color, IndexSpectral};
@@ -13,7 +14,7 @@ use utility::floats::BIG_EPSILON;
 /// emitter also has an emission.
 #[derive(Serialize, Deserialize)]
 pub struct Emitter {
-    geometry: Box<dyn Sampleable>,
+    pub geometry: Box<dyn Sampleable>,
     pub bsdf: BSDF,
     pub emission: Spectrum,
 }
@@ -156,6 +157,9 @@ impl Intersectable for Emitter {
     }
 }
 
+#[typetag::serde]
+impl Geometry for Emitter {}
+
 /// An emitter sample consists of
 /// * A `radiance` of the emitter
 /// * An `incident` vector (normalized) towards the emitter
@@ -295,28 +299,4 @@ impl SurfaceSample {
 
         Self { point, normal, pdf }
     }
-}
-
-/// Allows geometries to be sampled for a surface point.
-#[typetag::serde]
-pub trait Sampleable: Geometry + Send + Sync {
-    /// Returns the surface area of this object.
-    ///
-    /// # Returns
-    /// * The surface area
-    fn surface_area(&self) -> f32;
-
-    /// Samples the surface from the given point in the "solid angle" form.
-    ///
-    /// # Constraints
-    /// * `point` - All values should be finite (neither infinite nor `NaN`).
-    /// * `sample` - ALl values should be inside `[0, 1)`.
-    ///
-    /// # Arguments
-    /// * `point` - The point at which we look at the object
-    /// * `sample` - A random sample
-    ///
-    /// # Returns
-    /// * A surface sample
-    fn sample_surface(&self, origin: &Vec3, sample: &Vec2) -> SurfaceSample;
 }
