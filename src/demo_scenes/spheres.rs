@@ -44,9 +44,8 @@ fn ground() -> SceneObject {
     let bxdf = Box::new(lambertian);
 
     let bsdf = BSDF::new(vec![bxdf]);
-    let geometry = Box::new(cube);
 
-    let receiver = Arc::new(Receiver::new(geometry, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(cube), bsdf));
 
     SceneObject::Receiver(receiver)
 }
@@ -59,9 +58,8 @@ fn sky() -> SceneObject {
     let bxdf = Box::new(lambertian);
 
     let bsdf = BSDF::new(vec![bxdf]);
-    let geometry = Box::new(sphere);
 
-    let receiver = Arc::new(Receiver::new(geometry, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(sphere), bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -126,9 +124,8 @@ fn create_emitter() -> SceneObject {
     let bsdf = BSDF::empty();
     let mut emission = Spectrum::white() + Spectrum::green() + Spectrum::red();
     emission /= 2.0;
-    let geometry = Box::new(point);
 
-    let emitter = Arc::new(Emitter::new(geometry, bsdf, emission));
+    let emitter = Arc::new(Emitter::new(Box::new(point), bsdf, emission));
     SceneObject::Emitter(emitter)
 }
 
@@ -139,16 +136,15 @@ fn create_scene() -> Scene {
         for _ in 0..NUM_SPHERES_IN_DIMENSION {
             let center = random_pos();
             let sphere = Sphere::new(center, RADIUS);
-            let geometry = Box::new(sphere);
 
             let color = random_color();
             let (emitting, bsdf) = random_bsdf(color);
 
             let obj = if emitting {
-                let emitter = Arc::new(Emitter::new(geometry, bsdf, color * 2.0));
+                let emitter = Arc::new(Emitter::new(Box::new(sphere), bsdf, color * 2.0));
                 SceneObject::Emitter(emitter)
             } else {
-                let receiver = Arc::new(Receiver::new(geometry, bsdf));
+                let receiver = Arc::new(Receiver::new(Box::new(sphere), bsdf));
                 SceneObject::Receiver(receiver)
             };
 

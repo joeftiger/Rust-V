@@ -33,6 +33,7 @@ impl SpecularReflection {
     }
 }
 
+#[typetag::serde]
 impl BxDF for SpecularReflection {
     fn get_type(&self) -> Type {
         Type::REFLECTION | Type::SPECULAR
@@ -107,6 +108,7 @@ impl SpecularTransmission {
     }
 }
 
+#[typetag::serde]
 impl BxDF for SpecularTransmission {
     fn get_type(&self) -> Type {
         Type::SPECULAR | Type::TRANSMISSION
@@ -197,6 +199,7 @@ impl FresnelSpecular {
     }
 }
 
+#[typetag::serde]
 impl BxDF for FresnelSpecular {
     fn get_type(&self) -> Type {
         Type::REFLECTION | Type::SPECULAR | Type::TRANSMISSION

@@ -3,8 +3,6 @@ mod fresnel;
 mod lambertian;
 mod oren_nayar;
 mod specular;
-mod types;
-pub use types::*;
 
 pub use bsdf::BSDF;
 
@@ -348,6 +346,7 @@ where
 /// The common base shared between BRDFs and BTDFs.
 /// Provides methods for evaluating and sampling the distribution function for pairs of directions
 /// at an intersection.
+#[typetag::serde]
 pub trait BxDF: Send + Sync {
     /// Returns the type of this bxdf.
     ///
@@ -458,7 +457,7 @@ pub trait BxDF: Send + Sync {
 /// some `BxDF` with a `scale`.
 #[derive(Serialize, Deserialize)]
 pub struct ScaledBxDF {
-    bxdf: BSDFType,
+    bxdf: Box<dyn BxDF>,
     scale: Spectrum,
 }
 
@@ -471,11 +470,12 @@ impl ScaledBxDF {
     ///
     /// # Returns
     /// * Self
-    pub fn new(bxdf: BSDFType, scale: Spectrum) -> Self {
+    pub fn new(bxdf: Box<dyn BxDF>, scale: Spectrum) -> Self {
         Self { bxdf, scale }
     }
 }
 
+#[typetag::serde]
 impl BxDF for ScaledBxDF {
     fn get_type(&self) -> Type {
         self.bxdf.get_type()

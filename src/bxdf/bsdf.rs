@@ -1,4 +1,4 @@
-use crate::bxdf::{same_hemisphere, world_to_bxdf, BSDFType, BxDF, BxDFSample, Type};
+use crate::bxdf::{same_hemisphere, world_to_bxdf, BxDF, BxDFSample, Type};
 use crate::debug_utils::is_normalized;
 use crate::sampler::Sample;
 use crate::Spectrum;
@@ -7,7 +7,7 @@ use ultraviolet::Vec3;
 
 #[derive(Serialize, Deserialize)]
 pub struct BSDF {
-    bxdfs: Vec<BSDFType>,
+    bxdfs: Vec<Box<dyn BxDF>>,
 }
 
 impl BSDF {
@@ -15,7 +15,7 @@ impl BSDF {
         Self::new(vec![])
     }
 
-    pub fn new(bxdfs: Vec<BSDFType>) -> Self {
+    pub fn new(bxdfs: Vec<Box<dyn BxDF>>) -> Self {
         Self { bxdfs }
     }
 
@@ -31,14 +31,20 @@ impl BSDF {
         self.bxdfs.iter().filter(|bxdf| bxdf.is_type(t)).count()
     }
 
-    fn random_matching_bxdf(&self, t: Type, rand: f32) -> Option<&BSDFType> {
+    fn random_matching_bxdf(&self, t: Type, rand: f32) -> Option<&dyn BxDF> {
         let count = self.num_types(t);
         if count == 0 {
             return None;
         }
 
         let index = (rand * count as f32) as usize;
-        self.bxdfs.iter().filter(|bxdf| bxdf.is_type(t)).nth(index)
+        self.bxdfs.iter()
+            .filter_map(|bxdf| if bxdf.is_type(t) {
+                Some(bxdf.as_ref())
+            } else {
+                None
+            })
+            .nth(index)
     }
 
     pub fn evaluate(

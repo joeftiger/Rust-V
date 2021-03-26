@@ -41,9 +41,8 @@ fn ground() -> SceneObject {
     let bxdf = Box::new(oren_nayar);
 
     let bsdf = BSDF::new(vec![bxdf]);
-    let geometry = Box::new(cube);
 
-    let receiver = Arc::new(Receiver::new(geometry, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(cube), bsdf));
 
     SceneObject::Receiver(receiver)
 }
@@ -73,9 +72,8 @@ fn prism() -> SceneObject {
     let bxdf = Box::new(specular);
 
     let bsdf = BSDF::new(vec![bxdf]);
-    let geometry = Box::new(prism);
 
-    let receiver = Arc::new(Receiver::new(geometry, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(prism), bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -84,9 +82,12 @@ fn light_bulb() -> SceneObject {
     let light_bulb = Sphere::new(center, 0.5);
 
     let bsdf = BSDF::empty();
-    let geometry = Box::new(light_bulb);
 
-    let emitter = Arc::new(Emitter::new(geometry, bsdf, Spectrum::white() * 2.0));
+    let emitter = Arc::new(Emitter::new(
+        Box::new(light_bulb),
+        bsdf,
+        Spectrum::white() * 2.0,
+    ));
     SceneObject::Emitter(emitter)
 }
 
@@ -96,22 +97,24 @@ fn light_bulb_rectifier() -> SceneObject {
     let right_end = position + Vec3::new(2.0, -0.5, 0.0);
 
     let rectifier = Cylinder::new((left_end, right_end), 0.51);
-
     let lambertian = LambertianReflection::new(Spectrum::grey());
     let bxdf = Box::new(lambertian);
 
     let bsdf = BSDF::new(vec![bxdf]);
-    let geometry = Box::new(rectifier);
 
-    let receiver = Arc::new(Receiver::new(geometry, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(rectifier), bsdf));
     SceneObject::Receiver(receiver)
 }
 
 fn global_light() -> SceneObject {
-    let point = Box::new(Point(Vec3::unit_y() * 100.0));
+    let point = Point(Vec3::unit_y() * 100.0);
     let bsdf = BSDF::empty();
 
-    let emitter = Arc::new(Emitter::new(point, bsdf, Spectrum::white() * 0.01));
+    let emitter = Arc::new(Emitter::new(
+        Box::new(point),
+        bsdf,
+        Spectrum::white() * 0.01,
+    ));
     SceneObject::Emitter(emitter)
 }
 

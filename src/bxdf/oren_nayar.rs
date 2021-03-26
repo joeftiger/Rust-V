@@ -37,6 +37,7 @@ impl OrenNayar {
     }
 }
 
+#[typetag::serde]
 impl BxDF for OrenNayar {
     fn get_type(&self) -> Type {
         Type::DIFFUSE | Type::REFLECTION

@@ -48,9 +48,8 @@ fn ground() -> SceneObject {
     let bxdf = Box::new(lambertian);
 
     let bsdf = BSDF::new(vec![bxdf]);
-    let geometry = Box::new(cube);
 
-    let receiver = Arc::new(Receiver::new(geometry, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(cube), bsdf));
 
     SceneObject::Receiver(receiver)
 }
@@ -65,9 +64,8 @@ fn cylinder() -> SceneObject {
     let bxdf = Box::new(specular);
 
     let bsdf = BSDF::new(vec![bxdf]);
-    let geometry = Box::new(cylinder);
 
-    let receiver = Arc::new(Receiver::new(geometry, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(cylinder), bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -83,9 +81,8 @@ fn sphere() -> SceneObject {
     let bxdf = Box::new(specular);
 
     let bsdf = BSDF::new(vec![bxdf]);
-    let geometry = Box::new(sphere);
 
-    let receiver = Arc::new(Receiver::new(geometry, bsdf));
+    let receiver = Arc::new(Receiver::new(Box::new(sphere), bsdf));
     SceneObject::Receiver(receiver)
 }
 
@@ -95,9 +92,12 @@ fn sphere_emitter() -> SceneObject {
     let sphere = Sphere::new(center, RADIUS);
 
     let bsdf = BSDF::empty();
-    let geometry = Box::new(sphere);
 
-    let emitter = Arc::new(Emitter::new(geometry, bsdf, Spectrum::new_const(1.0)));
+    let emitter = Arc::new(Emitter::new(
+        Box::new(sphere),
+        bsdf,
+        Spectrum::new_const(1.0),
+    ));
     SceneObject::Emitter(emitter)
 }
 
@@ -106,9 +106,11 @@ fn create_emitter() -> SceneObject {
     let point = Point(position);
 
     let bsdf = BSDF::empty();
-    let geometry = Box::new(point);
-
-    let emitter = Arc::new(Emitter::new(geometry, bsdf, Spectrum::new_const(0.1)));
+    let emitter = Arc::new(Emitter::new(
+        Box::new(point),
+        bsdf,
+        Spectrum::new_const(0.1),
+    ));
     SceneObject::Emitter(emitter)
 }
 

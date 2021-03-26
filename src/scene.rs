@@ -47,18 +47,6 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn init(&mut self) {
-        self.lights.clear();
-
-        for s in &self.objects {
-            if let SceneObject::Emitter(e) = s {
-                self.lights.push(e.clone());
-            }
-        }
-
-        self.collect_emitters();
-    }
-
     /// Adds the given object to the scene.
     ///
     /// If the object is an emitter, it will also be added to the lights.
@@ -81,7 +69,7 @@ impl Scene {
     }
 
     /// Recollects all emitters into a cached list.
-    fn collect_emitters(&mut self) {
+    pub fn collect_emitters(&mut self) {
         self.lights.clear();
 
         for o in &self.objects {

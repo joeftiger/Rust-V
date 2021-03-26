@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// A receiver consists of a geometry and a BSDF.
 #[derive(Serialize, Deserialize)]
 pub struct Receiver {
-    pub geometry: Box<dyn Geometry>,
+    geometry: Box<dyn Geometry>,
     pub bsdf: BSDF,
 }
 

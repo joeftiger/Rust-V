@@ -24,6 +24,7 @@ impl LambertianReflection {
     }
 }
 
+#[typetag::serde]
 impl BxDF for LambertianReflection {
     fn get_type(&self) -> Type {
         Type::DIFFUSE | Type::REFLECTION
@@ -57,6 +58,7 @@ impl LambertianTransmission {
     }
 }
 
+#[typetag::serde]
 impl BxDF for LambertianTransmission {
     fn get_type(&self) -> Type {
         Type::DIFFUSE | Type::TRANSMISSION

@@ -131,7 +131,7 @@ impl MainConfig {
     fn create_renderer(&self) -> Renderer {
         let content = std::fs::read_to_string(&self.input).expect("Could not read scene file");
         let mut scene: Scene = from_str(content.as_str()).expect("Could not parse scene file");
-        scene.init();
+        scene.collect_emitters();
 
         let integrator: Arc<dyn Integrator> = match self.integrator_type {
             IntegratorType::Debug => Arc::new(DebugNormals),
