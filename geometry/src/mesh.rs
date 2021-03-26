@@ -1,13 +1,13 @@
 use crate::bvh::Tree;
 use crate::debug_util::{is_finite, is_normalized};
 use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
-use serde::{Deserialize, Serialize, de, Deserializer, Serializer};
+use serde::de::{Error, MapAccess, Visitor};
+use serde::ser::SerializeStruct;
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use std::fmt;
 use std::mem::swap;
 use ultraviolet::{Mat3, Rotor3, Vec3};
 use utility::floats::fast_clamp;
-use serde::de::{Visitor, SeqAccess, MapAccess, Error};
-use std::fmt;
-use serde::ser::SerializeStruct;
 
 /// The shading mode defines the shading of normals. In `Flat` mode, the surface of triangles will
 /// appear flat. In `Phong` however, they will be interpolated to create a smooth looking surface.
@@ -343,7 +343,8 @@ impl Mesh {
     pub fn load(file: String, shading_mode: ShadingMode) -> Mesh {
         let mesh = &tobj::load_obj(file, true)
             .expect("Could not load mesh file")
-            .0[0].mesh;
+            .0[0]
+            .mesh;
 
         let mut bounds = Aabb::empty();
 
@@ -353,11 +354,7 @@ impl Mesh {
             let y = x + 1;
             let z = x + 2;
 
-            let position = Vec3::new(
-                mesh.positions[x],
-                mesh.positions[y],
-                mesh.positions[z],
-            );
+            let position = Vec3::new(mesh.positions[x], mesh.positions[y], mesh.positions[z]);
 
             bounds.min = bounds.min.min_by_component(position);
             bounds.max = bounds.max.max_by_component(position);
@@ -365,11 +362,7 @@ impl Mesh {
             let vertex = if mesh.normals.is_empty() {
                 Vertex::new_pos(position)
             } else {
-                let normal = Vec3::new(
-                    mesh.normals[x],
-                    mesh.normals[y],
-                    mesh.normals[z],
-                );
+                let normal = Vec3::new(mesh.normals[x], mesh.normals[y], mesh.normals[z]);
 
                 Vertex::new(position, normal)
             };
@@ -610,10 +603,15 @@ impl Intersectable for Mesh {
     }
 }
 
+#[typetag::serde]
+impl Geometry for Mesh {}
+
 impl Serialize for Mesh {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
-        S: Serializer {
-        let mut state = serializer.serialize_struct("Mesh", 2)?;
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Mesh", 5)?;
         state.serialize_field("Vertices", &self.vertices)?;
         state.serialize_field("Normals", &self.normals)?;
         state.serialize_field("Triangles", &self.triangles)?;
@@ -625,8 +623,10 @@ impl Serialize for Mesh {
 }
 
 impl<'de> Deserialize<'de> for Mesh {
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error> where
-        D: Deserializer<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    where
+        D: Deserializer<'de>,
+    {
         enum Field {
             Vertices,
             Normals,
@@ -636,19 +636,25 @@ impl<'de> Deserialize<'de> for Mesh {
         }
 
         impl<'de> Deserialize<'de> for Field {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where
-                D: Deserializer<'de> {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
                 struct FieldVisitor;
 
                 impl<'de> Visitor<'de> for FieldVisitor {
                     type Value = Field;
 
                     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                        formatter.write_str("`File` or `ShadingMode`")
+                        formatter.write_str(
+                            "`Vertices`, `Normals`, `Triangles`, `Bounds` or `ShadingMode`",
+                        )
                     }
 
-                    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> where
-                        E: Error, {
+                    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+                    where
+                        E: Error,
+                    {
                         match v {
                             "Vertices" => Ok(Field::Vertices),
                             "Normals" => Ok(Field::Normals),
@@ -673,16 +679,10 @@ impl<'de> Deserialize<'de> for Mesh {
                 formatter.write_str("struct Mesh")
             }
 
-            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error> where
-                A: SeqAccess<'de>, {
-                let file: String = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                let shading_mode = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(0, &self))?;
-
-                Ok(Mesh::load(file, shading_mode))
-            }
-
-            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error> where
-                A: MapAccess<'de>, {
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
                 let mut vertices = None;
                 let mut normals = None;
                 let mut triangles = None;
@@ -690,50 +690,66 @@ impl<'de> Deserialize<'de> for Mesh {
                 let mut shading_mode = None;
                 while let Some(key) = map.next_key()? {
                     match key {
-                        Field::Vertices => if vertices.is_some() {
-                            return Err(de::Error::duplicate_field("Vertices"));
-                        } else {
-                            vertices = Some(map.next_value()?);
-                        },
-                        Field::Normals => if normals.is_some() {
-                            return Err(de::Error::duplicate_field("Normals"));
-                        } else {
-                            normals = Some(map.next_value()?);
-                        },
-                        Field::Triangles => if triangles.is_some() {
-                            return Err(de::Error::duplicate_field("Triangles"));
-                        } else {
-                            triangles = Some(map.next_value()?);
-                        },
-                        Field::Bounds => if bounds.is_some() {
-                            return Err(de::Error::duplicate_field("Bounds"));
-                        } else {
-                            bounds = Some(map.next_value()?);
-                        },
-                        Field::ShadingMode => if shading_mode.is_some() {
-                            return Err(de::Error::duplicate_field("ShadingMode"));
-                        } else {
-                            shading_mode = Some(map.next_value()?);
-                        },
+                        Field::Vertices => {
+                            if vertices.is_some() {
+                                return Err(de::Error::duplicate_field("Vertices"));
+                            } else {
+                                vertices = Some(map.next_value()?);
+                            }
+                        }
+                        Field::Normals => {
+                            if normals.is_some() {
+                                return Err(de::Error::duplicate_field("Normals"));
+                            } else {
+                                normals = Some(map.next_value()?);
+                            }
+                        }
+                        Field::Triangles => {
+                            if triangles.is_some() {
+                                return Err(de::Error::duplicate_field("Triangles"));
+                            } else {
+                                triangles = Some(map.next_value()?);
+                            }
+                        }
+                        Field::Bounds => {
+                            if bounds.is_some() {
+                                return Err(de::Error::duplicate_field("Bounds"));
+                            } else {
+                                bounds = Some(map.next_value()?);
+                            }
+                        }
+                        Field::ShadingMode => {
+                            if shading_mode.is_some() {
+                                return Err(de::Error::duplicate_field("ShadingMode"));
+                            } else {
+                                shading_mode = Some(map.next_value()?);
+                            }
+                        }
                     }
                 }
                 let vertices = vertices.ok_or_else(|| de::Error::invalid_length(0, &self))?;
                 let normals = normals.ok_or_else(|| de::Error::invalid_length(0, &self))?;
                 let triangles = triangles.ok_or_else(|| de::Error::invalid_length(0, &self))?;
                 let bounds = bounds.ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                let shading_mode = shading_mode.ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                let shading_mode =
+                    shading_mode.ok_or_else(|| de::Error::invalid_length(0, &self))?;
 
-                Ok(Mesh::new(vertices, normals, triangles, bounds, shading_mode))
+                Ok(Mesh::new(
+                    vertices,
+                    normals,
+                    triangles,
+                    bounds,
+                    shading_mode,
+                ))
             }
         }
 
-        const FIELDS : &[&str] = &["File", "ShadingMode"];
-        deserializer.deserialize_struct("Mesh", FIELDS, MeshVisitor).map(|mut m| {
-            m.build_bvh();
-            m
-        })
+        const FIELDS: &[&str] = &["Vertices", "Normals", "Triangles", "Bounds", "ShadingMode"];
+        deserializer
+            .deserialize_struct("Mesh", FIELDS, MeshVisitor)
+            .map(|mut m| {
+                m.build_bvh();
+                m
+            })
     }
 }
-
-#[typetag::serde]
-impl Geometry for Mesh {}

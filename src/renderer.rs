@@ -232,9 +232,16 @@ impl Renderer {
     /// # Returns
     /// * The computed pixel spectrum
     fn render_pixel(&mut self, pixel: UVec2) -> Spectrum {
-        debug_assert!(pixel == pixel.min_by_component({
-            self.scene.camera.lock().expect("camera poisoned").resolution()
-        }));
+        debug_assert!(
+            pixel
+                == pixel.min_by_component({
+                    self.scene
+                        .camera
+                        .lock()
+                        .expect("camera poisoned")
+                        .resolution()
+                })
+        );
 
         let ray = {
             let mut camera = self.scene.camera.lock().expect("Camera lock poisoned");
@@ -328,7 +335,11 @@ impl Renderer {
     //noinspection DuplicatedCode
     pub fn get_image_u8(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
         let res = {
-            self.scene.camera.lock().expect("camera poisoned").resolution()
+            self.scene
+                .camera
+                .lock()
+                .expect("camera poisoned")
+                .resolution()
         };
         let mut buffer = ImageBuffer::new(res.x, res.y);
 
@@ -346,7 +357,11 @@ impl Renderer {
     //noinspection DuplicatedCode
     pub fn get_image_u16(&self) -> ImageBuffer<Rgb<u16>, Vec<u16>> {
         let res = {
-            self.scene.camera.lock().expect("camera poisoned").resolution()
+            self.scene
+                .camera
+                .lock()
+                .expect("camera poisoned")
+                .resolution()
         };
         let mut buffer = ImageBuffer::new(res.x, res.y);
 

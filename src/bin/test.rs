@@ -5,7 +5,7 @@ use rust_v::scene::Scene;
 use ultraviolet::UVec2;
 
 fn main() {
-    let scene = DebugSphereScene::create(UVec2::broadcast(512));
+    let scene = DebugSphereScene::create(UVec2::broadcast(2000));
 
     let serialization =
         to_string_pretty(&scene, PrettyConfig::default()).expect("Could not serialize to RON");

@@ -1,7 +1,7 @@
 use crate::ray::Ray;
 #[cfg(test)]
 use crate::UNIT_VECTORS;
-use crate::{Boundable, Container, Intersectable, Intersection, Geometry};
+use crate::{Boundable, Container, Geometry, Intersectable, Intersection};
 use serde::{Deserialize, Serialize};
 use ultraviolet::Vec3;
 use utility::floats::BIG_EPSILON;
@@ -124,7 +124,7 @@ impl Intersectable for Aabb {
         let bias = 1.0 + BIG_EPSILON;
 
         let mut normal = direction * bias / half_size;
-        normal.apply(|f| f.floor());
+        normal.apply(|f| f as i32 as f32);
         normal.normalize();
 
         Some(Intersection::new(point, normal, t, *ray))

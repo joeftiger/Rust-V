@@ -7,21 +7,6 @@ use geometry::Ray;
 use serde::{Deserialize, Serialize};
 use ultraviolet::UVec2;
 
-// #[derive(Serialize, Deserialize)]
-// pub enum CameraType {
-//     Dummy,
-//     Perspective(PerspectiveCamera),
-// }
-//
-// impl Camera for CameraType {
-//     fn primary_ray(&mut self, pixel: UVec2) -> Ray {
-//         match self {
-//             CameraType::Dummy => unimplemented!(),
-//             CameraType::Perspective(c) => c.primary_ray(pixel),
-//         }
-//     }
-// }
-
 #[typetag::serde]
 pub trait Camera: Send + Sync {
     fn resolution(&self) -> UVec2;

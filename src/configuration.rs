@@ -1,5 +1,4 @@
-x
-/// Teh render configuration stores all parameters relevant for the renderer.
+/// The render configuration stores all parameters relevant for the renderer.
 #[derive(Debug, Copy, Clone)]
 pub struct RenderConfig {
     pub depth: u32,
@@ -19,12 +18,7 @@ impl RenderConfig {
     ///
     /// # Returns
     /// * Self
-    pub fn new(
-        depth: u32,
-        passes: u32,
-        block_size: u32,
-        threads: u32,
-    ) -> Self {
+    pub fn new(depth: u32, passes: u32, block_size: u32, threads: u32) -> Self {
         Self {
             depth,
             passes,

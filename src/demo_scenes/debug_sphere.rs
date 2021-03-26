@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::bxdf::{FresnelSpecular, LambertianReflection, OrenNayar, BSDF};
-use crate::camera::{PerspectiveCamera, Camera};
+use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
 use crate::objects::{Emitter, Receiver, SceneObject};
 use crate::refractive_index::RefractiveType;

@@ -38,11 +38,14 @@ impl BSDF {
         }
 
         let index = (rand * count as f32) as usize;
-        self.bxdfs.iter()
-            .filter_map(|bxdf| if bxdf.is_type(t) {
-                Some(bxdf.as_ref())
-            } else {
-                None
+        self.bxdfs
+            .iter()
+            .filter_map(|bxdf| {
+                if bxdf.is_type(t) {
+                    Some(bxdf.as_ref())
+                } else {
+                    None
+                }
             })
             .nth(index)
     }
