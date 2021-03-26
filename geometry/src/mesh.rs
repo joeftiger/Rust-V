@@ -1,11 +1,15 @@
 use crate::bvh::Tree;
 use crate::debug_util::{is_finite, is_normalized};
 use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de, Deserializer, Serializer};
 use std::mem::swap;
 use tobj::Mesh as TobjMesh;
 use ultraviolet::{Mat3, Rotor3, Vec3};
 use utility::floats::fast_clamp;
+use serde::de::{Visitor, SeqAccess, MapAccess};
+use std::error::Error;
+use std::fmt;
+use serde::ser::SerializeStruct;
 
 /// The shading mode defines the shading of normals. In `Flat` mode, the surface of triangles will
 /// appear flat. In `Phong` however, they will be interpolated to create a smooth looking surface.
@@ -340,28 +344,35 @@ impl Mesh {
     ///
     /// # Returns
     /// * Self
-    pub fn load(tobj_mesh: &TobjMesh, shading_mode: ShadingMode) -> Mesh {
+    pub fn load(file: String, shading_mode: ShadingMode) -> Mesh {
+        let mesh = &tobj::load_obj(file, true)
+            .expect("Could not load mesh file")
+            .0[0].mesh;
+
         let mut bounds = Aabb::empty();
 
-        let mut vertices = Vec::with_capacity(tobj_mesh.positions.len());
-        let mut pos_index = 0;
-        while pos_index < tobj_mesh.positions.len() {
+        let mut vertices = Vec::with_capacity(mesh.positions.len());
+        let mut x = 0;
+        while x < mesh.positions.len() {
+            let y = x + 1;
+            let z = x + 2;
+
             let position = Vec3::new(
-                tobj_mesh.positions[pos_index],
-                tobj_mesh.positions[pos_index + 1],
-                tobj_mesh.positions[pos_index + 2],
+                mesh.positions[x],
+                mesh.positions[y],
+                mesh.positions[z],
             );
 
             bounds.min = bounds.min.min_by_component(position);
             bounds.max = bounds.max.max_by_component(position);
 
-            let vertex = if tobj_mesh.normals.is_empty() {
+            let vertex = if mesh.normals.is_empty() {
                 Vertex::new_pos(position)
             } else {
                 let normal = Vec3::new(
-                    tobj_mesh.normals[pos_index],
-                    tobj_mesh.normals[pos_index + 1],
-                    tobj_mesh.normals[pos_index + 2],
+                    mesh.normals[x],
+                    mesh.normals[y],
+                    mesh.normals[z],
                 );
 
                 Vertex::new(position, normal)
@@ -369,19 +380,19 @@ impl Mesh {
 
             vertices.push(vertex);
 
-            pos_index += 3;
+            x += 3;
         }
         vertices.shrink_to_fit();
-        assert_eq!(pos_index, tobj_mesh.positions.len());
+        assert_eq!(x, mesh.positions.len());
 
-        let mut normals = Vec::with_capacity(tobj_mesh.indices.len() / 3);
-        let mut triangles = Vec::with_capacity(tobj_mesh.indices.len() / 3);
+        let mut normals = Vec::with_capacity(mesh.indices.len() / 3);
+        let mut triangles = Vec::with_capacity(mesh.indices.len() / 3);
 
         let mut index = 0;
-        while index < tobj_mesh.indices.len() {
-            let a_index = tobj_mesh.indices[index];
-            let b_index = tobj_mesh.indices[index + 1];
-            let c_index = tobj_mesh.indices[index + 2];
+        while index < mesh.indices.len() {
+            let a_index = mesh.indices[index];
+            let b_index = mesh.indices[index + 1];
+            let c_index = mesh.indices[index + 2];
 
             let p0 = vertices[a_index as usize].position;
             let p1 = vertices[b_index as usize].position;
@@ -399,9 +410,9 @@ impl Mesh {
             index += 3;
         }
         triangles.shrink_to_fit();
-        assert_eq!(index, tobj_mesh.indices.len());
+        assert_eq!(index, mesh.indices.len());
 
-        if tobj_mesh.normals.is_empty() {
+        if mesh.normals.is_empty() {
             triangles.iter().for_each(|t| {
                 let (w0, w1, w2) = Self::angle_weights(
                     vertices[t.a as usize].position,
@@ -600,6 +611,131 @@ impl Intersectable for Mesh {
         }
 
         hits.iter().any(|t| t.intersects(self, ray))
+    }
+}
+
+impl Serialize for Mesh {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
+        S: Serializer {
+        let mut state = serializer.serialize_struct("Mesh", 2)?;
+        state.serialize_field("Vertices", &self.vertices)?;
+        state.serialize_field("Normals", &self.normals)?;
+        state.serialize_field("Triangles", &self.triangles)?;
+        state.serialize_field("Bounds", &self.bounds)?;
+        state.serialize_field("ShadingMode", &self.shading_mode)?;
+
+        state.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for Mesh {
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error> where
+        D: Deserializer<'de> {
+        enum Field {
+            Vertices,
+            Normals,
+            Triangles,
+            Bounds,
+            ShadingMode,
+        }
+
+        impl<'de> Deserialize<'de> for Field {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where
+                D: Deserializer<'de> {
+                struct FieldVisitor;
+
+                impl<'de> Visitor<'de> for FieldVisitor {
+                    type Value = Field;
+
+                    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                        formatter.write_str("`File` or `ShadingMode`")
+                    }
+
+                    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> where
+                        E: Error, {
+                        match v {
+                            "Vertices" => Ok(Field::Vertices),
+                            "Normals" => Ok(Field::Normals),
+                            "Triangles" => Ok(Field::Triangles),
+                            "Bounds" => Ok(Field::Bounds),
+                            "ShadingMode" => Ok(Field::ShadingMode),
+                            _ => Err(de::Error::unknown_field(v, FIELDS)),
+                        }
+                    }
+                }
+
+                deserializer.deserialize_identifier(FieldVisitor)
+            }
+        }
+
+        struct MeshVisitor;
+
+        impl<'de> Visitor<'de> for MeshVisitor {
+            type Value = Mesh;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct Mesh")
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error> where
+                A: SeqAccess<'de>, {
+                let file: String = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                let shading_mode = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(0, &self))?;
+
+                Ok(Mesh::load(file, shading_mode))
+            }
+
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error> where
+                A: MapAccess<'de>, {
+                let mut vertices = None;
+                let mut normals = None;
+                let mut triangles = None;
+                let mut bounds = None;
+                let mut shading_mode = None;
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Vertices => if vertices.is_some() {
+                            return Err(de::Error::duplicate_field("Vertices"));
+                        } else {
+                            vertices = Some(map.next_value()?);
+                        },
+                        Field::Normals => if normals.is_some() {
+                            return Err(de::Error::duplicate_field("Normals"));
+                        } else {
+                            normals = Some(map.next_value()?);
+                        },
+                        Field::Triangles => if triangles.is_some() {
+                            return Err(de::Error::duplicate_field("Triangles"));
+                        } else {
+                            triangles = Some(map.next_value()?);
+                        },
+                        Field::Bounds => if bounds.is_some() {
+                            return Err(de::Error::duplicate_field("Bounds"));
+                        } else {
+                            bounds = Some(map.next_value()?);
+                        },
+                        Field::ShadingMode => if shading_mode.is_some() {
+                            return Err(de::Error::duplicate_field("ShadingMode"));
+                        } else {
+                            shading_mode = Some(map.next_value()?);
+                        },
+                    }
+                }
+                let vertices = vertices.ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                let normals = normals.ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                let triangles = triangles.ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                let bounds = bounds.ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                let shading_mode = shading_mode.ok_or_else(|| de::Error::invalid_length(0, &self))?;
+
+                Ok(Mesh::new(vertices, normals, triangles, bounds, shading_mode))
+            }
+        }
+
+        const FIELDS : &[&str] = &["File", "ShadingMode"];
+        deserializer.deserialize_struct("Mesh", FIELDS, MeshVisitor).map(|mut m| {
+            m.build_bvh();
+            m
+        })
     }
 }
 
