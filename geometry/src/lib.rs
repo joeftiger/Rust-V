@@ -519,6 +519,25 @@ pub trait Intersectable {
 #[typetag::serde]
 pub trait Geometry: Boundable + Intersectable + Send + Sync {}
 
+impl Boundable for Box<dyn Geometry> {
+    fn bounds(&self) -> Aabb {
+        self.as_ref().bounds()
+    }
+}
+
+impl Intersectable for Box<dyn Geometry> {
+    fn intersect(&self, ray: &Ray) -> Option<Intersection> {
+        self.as_ref().intersect(ray)
+    }
+
+    fn intersects(&self, ray: &Ray) -> bool {
+        self.as_ref().intersects(ray)
+    }
+}
+
+#[typetag::serde]
+impl Geometry for Box<dyn Geometry> {}
+
 pub trait ContainerGeometry: Container + Intersectable {
     fn contains_or_intersects(&self, ray: &Ray) -> bool {
         self.contains(&ray.origin) || self.intersects(ray)
