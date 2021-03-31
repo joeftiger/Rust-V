@@ -5,6 +5,7 @@ use crate::objects::Sampleable;
 use geometry::{spherical_to_cartesian_frame_trig, CoordinateSystem, Sphere};
 use std::f32::consts::TAU;
 use ultraviolet::{Vec2, Vec3};
+use utility::floats::fast_max;
 
 fn sample_surface_inside(sphere: &Sphere, sample: &Vec2) -> SurfaceSample {
     let normal = sample_unit_sphere(sample);
@@ -41,7 +42,7 @@ impl Sampleable for Sphere {
             let sin_theta_max = f32::sqrt(r2 / dist_sq);
             let sin_theta_max2 = sin_theta_max * sin_theta_max;
             let inv_sin_theta_max = 1.0 / sin_theta_max;
-            let cos_theta_max = f32::max(0.0, 1.0 - sin_theta_max2).sqrt();
+            let cos_theta_max = fast_max(0.0, 1.0 - sin_theta_max2).sqrt();
 
             let mut cos_theta = (cos_theta_max - 1.0) * sample.x + 1.0;
             let mut sin_theta2 = 1.0 - cos_theta * cos_theta;
@@ -51,14 +52,16 @@ impl Sampleable for Sphere {
                 cos_theta = (1.0 - sin_theta2).sqrt();
             }
 
-            let cos_alpha = sin_theta2 * inv_sin_theta_max
-                + cos_theta
-                    * f32::max(
+            let cos_alpha = sin_theta2.mul_add(
+                inv_sin_theta_max,
+                cos_theta
+                    * fast_max(
                         0.0,
-                        1.0 - sin_theta2 * inv_sin_theta_max * inv_sin_theta_max,
+                        sin_theta2.mul_add(-inv_sin_theta_max * inv_sin_theta_max, 1.0),
                     )
-                    .sqrt();
-            let sin_alpha = f32::max(0.0, 1.0 - cos_alpha * cos_alpha).sqrt();
+                    .sqrt(),
+            );
+            let sin_alpha = fast_max(0.0, cos_alpha.mul_add(-cos_alpha, 1.0)).sqrt();
             let (sin_phi, cos_phi) = f32::sin_cos(sample.y * TAU);
 
             let normal =

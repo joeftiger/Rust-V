@@ -3,11 +3,12 @@ use crate::grid::{Grid, GridBlock};
 use crate::integrator::Integrator;
 use crate::sampler::Sampler;
 use crate::scene::Scene;
-use crate::Spectrum;
+use crate::{Spectrum, RAY_PACKETS};
 use color::Color;
 use image::{ImageBuffer, Rgb};
 use indicatif::ProgressBar;
 use indicatif::ProgressStyle;
+use std::array::IntoIter;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -153,10 +154,11 @@ impl Renderer {
         config: RenderConfig,
     ) -> Self {
         let render_blocks = {
-            let resolution = {
-                let lock = scene.camera.lock().expect("camera lock poisoned");
-                lock.resolution()
-            };
+            let resolution = scene.camera.resolution();
+            // {
+            //     let lock = scene.camera.lock().expect("camera lock poisoned");
+            //     lock.resolution()
+            // };
 
             let grid = Grid::new(&resolution, config.block_size);
             let blocks = grid
@@ -231,24 +233,17 @@ impl Renderer {
     ///
     /// # Returns
     /// * The computed pixel spectrum
-    fn render_pixel(&mut self, pixel: UVec2) -> Spectrum {
-        debug_assert!(
-            pixel
-                == pixel.min_by_component({
-                    self.scene
-                        .camera
-                        .lock()
-                        .expect("camera poisoned")
-                        .resolution()
-                })
-        );
+    fn render_pixel(&mut self, pixel: UVec2) -> [Spectrum; RAY_PACKETS] {
+        debug_assert!(pixel == pixel.min_by_component(self.scene.camera.resolution()));
 
-        let ray = {
-            let mut camera = self.scene.camera.lock().expect("Camera lock poisoned");
-            camera.primary_ray(pixel)
-        };
+        let ray = self.scene.camera.primary_ray(pixel);
 
-        self.integrator.integrate(&self.scene, &ray, &*self.sampler)
+        let mut spectra = [Spectrum::new_const(0.0); RAY_PACKETS];
+        for s in &mut spectra {
+            *s = self.integrator.integrate(&self.scene, &ray, &*self.sampler)
+        }
+
+        spectra
     }
 
     /// Fetch-adds-1 the current progress and returns the associated render block.
@@ -305,15 +300,16 @@ impl Renderer {
                     if let Some(block) = this.clone().try_get_next_block() {
                         let mut lock = block.write().expect("Block is poisoned");
 
-                        lock.pixels.iter_mut().for_each(|px| {
-                            let spectrum = this.render_pixel(px.pixel);
-                            px.add(spectrum);
-                        });
+                        for px in &mut lock.pixels {
+                            for s in IntoIter::new(this.render_pixel(px.pixel)) {
+                                px.add(s)
+                            }
+                        }
 
                         this.progress_bar
                             .lock()
                             .expect("Progress bar is poisoned")
-                            .inc(1);
+                            .inc(RAY_PACKETS as u64);
                     } else {
                         let bar = this.progress_bar.lock().expect("Progress bar poisoned");
                         bar.println(format!(
@@ -334,13 +330,7 @@ impl Renderer {
 
     //noinspection DuplicatedCode
     pub fn get_image_u8(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-        let res = {
-            self.scene
-                .camera
-                .lock()
-                .expect("camera poisoned")
-                .resolution()
-        };
+        let res = self.scene.camera.resolution();
         let mut buffer = ImageBuffer::new(res.x, res.y);
 
         self.render_blocks.iter().for_each(|block| {
@@ -356,13 +346,7 @@ impl Renderer {
 
     //noinspection DuplicatedCode
     pub fn get_image_u16(&self) -> ImageBuffer<Rgb<u16>, Vec<u16>> {
-        let res = {
-            self.scene
-                .camera
-                .lock()
-                .expect("camera poisoned")
-                .resolution()
-        };
+        let res = self.scene.camera.resolution();
         let mut buffer = ImageBuffer::new(res.x, res.y);
 
         self.render_blocks.iter().for_each(|block| {

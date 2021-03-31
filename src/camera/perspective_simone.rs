@@ -50,7 +50,7 @@ impl Camera for PerspectiveCameraSimone {
         self.resolution
     }
 
-    fn primary_ray(&mut self, pixel: UVec2) -> Ray {
+    fn primary_ray(&self, pixel: UVec2) -> Ray {
         let dir_2d = self.bottom_left
             + (self.top_right - self.bottom_left)
                 * (to_vec2(pixel) * self.sampler.sample(pixel))

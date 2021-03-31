@@ -5,7 +5,7 @@ use crate::Spectrum;
 use color::Color;
 use serde::{Deserialize, Serialize};
 use std::mem::swap;
-use utility::floats::fast_clamp;
+use utility::floats::{fast_clamp, fast_max};
 
 #[derive(Serialize, Deserialize)]
 pub enum FresnelType {
@@ -87,7 +87,7 @@ pub fn fresnel_dielectric(mut cos_i: f32, mut eta_i: f32, mut eta_t: f32) -> f32
     }
 
     // compute cos_t using Snell's law
-    let sin_i = f32::max(0.0, 1.0 - cos_i * cos_i).sqrt();
+    let sin_i = fast_max(0.0, cos_i.mul_add(-cos_i, 1.0)).sqrt();
     let sin_t = eta_i * sin_i / eta_t;
 
     // handle total internal reflection
@@ -95,11 +95,11 @@ pub fn fresnel_dielectric(mut cos_i: f32, mut eta_i: f32, mut eta_t: f32) -> f32
         return 1.0;
     }
 
-    let cos_t = f32::max(0.0, 1.0 - sin_t * sin_t).sqrt();
+    let cos_t = fast_max(0.0, sin_t.mul_add(-sin_t, 1.0)).sqrt();
     let r_par = dielectric_parallel(cos_i, cos_t, eta_i, eta_t);
     let r_perp = dielectric_perpendicular(cos_i, cos_t, eta_i, eta_t);
 
-    (r_par * r_par + r_perp * r_perp) / 2.0
+    r_par.mul_add(r_par, r_perp * r_perp) / 2.0
 }
 
 /// Provides an interface for computing Fresnel reflection coefficients.

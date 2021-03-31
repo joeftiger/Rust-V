@@ -23,6 +23,7 @@ pub fn sellmeier_n(lambda: f32) -> f32 {
     debug_assert!(lambda.is_finite());
 
     let l2 = lambda * lambda;
+
     let one = 0.75831 * l2 / (l2 - 0.01007);
     let two = 0.08495 * l2 / (l2 - 8.91377);
 

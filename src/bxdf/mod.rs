@@ -1,3 +1,5 @@
+#![allow(clippy::upper_case_acronyms)]
+
 mod bsdf;
 mod fresnel;
 mod lambertian;
@@ -17,6 +19,7 @@ use crate::Spectrum;
 use serde::{Deserialize, Serialize};
 use std::f32::consts::{FRAC_1_PI, PI};
 use ultraviolet::{Rotor3, Vec2, Vec3};
+use utility::floats::{fast_clamp, fast_max};
 
 /// Allows indicating whether an intersection was found along a path starting from a camera or one
 /// starting from a light source.
@@ -86,7 +89,7 @@ pub fn cos2_theta(v: &Vec3) -> f32 {
 pub fn sin2_theta(v: &Vec3) -> f32 {
     debug_assert!(is_finite(v));
 
-    f32::max(0.0, 1.0 - cos2_theta(v))
+    fast_max(0.0, 1.0 - cos2_theta(v))
 }
 
 #[inline(always)]
@@ -118,7 +121,7 @@ pub fn cos_phi(v: &Vec3) -> f32 {
     if sin_theta == 0.0 {
         0.0
     } else {
-        f32::max(v.x / sin_theta, -1.0).min(1.0)
+        fast_clamp(v.x / sin_theta, -1.0, 1.0)
     }
 }
 
@@ -130,7 +133,7 @@ pub fn sin_phi(v: &Vec3) -> f32 {
     if sin_theta == 0.0 {
         0.0
     } else {
-        f32::max(v.z / sin_theta, -1.0).min(1.0)
+        fast_clamp(v.z / sin_theta, -1.0, 1.0)
     }
 }
 
@@ -157,19 +160,20 @@ pub fn cos_d_phi(a: &Vec3, b: &Vec3) -> f32 {
     let axz = a.x * a.x + a.z * a.z;
     let bxz = b.x * b.x + b.z * b.z;
 
-    f32::max(abxz / f32::sqrt(axz * bxz), -1.0).max(1.0)
+    fast_clamp(abxz / f32::sqrt(axz * bxz), -1.0, 1.0)
 }
 
 #[inline]
 pub fn refract(v: Vec3, n: Vec3, eta: f32) -> Option<Vec3> {
     let cos_i = n.dot(v);
-    let sin_t2 = eta * eta * f32::max(0.0, 1.0 - cos_i * cos_i);
+    let sin_t2 = eta * eta * fast_max(0.0, cos_i.mul_add(-cos_i, 1.0));
 
     if sin_t2 > 1.0 {
         None
     } else {
         let cos_t = f32::sqrt(1.0 - sin_t2);
-        let r = eta * -v + (eta * cos_i - cos_t) * n;
+        let right = eta.mul_add(cos_i, -cos_t);
+        let r = eta * -v + right * n;
 
         Some(r)
     }

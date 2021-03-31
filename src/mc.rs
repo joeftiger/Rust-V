@@ -1,7 +1,9 @@
 use crate::debug_utils::within_01;
 use geometry::{spherical_to_cartesian_frame_trig, spherical_to_cartesian_trig, CoordinateSystem};
 use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, TAU};
-use ultraviolet::{Lerp, Vec2, Vec3};
+use ultraviolet::{Vec2, Vec3};
+use utility::floats::fast_max;
+use utility::math::lerp;
 
 pub fn sample_vector_from_angle(direction: Vec3, sin_theta_max: f32, sample: &Vec2) -> Vec3 {
     debug_assert!(within_01(sample));
@@ -62,7 +64,7 @@ pub fn sample_unit_disk_concentric(sample: &Vec2) -> Vec2 {
     let (r, theta) = if (offset.x * offset.x) > (offset.y * offset.y) {
         (offset.x, FRAC_PI_4 * offset.y / offset.x)
     } else {
-        (offset.y, FRAC_PI_2 - FRAC_PI_4 * offset.x / offset.y)
+        (offset.y, FRAC_PI_4.mul_add(-offset.x / offset.y, FRAC_PI_2))
     };
 
     let (sin, cos) = theta.sin_cos();
@@ -84,7 +86,11 @@ pub fn sample_unit_hemisphere(sample: &Vec2) -> Vec3 {
     debug_assert!(within_01(sample));
 
     let d = sample_unit_disk_concentric(sample);
-    let y = f32::max(0.0, 1.0 - d.x * d.x - d.y * d.y).sqrt();
+    let b = d.y.mul_add(-d.y, 1.0);
+    let right = d.x.mul_add(-d.x, b);
+
+    // let y = fast_max(0.0, 1.0 - d.x * d.x - d.y * d.y).sqrt();
+    let y = fast_max(0.0, right).sqrt();
 
     Vec3::new(d.x, y, d.y)
 }
@@ -102,9 +108,9 @@ pub fn sample_unit_hemisphere(sample: &Vec2) -> Vec3 {
 pub fn sample_unit_sphere(sample: &Vec2) -> Vec3 {
     debug_assert!(within_01(sample));
 
-    let z = 1.0 - 2.0 * sample.x;
+    let z = sample.x.mul_add(-2.0, 1.0);
 
-    let r = f32::max(0.0, 1.0 - z * z).sqrt();
+    let r = fast_max(0.0, z.mul_add(-z, 1.0)).sqrt();
     let (sin_phi, cos_phi) = f32::sin_cos(sample.y * TAU);
 
     let x = r * cos_phi;
@@ -127,8 +133,8 @@ pub fn sample_unit_sphere(sample: &Vec2) -> Vec3 {
 pub fn sample_cone(sample: &Vec2, cos_theta_max: f32) -> Vec3 {
     debug_assert!(within_01(sample));
 
-    let cos_theta = cos_theta_max.lerp(1.0, sample.x);
-    let sin_theta = f32::sqrt(1.0 - cos_theta * cos_theta);
+    let cos_theta = lerp(cos_theta_max, 1.0, sample.x);
+    let sin_theta = cos_theta.mul_add(-cos_theta, 1.0).sqrt();
     let (sin_phi, cos_phi) = f32::sin_cos(sample.y * TAU);
 
     spherical_to_cartesian_trig(sin_theta, cos_theta, sin_phi, cos_phi)
@@ -153,8 +159,8 @@ pub fn uniform_sample_cone_frame(
 ) -> Vec3 {
     debug_assert!(within_01(sample));
 
-    let cos_theta = cos_theta_max.lerp(1.0, sample.x);
-    let sin_theta = f32::sqrt(1.0 - cos_theta * cos_theta);
+    let cos_theta = lerp(cos_theta_max, 1.0, sample.x);
+    let sin_theta = cos_theta.mul_add(-cos_theta, 1.0).sqrt();
     let (sin_phi, cos_phi) = f32::sin_cos(sample.y * TAU);
 
     spherical_to_cartesian_frame_trig(sin_theta, cos_theta, sin_phi, cos_phi, frame)

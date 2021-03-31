@@ -1,8 +1,9 @@
 use crate::camera::{Camera, NoOpCamera};
 use crate::objects::{Emitter, SceneObject};
-use geometry::{Aabb, Boundable, ContainerGeometry, Intersectable, Intersection, Ray};
+use geometry::bvh::Tree;
+use geometry::{Aabb, Boundable, Intersectable, Intersection, Ray};
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use ultraviolet::Vec3;
 
 /// A scene intersection is a more detailed `Intersection`, also containing a reference to the
@@ -41,9 +42,11 @@ impl SceneIntersection {
 pub struct Scene {
     bounding_box: Aabb,
     #[serde(skip)]
-    pub lights: Vec<Arc<Emitter>>,
+    pub emitters: Vec<Arc<Emitter>>,
     objects: Vec<SceneObject>,
-    pub camera: Mutex<Box<dyn Camera>>,
+    #[serde(skip)]
+    bvh: Tree<SceneObject>,
+    pub camera: Box<dyn Camera>,
 }
 
 impl Scene {
@@ -60,7 +63,7 @@ impl Scene {
         self.objects.push(obj.clone());
 
         if let SceneObject::Emitter(ref e) = obj {
-            self.lights.push(e.clone())
+            self.emitters.push(e.clone())
         }
 
         self.bounding_box = self.bounding_box.join(&obj.bounds());
@@ -69,24 +72,24 @@ impl Scene {
     }
 
     /// Recollects all emitters into a cached list.
-    pub fn collect_emitters(&mut self) {
-        self.lights.clear();
-
+    pub fn init(&mut self) {
+        // collect emitters
+        self.emitters.clear();
         for o in &self.objects {
             match o {
-                SceneObject::Emitter(e) => self.lights.push(e.clone()),
+                SceneObject::Emitter(e) => self.emitters.push(e.clone()),
                 SceneObject::Receiver(_) => {}
             }
         }
+        self.emitters.shrink_to_fit();
 
-        self.lights.shrink_to_fit();
+        self.bvh = Tree::new(self.objects.clone(), |s| s.bounds());
     }
 
     /// Intersects the scene with the given ray.
     ///
     /// # Performance
     /// It currently uses no search tree, only brute force intersection code.
-    /// TODO: implement Bvh
     ///
     /// # Arguments
     /// * `ray` - The ray to intersect against
@@ -94,25 +97,19 @@ impl Scene {
     /// # Returns
     /// * A scene intersection (if any)
     pub fn intersect(&self, ray: &Ray) -> Option<SceneIntersection> {
-        if !self.bounding_box.intersects(&ray) {
-            return None;
-        }
-
         let mut new_ray = *ray;
         let mut intersection = None;
 
-        for o in &self.objects {
-            if let Some(i) = o.intersect(&new_ray) {
+        let hits = self.bvh.intersect(ray);
+        for hit in &hits {
+            if let Some(i) = hit.intersect(&new_ray) {
                 new_ray.t_end = i.t;
-                let si = SceneIntersection::new(i, o.clone());
-
-                intersection = Some(si);
+                intersection = Some(SceneIntersection::new(i, hit.clone().as_ref().clone()));
             }
         }
 
         if let Some(mut i) = intersection {
             i.ray = *ray;
-
             Some(i)
         } else {
             None
@@ -120,14 +117,13 @@ impl Scene {
     }
 
     pub fn is_occluded(&self, ray: &Ray) -> bool {
-        self.objects.iter().any(|o| o.intersects(ray))
+        self.intersects(ray)
     }
 
     /// Intersects the scene with the given ray.
     ///
     /// # Performance
     /// It currently uses no search tree, only brute force intersection code.
-    /// TODO: implement Bvh
     ///
     /// # Arguments
     /// * `ray` - The ray to intersect against
@@ -135,8 +131,7 @@ impl Scene {
     /// # Returns
     /// * Whether the ray intersects
     pub fn intersects(&self, ray: &Ray) -> bool {
-        self.bounding_box.contains_or_intersects(ray)
-            && self.objects.iter().any(|o| o.intersects(ray))
+        self.bvh.intersect(ray).iter().any(|s| s.intersects(ray))
     }
 }
 
@@ -144,16 +139,10 @@ impl Default for Scene {
     fn default() -> Self {
         Self {
             bounding_box: Aabb::empty(),
-            lights: Vec::default(),
+            emitters: Vec::default(),
             objects: Vec::default(),
-            camera: Mutex::new(Box::new(NoOpCamera)),
+            bvh: Tree::default(),
+            camera: Box::new(NoOpCamera),
         }
     }
 }
-
-// impl Serialize for Scene {
-//     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
-//         S: Serializer {
-//         self.objects.serialize(serializer)
-//     }
-// }

@@ -16,7 +16,6 @@ use std::sync::Arc;
 
 const LIVE: &str = "LIVE_WINDOW";
 const VERBOSE: &str = "VERBOSE";
-#[allow(dead_code)]
 const INPUT: &str = "INPUT";
 const OUTPUT: &str = "OUTPUT";
 const PASSES: &str = "PASSES";
@@ -120,7 +119,7 @@ impl MainConfig {
     fn create_renderer(&self) -> Renderer {
         let content = std::fs::read_to_string(&self.input).expect("Could not read scene file");
         let mut scene: Scene = from_str(content.as_str()).expect("Could not parse scene file");
-        scene.collect_emitters();
+        scene.init();
 
         let integrator: Arc<dyn Integrator> = match self.integrator_type {
             IntegratorType::Debug => Arc::new(DebugNormals),

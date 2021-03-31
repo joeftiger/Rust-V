@@ -29,7 +29,15 @@ impl GaussianFilter {
     }
 }
 
+#[typetag::serde]
 impl Filter for GaussianFilter {
+    fn radius(&self) -> Vec2 {
+        self.radius
+    }
+    fn inv_radius(&self) -> Vec2 {
+        self.inv_radius
+    }
+
     fn evaluate(&self, point: &Vec2) -> f32 {
         self.gaussian(point.x, self.exp.x) * self.gaussian(point.y, self.exp.y)
     }

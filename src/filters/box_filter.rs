@@ -18,7 +18,16 @@ impl BoxFilter {
     }
 }
 
+#[typetag::serde]
 impl Filter for BoxFilter {
+    fn radius(&self) -> Vec2 {
+        self.radius
+    }
+
+    fn inv_radius(&self) -> Vec2 {
+        self.inv_radius
+    }
+
     #[inline(always)]
     fn evaluate(&self, _: &Vec2) -> f32 {
         1.0

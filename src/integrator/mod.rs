@@ -91,7 +91,7 @@ fn direct_illumination(
 
     let outgoing_world = -intersection.ray.direction;
 
-    for light in &scene.lights {
+    for light in &scene.emitters {
         let emitter_sample = light.sample(&intersection.point, &sampler.get_2d());
 
         if emitter_sample.pdf > 0.0
@@ -134,7 +134,7 @@ fn direct_illumination_light_wave(
 
     let outgoing_world = -intersection.ray.direction;
 
-    for light in &scene.lights {
+    for light in &scene.emitters {
         let emitter_sample =
             light.sample_light_wave(&intersection.point, &sampler.get_2d(), light_wave_index);
 

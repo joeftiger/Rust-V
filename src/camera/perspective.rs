@@ -92,7 +92,7 @@ impl Camera for PerspectiveCamera {
         self.resolution
     }
 
-    fn primary_ray(&mut self, pixel: UVec2) -> Ray {
+    fn primary_ray(&self, pixel: UVec2) -> Ray {
         debug_assert!(pixel == pixel.min_by_component(self.resolution));
 
         let sample = self.sampler.sample(pixel);

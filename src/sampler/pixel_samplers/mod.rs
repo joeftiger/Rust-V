@@ -1,8 +1,8 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
-mod super_sampling;
-pub use super_sampling::*;
+// mod super_sampling;
+// pub use super_sampling::*;
 
 use serde::{Deserialize, Serialize};
 use ultraviolet::{UVec2, Vec2};
@@ -13,15 +13,15 @@ pub enum PixelSamplerType {
     NoOp,
     /// Generates random samples
     Random,
-    UniformSuperSampling(UniformSuperSampling),
+    // UniformSuperSampling(UniformSuperSampling),
 }
 
 impl PixelSampler for PixelSamplerType {
-    fn sample(&mut self, pixel: UVec2) -> Vec2 {
+    fn sample(&self, pixel: UVec2) -> Vec2 {
         match self {
             PixelSamplerType::NoOp => Vec2::broadcast(0.5),
             PixelSamplerType::Random => Vec2::new(fastrand::f32(), fastrand::f32()),
-            PixelSamplerType::UniformSuperSampling(s) => s.sample(pixel),
+            // PixelSamplerType::UniformSuperSampling(s) => s.sample(pixel),
         }
     }
 }
@@ -34,5 +34,5 @@ pub trait PixelSampler {
     ///
     /// # Returns
     /// * A camera pixel anchor in range `[0, 1)`
-    fn sample(&mut self, pixel: UVec2) -> Vec2;
+    fn sample(&self, pixel: UVec2) -> Vec2;
 }

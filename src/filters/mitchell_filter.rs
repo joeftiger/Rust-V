@@ -43,7 +43,16 @@ impl MitchellFilter {
     }
 }
 
+#[typetag::serde]
 impl Filter for MitchellFilter {
+    fn radius(&self) -> Vec2 {
+        self.radius
+    }
+
+    fn inv_radius(&self) -> Vec2 {
+        self.inv_radius
+    }
+
     fn evaluate(&self, point: &Vec2) -> f32 {
         let var = *point * self.inv_radius;
         self.mitchell_1d(var.x) * self.mitchell_1d(var.y)

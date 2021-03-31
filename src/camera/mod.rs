@@ -21,7 +21,7 @@ pub trait Camera: Send + Sync {
     ///
     /// # Returns
     /// * A ray
-    fn primary_ray(&mut self, pixel: UVec2) -> Ray;
+    fn primary_ray(&self, pixel: UVec2) -> Ray;
 }
 
 #[derive(Serialize, Deserialize)]
@@ -33,7 +33,7 @@ impl Camera for NoOpCamera {
         unimplemented!()
     }
 
-    fn primary_ray(&mut self, _: UVec2) -> Ray {
+    fn primary_ray(&self, _: UVec2) -> Ray {
         unimplemented!()
     }
 }
