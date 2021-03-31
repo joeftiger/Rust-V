@@ -17,7 +17,7 @@ use std::f32::consts::PI;
 ///
 /// # Returns
 /// * `Option<(f32, f32)>` - The solutions in ascending order (if any)
-#[inline(always)]
+#[inline]
 #[must_use]
 pub fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {
     debug_assert!(a.is_finite());
@@ -34,7 +34,7 @@ pub fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {
         return Some((sol, sol));
     }
 
-    let discriminant = b * b - 4.0 * a * c;
+    let discriminant = b.mul_add(b, -4.0 * a * c);
     if discriminant < 0.0 {
         return None;
     }
