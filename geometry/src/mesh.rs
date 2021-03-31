@@ -1,13 +1,21 @@
 use crate::bvh::Tree;
-use crate::debug_util::{is_finite, is_normalized};
+use crate::debug_util::is_finite;
+use crate::obj_file::ObjFile;
 use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
+use itertools::{Itertools, MinMaxResult};
 use serde::de::{Error, MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use std::cmp::Ordering;
 use std::fmt;
+use std::fmt::Debug;
 use std::mem::swap;
+use std::path::Path;
 use ultraviolet::{Mat3, Rotor3, Vec3};
+#[cfg(feature = "watertight-mesh")]
 use utility::floats::fast_clamp;
+#[cfg(not(feature = "watertight-mesh"))]
+use utility::floats::{fast_clamp, in_range, EPSILON};
 
 /// The shading mode defines the shading of normals. In `Flat` mode, the surface of triangles will
 /// appear flat. In `Phong` however, they will be interpolated to create a smooth looking surface.
@@ -31,93 +39,63 @@ fn max_index(v: &Vec3) -> usize {
     2
 }
 
-/// A vertex consists of a position and normal vector, which possibly influences the shading of
-/// [`triangles`](Triangle).
+/// A triangle consists of vertex indices `(v0, v1, v2)` and their optional normal indices `n0, n1, n2)`.
+///
+/// In order to query a triangle for an intersection, it is therefore needed to pass it the proper mesh.
 #[derive(Copy, Clone, Serialize, Deserialize)]
-struct Vertex {
-    position: Vec3,
-    normal: Vec3,
+pub struct Face {
+    pub v: (u32, u32, u32),
+    pub vn: Option<(u32, u32, u32)>,
 }
 
-impl Vertex {
-    /// Creates a new vertex.
-    ///
-    /// # Constraints
-    /// * `position` - All values should be finite (neither infinite nor `NaN`).
-    /// * `normal` - ALl values should be finite.
-    ///              Should be normalized.
-    ///
-    /// # Arguments
-    /// * `position` - The position of the vertex
-    /// * `normal` - The normal of the vertex
-    ///
-    /// # Returns
-    /// * Self
-    fn new(position: Vec3, normal: Vec3) -> Self {
-        debug_assert!(is_finite(&position));
-        debug_assert!(is_finite(&normal));
-        debug_assert!(is_normalized(&normal));
-
-        Self { position, normal }
+impl Face {
+    pub fn new(v: (u32, u32, u32), vn: Option<(u32, u32, u32)>) -> Self {
+        Self { v, vn }
     }
 
-    fn new_pos(position: Vec3) -> Self {
-        debug_assert!(is_finite(&position));
+    pub fn get_vertices(&self, vertices: &[Vec3]) -> (Vec3, Vec3, Vec3) {
+        (
+            vertices[self.v.0 as usize],
+            vertices[self.v.1 as usize],
+            vertices[self.v.2 as usize],
+        )
+    }
 
-        Self {
-            position,
-            normal: Vec3::zero(),
+    pub fn get_normals(&self, normals: &[Vec3]) -> Option<(Vec3, Vec3, Vec3)> {
+        if let Some((n0, n1, n2)) = self.vn {
+            Some((
+                normals[n0 as usize],
+                normals[n1 as usize],
+                normals[n2 as usize],
+            ))
+        } else {
+            None
         }
     }
-}
 
-/// A triangle consists of vertex indices `{a, b, c}` and a flat surface normal.
-///
-/// In order to query a triangle for an intersection, it is therefore needed to pass it the proper
-/// [`Mesh`](Mesh) it resides in.
-#[derive(Clone, Serialize, Deserialize)]
-struct Triangle {
-    a: u32,
-    b: u32,
-    c: u32,
-    normal: u32,
-}
+    pub fn face_normal(&self, vertices: &[Vec3]) -> Vec3 {
+        let (v0, v1, v2) = self.get_vertices(vertices);
 
-impl Triangle {
-    /// Creates a new triangle.
-    ///
-    /// # Constraints
-    /// * `normal` - All values should be finite (neither infinite nor `NaN`).
-    ///              Should be normalized.
-    ///
-    /// # Arguments
-    /// * `v0` - The vertex 0
-    /// * `v1` - The vertex 1
-    /// * `v2` - The vertex 2
-    /// * `normal` - The triangle normal vector
-    ///
-    /// # Returns
-    /// * Self
-    fn new(a: u32, b: u32, c: u32, normal: u32) -> Self {
-        Self { a, b, c, normal }
+        (v1 - v0).cross(v2 - v0).normalized()
     }
 
-    fn bounds(&self, mesh: &Mesh) -> Aabb {
-        let a = mesh.vertices[self.a as usize].position;
-        let b = mesh.vertices[self.b as usize].position;
-        let c = mesh.vertices[self.c as usize].position;
+    pub fn has_normals(&self) -> bool {
+        self.vn.is_some()
+    }
 
-        let min = a.min_by_component(b.min_by_component(c));
-        let max = a.max_by_component(b.max_by_component(c));
+    pub fn bounds(&self, vertices: &[Vec3]) -> Aabb {
+        let (v0, v1, v2) = self.get_vertices(vertices);
+
+        let min = v0.min_by_component(v1.min_by_component(v2));
+        let max = v0.max_by_component(v1.max_by_component(v2));
 
         Aabb::new(min, max)
     }
 
+    #[cfg(feature = "watertight-mesh")]
     #[allow(clippy::many_single_char_names)]
     fn intersect(&self, mesh: &Mesh, ray: &Ray) -> Option<Intersection> {
-        let vertex0 = mesh.vertices[self.a as usize];
-        let vertex1 = mesh.vertices[self.b as usize];
-        let vertex2 = mesh.vertices[self.c as usize];
+        let (v0, v1, v2) = self.get_vertices(&mesh.vertices);
 
         let dir = &ray.direction;
         // calculate dimension where the ray direction is maximal
@@ -142,9 +120,9 @@ impl Triangle {
         let sz = 1.0 / dir[kz];
 
         // calculate vertices relative to ray origin
-        let a = vertex0.position - ray.origin;
-        let b = vertex1.position - ray.origin;
-        let c = vertex2.position - ray.origin;
+        let a = v0 - ray.origin;
+        let b = v1 - ray.origin;
+        let c = v2 - ray.origin;
 
         // perform shear and scale of vertices
         let ax = a[kx] - sx * a[kz];
@@ -202,25 +180,82 @@ impl Triangle {
         let point = ray.at(t);
 
         let normal = match mesh.shading_mode {
-            ShadingMode::Flat => mesh.normals[self.normal as usize],
+            ShadingMode::Flat => (v1 - v0).cross(v2 - v0),
             ShadingMode::Phong => {
-                let beta = u * inv_det;
-                let gamma = v * inv_det;
-                let alpha = 1.0 - beta - gamma;
+                if let Some((n0, n1, n2)) = self.get_normals(&mesh.vertex_normals) {
+                    let beta = u * inv_det;
+                    let gamma = v * inv_det;
+                    let alpha = 1.0 - beta - gamma;
 
-                (alpha * vertex0.normal + beta * vertex1.normal + gamma * vertex2.normal)
-                    .normalized()
+                    alpha * n0 + beta * n1 + gamma * n2
+                } else {
+                    (v1 - v0).cross(v2 - v0)
+                }
             }
-        };
+        }
+        .normalized();
 
         Some(Intersection::new(point, normal, t, *ray))
     }
 
+    #[cfg(not(feature = "watertight-mesh"))]
+    fn intersect(&self, mesh: &Mesh, ray: &Ray) -> Option<Intersection> {
+        let (v0, v1, v2) = self.get_vertices(&mesh.vertices);
+
+        let edge1 = v1 - v0;
+        let edge2 = v2 - v0;
+
+        let h = ray.direction.cross(edge2);
+        let a = edge1.dot(h);
+
+        // ray is parallel to triangle
+        if in_range(a, -EPSILON, EPSILON) {
+            return None;
+        }
+
+        let f = 1.0 / a;
+        let s = ray.origin - v0;
+        let beta = f * s.dot(h);
+        if beta < 0.0 || beta > 1.0 {
+            return None;
+        }
+
+        let q = s.cross(edge1);
+        let gamma = f * ray.direction.dot(q);
+        if gamma < 0.0 || beta + gamma > 1.0 {
+            return None;
+        }
+
+        let t = f * edge2.dot(q);
+        if !ray.contains(t) {
+            return None;
+        }
+
+        let point = ray.at(t);
+
+        let normal = match mesh.shading_mode {
+            ShadingMode::Flat => edge1.cross(edge2),
+            ShadingMode::Phong => {
+                if let Some((n0, n1, n2)) = self.get_normals(&mesh.vertex_normals) {
+                    let beta = u * inv_det;
+                    let gamma = v * inv_det;
+                    let alpha = 1.0 - beta - gamma;
+
+                    alpha * n0 + beta * n1 + gamma * n2
+                } else {
+                    edge1.cross(edge2)
+                }
+            }
+        }
+        .normalized();
+
+        Some(Intersection::new(point, normal, t, *ray))
+    }
+
+    #[cfg(feature = "watertight-mesh")]
     #[allow(clippy::many_single_char_names)]
-    fn intersects(&self, mesh: &Mesh, ray: &Ray) -> bool {
-        let vertex0 = mesh.vertices[self.a as usize];
-        let vertex1 = mesh.vertices[self.b as usize];
-        let vertex2 = mesh.vertices[self.c as usize];
+    fn intersects(&self, vertices: &[Vec3], ray: &Ray) -> bool {
+        let (v0, v1, v2) = self.get_vertices(vertices);
 
         let dir = &ray.direction;
         // calculate dimension where the ray direction is maximal
@@ -245,9 +280,9 @@ impl Triangle {
         let sz = 1.0 / dir[kz];
 
         // calculate vertices relative to ray origin
-        let a = vertex0.position - ray.origin;
-        let b = vertex1.position - ray.origin;
-        let c = vertex2.position - ray.origin;
+        let a = v0 - ray.origin;
+        let b = v1 - ray.origin;
+        let c = v2 - ray.origin;
 
         // perform shear and scale of vertices
         let ax = a[kx] - sx * a[kz];
@@ -300,34 +335,67 @@ impl Triangle {
 
         ray.contains(t)
     }
+
+    #[cfg(not(feature = "watertight-mesh"))]
+    fn intersects(&self, vertices: &[Vec3], ray: &Ray) -> bool {
+        let (v0, v1, v2) = self.get_vertices(vertices);
+
+        let edge1 = v1 - v0;
+        let edge2 = v2 - v0;
+
+        let h = ray.direction.cross(edge2);
+        let a = edge1.dot(h);
+
+        // ray is parallel to triangle
+        if in_range(a, -EPSILON, EPSILON) {
+            return false;
+        }
+
+        let f = 1.0 / a;
+        let s = ray.origin - v0;
+        let beta = f * s.dot(h);
+        if beta < 0.0 || beta > 1.0 {
+            return false;
+        }
+
+        let q = s.cross(edge1);
+        let gamma = f * ray.direction.dot(q);
+        if gamma < 0.0 || beta + gamma > 1.0 {
+            return false;
+        }
+
+        let t = f * edge2.dot(q);
+
+        ray.contains(t)
+    }
 }
 
 /// A mesh consists of vertices and triangles, allowing queries for intersections.
 /// Depending on the [`MeshMode`](MeshMode), the intersection normals will be interpolated.
 pub struct Mesh {
-    vertices: Vec<Vertex>,
-    normals: Vec<Vec3>,
-    triangles: Vec<Triangle>,
+    vertices: Vec<Vec3>,
+    vertex_normals: Vec<Vec3>,
+    faces: Vec<Face>,
     bounds: Aabb,
     shading_mode: ShadingMode,
-    bvh: Tree<Triangle>,
+    bvh: Tree<Face>,
 }
 
 impl Mesh {
-    fn new(
-        vertices: Vec<Vertex>,
-        normals: Vec<Vec3>,
-        triangles: Vec<Triangle>,
+    pub fn new(
+        vertices: Vec<Vec3>,
+        vertex_normals: Vec<Vec3>,
+        faces: Vec<Face>,
         bounds: Aabb,
         shading_mode: ShadingMode,
     ) -> Self {
         Self {
             vertices,
-            normals,
-            triangles,
+            vertex_normals,
+            faces,
             bounds,
             shading_mode,
-            bvh: Tree::default(),
+            bvh: Default::default(),
         }
     }
 
@@ -340,91 +408,31 @@ impl Mesh {
     ///
     /// # Returns
     /// * Self
-    pub fn load(file: String, shading_mode: ShadingMode) -> Mesh {
-        let mesh = &tobj::load_obj(file, true)
-            .expect("Could not load mesh file")
-            .0[0]
-            .mesh;
+    pub fn load<P>(path: P, shading_mode: ShadingMode) -> Mesh
+    where
+        P: AsRef<Path> + Debug,
+    {
+        let obj_file = ObjFile::from(path);
 
-        let mut bounds = Aabb::empty();
-
-        let mut vertices = Vec::with_capacity(mesh.positions.len());
-        let mut x = 0;
-        while x < mesh.positions.len() {
-            let y = x + 1;
-            let z = x + 2;
-
-            let position = Vec3::new(mesh.positions[x], mesh.positions[y], mesh.positions[z]);
-
-            bounds.min = bounds.min.min_by_component(position);
-            bounds.max = bounds.max.max_by_component(position);
-
-            let vertex = if mesh.normals.is_empty() {
-                Vertex::new_pos(position)
+        let bounds = match obj_file.vertices.iter().minmax_by(|a, b| {
+            if a.min_by_component(**b) == **a {
+                Ordering::Less
             } else {
-                let normal = Vec3::new(mesh.normals[x], mesh.normals[y], mesh.normals[z]);
+                Ordering::Greater
+            }
+        }) {
+            MinMaxResult::NoElements => Aabb::empty(),
+            MinMaxResult::OneElement(v) => Aabb::new(*v, *v),
+            MinMaxResult::MinMax(min, max) => Aabb::new(*min, *max),
+        };
 
-                Vertex::new(position, normal)
-            };
-
-            vertices.push(vertex);
-
-            x += 3;
-        }
-        vertices.shrink_to_fit();
-        assert_eq!(x, mesh.positions.len());
-
-        let mut normals = Vec::with_capacity(mesh.indices.len() / 3);
-        let mut triangles = Vec::with_capacity(mesh.indices.len() / 3);
-
-        let mut index = 0;
-        while index < mesh.indices.len() {
-            let a_index = mesh.indices[index];
-            let b_index = mesh.indices[index + 1];
-            let c_index = mesh.indices[index + 2];
-
-            let p0 = vertices[a_index as usize].position;
-            let p1 = vertices[b_index as usize].position;
-            let p2 = vertices[c_index as usize].position;
-            let normal = (p1 - p0).cross(p2 - p0).normalized();
-
-            debug_assert_ne!(normal, Vec3::zero());
-
-            let normal_index = normals.len() as u32;
-            normals.push(normal);
-
-            let triangle = Triangle::new(a_index, b_index, c_index, normal_index);
-            triangles.push(triangle);
-
-            index += 3;
-        }
-        triangles.shrink_to_fit();
-        assert_eq!(index, mesh.indices.len());
-
-        if mesh.normals.is_empty() {
-            triangles.iter().for_each(|t| {
-                let (w0, w1, w2) = Self::angle_weights(
-                    vertices[t.a as usize].position,
-                    vertices[t.b as usize].position,
-                    vertices[t.c as usize].position,
-                );
-                debug_assert!(!(w0 == 0.0 && w1 == 0.0 && w2 == 0.0));
-
-                let normal = normals[t.normal as usize];
-
-                vertices[t.a as usize].normal += w0 * normal;
-                vertices[t.b as usize].normal += w1 * normal;
-                vertices[t.c as usize].normal += w2 * normal;
-            });
-
-            vertices.iter_mut().for_each(|v| {
-                debug_assert!(is_finite(&v.normal));
-                debug_assert_ne!(v.normal, Vec3::zero());
-                v.normal.normalize()
-            });
-        }
-
-        Mesh::new(vertices, normals, triangles, bounds, shading_mode)
+        Mesh::new(
+            obj_file.vertices,
+            obj_file.vertex_normals,
+            obj_file.faces,
+            bounds,
+            shading_mode,
+        )
     }
 
     /// Determines the weights by which to scale triangle (p0, p1, p2)'s normal when
@@ -475,9 +483,7 @@ impl Mesh {
     pub fn translate(&mut self, translation: Vec3) -> &mut Self {
         debug_assert!(is_finite(&translation));
 
-        self.vertices
-            .iter_mut()
-            .for_each(|v| v.position += translation);
+        self.vertices.iter_mut().for_each(|v| *v += translation);
         self.bounds.min += translation;
         self.bounds.max += translation;
 
@@ -500,9 +506,12 @@ impl Mesh {
         debug_assert!(is_finite(&scale));
 
         for v in &mut self.vertices {
-            v.position *= scale;
-            v.normal *= scale;
-            v.normal.normalize();
+            *v *= scale;
+        }
+
+        for n in &mut self.vertex_normals {
+            *n *= scale;
+            n.normalize();
         }
 
         self.bounds.min *= scale;
@@ -540,10 +549,10 @@ impl Mesh {
     pub fn transform(&mut self, transformation: Mat3) -> &mut Self {
         let mut new_bounds = Aabb::empty();
         self.vertices.iter_mut().for_each(|v| {
-            v.position = transformation * v.position;
+            *v = transformation * *v;
 
-            new_bounds.min = new_bounds.min.min_by_component(v.position);
-            new_bounds.max = new_bounds.min.max_by_component(v.position);
+            new_bounds.min = new_bounds.min.min_by_component(*v);
+            new_bounds.max = new_bounds.min.max_by_component(*v);
         });
 
         self.bounds = new_bounds;
@@ -554,15 +563,15 @@ impl Mesh {
     pub fn update_bounds(&mut self) {
         let mut new_bounds = Aabb::empty();
         self.vertices.iter_mut().for_each(|v| {
-            new_bounds.min = new_bounds.min.min_by_component(v.position);
-            new_bounds.max = new_bounds.min.max_by_component(v.position);
+            new_bounds.min = new_bounds.min.min_by_component(*v);
+            new_bounds.max = new_bounds.min.max_by_component(*v);
         });
 
         self.bounds = new_bounds;
     }
 
     pub fn build_bvh(&mut self) {
-        self.bvh = Tree::new(self.triangles.clone(), |t| t.bounds(self));
+        self.bvh = Tree::new(self.faces.clone(), |f| f.bounds(&self.vertices));
     }
 }
 
@@ -594,12 +603,10 @@ impl Intersectable for Mesh {
     }
 
     fn intersects(&self, ray: &Ray) -> bool {
-        let hits = self.bvh.intersect(ray);
-        if hits.is_empty() {
-            return false;
-        }
-
-        hits.iter().any(|t| t.intersects(self, ray))
+        self.bvh
+            .intersect(ray)
+            .iter()
+            .any(|t| t.intersects(&self.vertices, ray))
     }
 }
 
@@ -613,8 +620,8 @@ impl Serialize for Mesh {
     {
         let mut state = serializer.serialize_struct("Mesh", 5)?;
         state.serialize_field("Vertices", &self.vertices)?;
-        state.serialize_field("Normals", &self.normals)?;
-        state.serialize_field("Triangles", &self.triangles)?;
+        state.serialize_field("VertexNormals", &self.vertex_normals)?;
+        state.serialize_field("Faces", &self.faces)?;
         state.serialize_field("Bounds", &self.bounds)?;
         state.serialize_field("ShadingMode", &self.shading_mode)?;
 
@@ -629,8 +636,8 @@ impl<'de> Deserialize<'de> for Mesh {
     {
         enum Field {
             Vertices,
-            Normals,
-            Triangles,
+            VertexNormals,
+            Faces,
             Bounds,
             ShadingMode,
         }
@@ -647,7 +654,7 @@ impl<'de> Deserialize<'de> for Mesh {
 
                     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                         formatter.write_str(
-                            "`Vertices`, `Normals`, `Triangles`, `Bounds` or `ShadingMode`",
+                            "`Vertices`, `VertexNormals`, `Faces`, `Bounds` or `ShadingMode`",
                         )
                     }
 
@@ -657,8 +664,8 @@ impl<'de> Deserialize<'de> for Mesh {
                     {
                         match v {
                             "Vertices" => Ok(Field::Vertices),
-                            "Normals" => Ok(Field::Normals),
-                            "Triangles" => Ok(Field::Triangles),
+                            "VertexNormals" => Ok(Field::VertexNormals),
+                            "Faces" => Ok(Field::Faces),
                             "Bounds" => Ok(Field::Bounds),
                             "ShadingMode" => Ok(Field::ShadingMode),
                             _ => Err(de::Error::unknown_field(v, FIELDS)),
@@ -684,7 +691,7 @@ impl<'de> Deserialize<'de> for Mesh {
                 A: MapAccess<'de>,
             {
                 let mut vertices = None;
-                let mut normals = None;
+                let mut vertex_normals = None;
                 let mut triangles = None;
                 let mut bounds = None;
                 let mut shading_mode = None;
@@ -697,16 +704,16 @@ impl<'de> Deserialize<'de> for Mesh {
                                 vertices = Some(map.next_value()?);
                             }
                         }
-                        Field::Normals => {
-                            if normals.is_some() {
-                                return Err(de::Error::duplicate_field("Normals"));
+                        Field::VertexNormals => {
+                            if vertex_normals.is_some() {
+                                return Err(de::Error::duplicate_field("VertexNormals"));
                             } else {
-                                normals = Some(map.next_value()?);
+                                vertex_normals = Some(map.next_value()?);
                             }
                         }
-                        Field::Triangles => {
+                        Field::Faces => {
                             if triangles.is_some() {
-                                return Err(de::Error::duplicate_field("Triangles"));
+                                return Err(de::Error::duplicate_field("Faces"));
                             } else {
                                 triangles = Some(map.next_value()?);
                             }
@@ -728,23 +735,29 @@ impl<'de> Deserialize<'de> for Mesh {
                     }
                 }
                 let vertices = vertices.ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                let normals = normals.ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                let triangles = triangles.ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                let vertex_normals = vertex_normals.unwrap_or_default();
+                let faces = triangles.ok_or_else(|| de::Error::invalid_length(0, &self))?;
                 let bounds = bounds.ok_or_else(|| de::Error::invalid_length(0, &self))?;
                 let shading_mode =
                     shading_mode.ok_or_else(|| de::Error::invalid_length(0, &self))?;
 
                 Ok(Mesh::new(
                     vertices,
-                    normals,
-                    triangles,
+                    vertex_normals,
+                    faces,
                     bounds,
                     shading_mode,
                 ))
             }
         }
 
-        const FIELDS: &[&str] = &["Vertices", "Normals", "Triangles", "Bounds", "ShadingMode"];
+        const FIELDS: &[&str] = &[
+            "Vertices",
+            "VertexNormals",
+            "Faces",
+            "Bounds",
+            "ShadingMode",
+        ];
         deserializer
             .deserialize_struct("Mesh", FIELDS, MeshVisitor)
             .map(|mut m| {

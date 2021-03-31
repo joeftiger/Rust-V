@@ -57,7 +57,7 @@ impl Intersectable for Sphere {
 
         let a = dir.dot(dir);
         let b = 2.0 * dir.dot(oc);
-        let c = oc.dot(oc) - self.radius * self.radius;
+        let c = self.radius.mul_add(-self.radius, oc.dot(oc));
 
         let (t_min, t_max) = solve_quadratic(a, b, c)?;
 
@@ -69,12 +69,8 @@ impl Intersectable for Sphere {
             return None;
         };
 
-        // println!("t:\t{}", t);
         let point = ray.at(t);
-        // println!("point:\t{:?}", point);
-        // println!("center:\t{:?}", self.center);
         let normal = (point - self.center).normalized();
-        // println!("normal:\t{:?}", normal);
 
         Some(Intersection::new(point, normal, t, *ray))
     }
@@ -89,7 +85,7 @@ impl Intersectable for Sphere {
 
         let a = dir.dot(dir);
         let b = 2.0 * dir.dot(oc);
-        let c = oc.dot(oc) - self.radius * self.radius;
+        let c = self.radius.mul_add(-self.radius, oc.dot(oc));
 
         if let Some((t_min, t_max)) = solve_quadratic(a, b, c) {
             ray.contains(t_min) || ray.contains(t_max)

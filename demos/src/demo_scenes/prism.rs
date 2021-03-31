@@ -1,21 +1,20 @@
 #![allow(dead_code)]
-
-use crate::bxdf::{FresnelSpecular, LambertianReflection, OrenNayar, BSDF};
-use crate::camera::{Camera, PerspectiveCamera};
-use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
-use crate::objects::{Emitter, Receiver, SceneObject};
-use crate::refractive_index::RefractiveType;
-use crate::sampler::pixel_samplers::PixelSamplerType;
-use crate::scene::Scene;
-use crate::Spectrum;
+use rust_v::Spectrum;
+use rust_v::bxdf::{BSDF, LambertianReflection, OrenNayar, FresnelSpecular};
+use rust_v::refractive_index::RefractiveType;
+use rust_v::objects::{SceneObject, Emitter, Receiver};
+use rust_v::scene::Scene;
+use rust_v::camera::{Camera, PerspectiveCamera};
+use rust_v::sampler::pixel_samplers::PixelSamplerType;
 use color::{Color, Colors};
 use geometry::{Aabb, Boundable, Cylinder, Mesh, Point, ShadingMode, Sphere};
 use std::sync::{Arc, Mutex};
 use ultraviolet::{UVec2, Vec3};
+use crate::demo_scenes::{DemoScene, SIGMA, FOVY};
 
-pub struct DebugSphereScene;
+pub struct PrismScene;
 
-impl DemoScene for DebugSphereScene {
+impl DemoScene for PrismScene {
     fn create(resolution: UVec2) -> Scene {
         let mut scene = Scene::default();
 

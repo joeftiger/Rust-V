@@ -12,5 +12,10 @@ tobj = ""
 ultraviolet = { path = "../ultraviolet", features= ["serde"] }
 serde = { version = "", features = ["derive"] }
 typetag = ""
+itertools = ""
 
 utility = { path = "../utility" }
+
+[features]
+default = ["watertight-mesh"]
+watertight-mesh = []

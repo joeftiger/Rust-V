@@ -4,11 +4,16 @@ pub mod bvh;
 mod composite;
 mod cylinder;
 mod debug_util;
+mod disk;
 mod lenses;
 mod mesh;
+pub mod obj_file;
+mod plane;
 mod point;
 mod ray;
 mod sphere;
+
+pub use plane::*;
 
 use ultraviolet::Vec3;
 
@@ -17,6 +22,7 @@ pub use aabb::*;
 pub use bubble::*;
 pub use composite::*;
 pub use cylinder::*;
+pub use disk::*;
 pub use lenses::*;
 pub use mesh::*;
 pub use point::*;

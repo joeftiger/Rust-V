@@ -5,6 +5,7 @@ use crate::bvh::side::Side;
 use crate::{Aabb, ContainerGeometry, Ray};
 use std::collections::HashSet;
 use std::sync::Arc;
+use utility::floats::fast_clamp;
 
 const K_T: f32 = 15.;
 const K_I: f32 = 20.;
@@ -148,16 +149,19 @@ where
         let mut right = *space;
         match plane {
             Plane::X(x) => {
-                left.max.x = x.max(space.min.x).min(space.max.x);
-                right.min.x = x.max(space.min.x).min(space.max.x);
+                let clamp = fast_clamp(*x, space.min.x, space.max.x);
+                left.max.x = clamp;
+                right.min.x = clamp;
             }
             Plane::Y(y) => {
-                left.max.y = y.max(space.min.y).min(space.max.y);
-                right.min.y = y.max(space.min.y).min(space.max.y);
+                let clamp = fast_clamp(*y, space.min.y, space.max.y);
+                left.max.y = clamp;
+                right.min.y = clamp;
             }
             Plane::Z(z) => {
-                left.max.z = z.max(space.min.z).min(space.max.z);
-                right.min.z = z.max(space.min.z).min(space.max.z);
+                let clamp = fast_clamp(*z, space.min.z, space.max.z);
+                left.max.z = clamp;
+                right.min.z = clamp;
             }
         }
         (left, right)
