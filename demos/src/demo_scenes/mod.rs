@@ -1,14 +1,14 @@
 mod cornell;
 mod debug;
-mod debug_sphere;
+mod prism;
 mod spheres;
 
-use crate::scene::Scene;
 use ultraviolet::UVec2;
 
 pub use cornell::CornellScene;
 pub use debug::DebugScene;
-pub use debug_sphere::DebugSphereScene;
+pub use prism::PrismScene;
+use rust_v::scene::Scene;
 pub use spheres::SphereScene;
 
 pub const SIGMA: f32 = 20.0;

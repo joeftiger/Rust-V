@@ -1,16 +1,17 @@
 #![allow(dead_code)]
-use rust_v::Spectrum;
-use rust_v::bxdf::{BSDF, LambertianReflection, OrenNayar, FresnelSpecular};
-use rust_v::refractive_index::RefractiveType;
-use rust_v::objects::{SceneObject, Emitter, Receiver};
-use rust_v::scene::Scene;
-use rust_v::camera::{Camera, PerspectiveCamera};
-use rust_v::sampler::pixel_samplers::PixelSamplerType;
+use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
 use color::{Color, Colors};
 use geometry::{Aabb, Boundable, Cylinder, Mesh, Point, ShadingMode, Sphere};
-use std::sync::{Arc, Mutex};
-use ultraviolet::{UVec2, Vec3};
-use crate::demo_scenes::{DemoScene, SIGMA, FOVY};
+use rust_v::bxdf::{FresnelSpecular, LambertianReflection, OrenNayar, BSDF};
+use rust_v::camera::{Camera, PerspectiveCamera};
+use rust_v::objects::{Emitter, Receiver, SceneObject};
+use rust_v::refractive_index::RefractiveType;
+use rust_v::sampler::pixel_samplers::PixelSamplerType;
+use rust_v::scene::Scene;
+use rust_v::Spectrum;
+use std::f32::consts::FRAC_PI_2;
+use std::sync::Arc;
+use ultraviolet::{Rotor3, UVec2, Vec3};
 
 pub struct PrismScene;
 
@@ -24,7 +25,7 @@ impl DemoScene for PrismScene {
         scene.add(light_bulb()); //.add(light_bulb_rectifier());
                                  // scene.add(global_light());
 
-        scene.camera = Mutex::new(create_camera(resolution));
+        scene.camera = create_camera(resolution);
 
         scene
     }
@@ -53,6 +54,9 @@ fn prism() -> SceneObject {
         let bounds = prism.bounds();
         let unit_scale = Vec3::broadcast(2.0) / bounds.size();
         prism.scale(unit_scale);
+    }
+    {
+        prism.rotate(Rotor3::from_rotation_yz(-FRAC_PI_2));
     }
     {
         let center = prism.bounds().center();

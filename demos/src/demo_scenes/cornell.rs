@@ -1,17 +1,17 @@
 #![allow(dead_code)]
 
-use crate::bxdf::{FresnelSpecular, OrenNayar, BSDF};
-use crate::camera::{Camera, PerspectiveCamera};
 use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
-use crate::objects::{Emitter, Receiver, SceneObject};
-use crate::refractive_index::RefractiveType;
-use crate::sampler::pixel_samplers::PixelSamplerType;
-use crate::scene::Scene;
-use crate::Spectrum;
 use color::{Color, Colors};
 use geometry::{Aabb, BiconvexLens, Boundable, Bubble, Mesh, ShadingMode, Sphere};
+use rust_v::bxdf::{FresnelSpecular, OrenNayar, BSDF};
+use rust_v::camera::{Camera, PerspectiveCamera};
+use rust_v::objects::{Emitter, Receiver, SceneObject};
+use rust_v::refractive_index::RefractiveType;
+use rust_v::sampler::pixel_samplers::PixelSamplerType;
+use rust_v::scene::Scene;
+use rust_v::Spectrum;
 use std::f32::consts::PI;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use ultraviolet::{Rotor3, UVec2, Vec3};
 
 const DIMENSION: f32 = 4.0;
@@ -58,7 +58,7 @@ impl DemoScene for CornellScene {
         // scene.add(create_biconvex_lens());
         scene.add(create_bubble());
         scene.add(create_emitter());
-        scene.camera = Mutex::new(create_camera(resolution));
+        scene.camera = create_camera(resolution);
 
         scene
     }
