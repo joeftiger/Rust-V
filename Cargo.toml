@@ -1,6 +1,6 @@
 [workspace]
-members = [ "color", "geometry", "utility" ]
-default-members = [ "color", "geometry", "utility" ]
+members = [ "color", "demos", "geometry", "utility" ]
+default-members = [ "color", "demos", "geometry", "utility" ]
 
 [package]
 name = "rust-v"
