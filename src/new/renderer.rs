@@ -149,12 +149,6 @@ impl Renderer {
                             .expect("Progress bar is poisoned")
                             .inc(1);
                     } else {
-                        let bar = this.progress_bar.lock().expect("Progress bar poisoned");
-                        bar.println(format!(
-                            "Render thread {} has no more blocks to do. Stopping...",
-                            i
-                        ));
-
                         break;
                     }
                 })
