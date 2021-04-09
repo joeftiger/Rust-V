@@ -23,8 +23,7 @@ impl PixelSampler for PixelSamplerType {
             PixelSamplerType::NoOp => Vector2::broadcast(0.5),
             PixelSamplerType::Random => {
                 Vector2::new(fastrand::f64() as Float, fastrand::f64() as Float)
-            }
-            // PixelSamplerType::UniformSuperSampling(s) => s.sample(pixel),
+            } // PixelSamplerType::UniformSuperSampling(s) => s.sample(pixel),
         }
     }
 }

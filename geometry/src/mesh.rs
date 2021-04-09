@@ -2,6 +2,7 @@ use crate::bvh::Tree;
 use crate::debug_util::is_finite;
 use crate::obj_file::ObjFile;
 use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
+#[allow(unused_imports)]
 use definitions::{Float, Matrix3, Rotation3, Vector3};
 use itertools::{Itertools, MinMaxResult};
 use serde::de::{Error, MapAccess, Visitor};
@@ -131,8 +132,11 @@ impl Face {
         let cy = c[ky] - sy * c[kz];
 
         // calculate scaled barycentric coordinates
+        #[allow(unused_mut)]
         let mut u = cx * by - cy * bx;
+        #[allow(unused_mut)]
         let mut v = ax * cy - ay * cx;
+        #[allow(unused_mut)]
         let mut w = bx * ay - by * ax;
 
         // perform edge tests
@@ -294,8 +298,11 @@ impl Face {
         let cy = c[ky] - sy * c[kz];
 
         // calculate scaled barycentric coordinates
+        #[allow(unused_mut)]
         let mut u = cx * by - cy * bx;
+        #[allow(unused_mut)]
         let mut v = ax * cy - ay * cx;
+        #[allow(unused_mut)]
         let mut w = bx * ay - by * ax;
 
         // perform edge tests

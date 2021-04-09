@@ -14,3 +14,7 @@ rust-v = { path = "../" }
 ultraviolet = { path = "../ultraviolet" }
 fastrand = ""
 ron = ""
+definitions = { path = "../definitions" }
+
+[features]
+f64 = ["color/f64", "geometry/f64", "rust-v/f64", "ultraviolet/f64", "definitions/f64"]

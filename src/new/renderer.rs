@@ -1,8 +1,8 @@
 use crate::integrator::Integrator;
 use crate::new::config::Config;
 use crate::new::render_job::RenderJob;
-use crate::new::sensor::Sensor;
 use crate::new::sensor::sensor_tile::SensorTile;
+use crate::new::sensor::Sensor;
 use crate::sampler::Sampler;
 use crate::scene::Scene;
 use image::{ImageBuffer, Rgb};

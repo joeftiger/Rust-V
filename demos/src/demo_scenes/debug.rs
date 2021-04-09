@@ -3,6 +3,7 @@
 
 use crate::demo_scenes::{DemoScene, FOVY};
 use color::Color;
+use definitions::{Float, Vector3};
 use geometry::{Aabb, Cylinder, Point, Sphere};
 use rust_v::bxdf::{
     FresnelType, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
@@ -14,10 +15,10 @@ use rust_v::sampler::pixel_samplers::PixelSamplerType;
 use rust_v::scene::Scene;
 use rust_v::Spectrum;
 use std::sync::Arc;
-use ultraviolet::{UVec2, Vec3};
+use ultraviolet::UVec2;
 
-const FLOOR: f32 = 0.0;
-const RADIUS: f32 = 0.5;
+const FLOOR: Float = 0.0;
+const RADIUS: Float = 0.5;
 
 pub struct DebugScene;
 
@@ -40,8 +41,8 @@ impl DemoScene for DebugScene {
 
 //noinspection DuplicatedCode
 fn ground() -> SceneObject {
-    let min = Vec3::new(-10000.0, FLOOR - 5.0, -10000.0);
-    let max = Vec3::new(10000.0, FLOOR, 10000.0);
+    let min = Vector3::new(-10000.0, FLOOR - 5.0, -10000.0);
+    let max = Vector3::new(10000.0, FLOOR, 10000.0);
     let cube = Aabb::new(min, max);
 
     let lambertian = LambertianReflection::new(Spectrum::broadcast(1.0));
@@ -55,8 +56,8 @@ fn ground() -> SceneObject {
 }
 
 fn cylinder() -> SceneObject {
-    let bot = Vec3::new(-RADIUS * 1.25, 0.0, 0.0);
-    let top = bot + Vec3::unit_y() * RADIUS;
+    let bot = Vector3::new(-RADIUS * 1.25, 0.0, 0.0);
+    let top = bot + Vector3::unit_y() * RADIUS;
 
     let cylinder = Cylinder::new((bot, top), RADIUS);
 
@@ -70,7 +71,7 @@ fn cylinder() -> SceneObject {
 }
 
 fn sphere() -> SceneObject {
-    let center = Vec3::new(-RADIUS * 1.25, RADIUS, 0.0);
+    let center = Vector3::new(-RADIUS * 1.25, RADIUS, 0.0);
     let sphere = Sphere::new(center, RADIUS);
 
     let specular = SpecularTransmission::new(
@@ -87,8 +88,8 @@ fn sphere() -> SceneObject {
 }
 
 fn sphere_emitter() -> SceneObject {
-    let center = Vec3::new(RADIUS * 1.25, RADIUS, 0.0);
-    // let center = Vec3::new(0.0, RADIUS, 0.0);
+    let center = Vector3::new(RADIUS * 1.25, RADIUS, 0.0);
+    // let center = Vector3::new(0.0, RADIUS, 0.0);
     let sphere = Sphere::new(center, RADIUS);
 
     let bsdf = BSDF::empty();
@@ -102,7 +103,7 @@ fn sphere_emitter() -> SceneObject {
 }
 
 fn create_emitter() -> SceneObject {
-    let position = Vec3::new(0.0, 200.0, 0.0);
+    let position = Vector3::new(0.0, 200.0, 0.0);
     let point = Point(position);
 
     let bsdf = BSDF::empty();
@@ -116,14 +117,14 @@ fn create_emitter() -> SceneObject {
 
 //noinspection DuplicatedCode
 fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
-    let position = Vec3::new(0.0, 2.0, 5.0);
-    let target = Vec3::new(0.0, RADIUS, 0.0);
+    let position = Vector3::new(0.0, 2.0, 5.0);
+    let target = Vector3::new(0.0, RADIUS, 0.0);
 
     let camera = PerspectiveCamera::new(
         PixelSamplerType::Random,
         position,
         target,
-        Vec3::unit_y(),
+        Vector3::unit_y(),
         FOVY / 2.0,
         resolution,
     );

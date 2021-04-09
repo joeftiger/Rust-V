@@ -3,6 +3,7 @@
 
 use crate::demo_scenes::{DemoScene, FOVY};
 use color::{Color, Colors};
+use definitions::{Float, Vector3};
 use geometry::{Aabb, Point, Sphere};
 use rust_v::bxdf::{
     FresnelType, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
@@ -14,13 +15,13 @@ use rust_v::sampler::pixel_samplers::PixelSamplerType;
 use rust_v::scene::Scene;
 use rust_v::Spectrum;
 use std::sync::Arc;
-use ultraviolet::{UVec2, Vec3};
+use ultraviolet::UVec2;
 
-const FLOOR: f32 = 0.0;
-const SKY_RADIUS: f32 = 500.0;
-const RADIUS: f32 = 0.5;
+const FLOOR: Float = 0.0;
+const SKY_RADIUS: Float = 500.0;
+const RADIUS: Float = 0.5;
 
-const DISTRIBUTION: f32 = 10.0;
+const DISTRIBUTION: Float = 10.0;
 const NUM_SPHERES_IN_DIMENSION: u32 = 5;
 
 pub struct SphereScene;
@@ -36,8 +37,8 @@ impl DemoScene for SphereScene {
 }
 
 fn ground() -> SceneObject {
-    let min = Vec3::new(-1000000.0, FLOOR - 5.0, -1000000.0);
-    let max = Vec3::new(1000000.0, FLOOR, 1000000.0);
+    let min = Vector3::new(-1000000.0, FLOOR - 5.0, -1000000.0);
+    let max = Vector3::new(1000000.0, FLOOR, 1000000.0);
     let cube = Aabb::new(min, max);
 
     let lambertian = LambertianReflection::new(Spectrum::white());
@@ -51,7 +52,7 @@ fn ground() -> SceneObject {
 }
 
 fn sky() -> SceneObject {
-    let center = Vec3::zero();
+    let center = Vector3::zero();
     let sphere = Sphere::new(center, SKY_RADIUS);
 
     let lambertian = LambertianReflection::new(Spectrum::blue() + Spectrum::white() * 0.2);
@@ -63,11 +64,25 @@ fn sky() -> SceneObject {
     SceneObject::Receiver(receiver)
 }
 
-fn random_pos() -> Vec3 {
-    let x = DISTRIBUTION * (fastrand::f32() - 0.5);
-    let z = DISTRIBUTION * (fastrand::f32() - 0.5);
+fn random_pos() -> Vector3 {
+    let (x, z) = {
+        #[cfg(feature = "f64")]
+        {
+            (
+                DISTRIBUTION * (fastrand::f64() - 0.5),
+                DISTRIBUTION * (fastrand::f64() - 0.5),
+            )
+        }
+        #[cfg(not(feature = "f64"))]
+        {
+            (
+                DISTRIBUTION * (fastrand::f32() - 0.5),
+                DISTRIBUTION * (fastrand::f32() - 0.5),
+            )
+        }
+    };
 
-    Vec3::new(x, RADIUS, z)
+    Vector3::new(x, RADIUS, z)
 }
 
 fn random_color() -> Spectrum {
@@ -118,7 +133,7 @@ fn random_bsdf(color: Spectrum) -> (bool, BSDF) {
 }
 
 fn create_emitter() -> SceneObject {
-    let position = Vec3::new(0.0, SKY_RADIUS / 2.0, 0.0);
+    let position = Vector3::new(0.0, SKY_RADIUS / 2.0, 0.0);
     let point = Point(position);
 
     let bsdf = BSDF::empty();
@@ -161,18 +176,18 @@ fn create_scene() -> Scene {
 
 //noinspection DuplicatedCode
 fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
-    let position = Vec3::new(0.0, 5.0, 10.0);
-    let target = Vec3::new(0.0, 1.0, 0.0);
+    let position = Vector3::new(0.0, 5.0, 10.0);
+    let target = Vector3::new(0.0, 1.0, 0.0);
 
     let camera = PerspectiveCamera::new(
         PixelSamplerType::Random,
         position,
         target,
-        Vec3::unit_y(),
+        Vector3::unit_y(),
         FOVY,
         resolution,
     );
-    // let camera = crate::camera::perspective_simone::PerspectiveCamera::new(position, target, Vec3::unit_y(), FOVY, resolution);
+    // let camera = crate::camera::perspective_simone::PerspectiveCamera::new(position, target, Vector3::unit_y(), FOVY, resolution);
 
     Box::new(camera)
 }

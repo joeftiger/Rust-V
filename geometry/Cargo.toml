@@ -21,4 +21,4 @@ utility = { path = "../utility" }
 [features]
 default = ["watertight-mesh"]
 watertight-mesh = []
-f64 = ["definitions/f64"]
+f64 = ["ultraviolet/f64", "definitions/f64", "utility/f64"]

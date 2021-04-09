@@ -47,8 +47,7 @@ name = "refractive_index"
 harness = false
 
 [features]
-default = []
-f64 = ["definitions/f64", "ultraviolet/f64", "color/f64", "geometry/f64", "utility/f64"]
+f64 = ["ultraviolet/f64", "color/f64", "definitions/f64", "geometry/f64", "utility/f64"]
 
 [profile.release]
 codegen-units = 1

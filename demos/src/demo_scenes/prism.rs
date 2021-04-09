@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
 use color::{Color, Colors};
+use definitions::{Float, Rotation3, Vector3};
 use geometry::{Aabb, Boundable, Cylinder, Mesh, Point, ShadingMode, Sphere};
 use rust_v::bxdf::{FresnelSpecular, LambertianReflection, OrenNayar, BSDF};
 use rust_v::camera::{Camera, PerspectiveCamera};
@@ -9,9 +10,9 @@ use rust_v::refractive_index::RefractiveType;
 use rust_v::sampler::pixel_samplers::PixelSamplerType;
 use rust_v::scene::Scene;
 use rust_v::Spectrum;
-use std::f32::consts::FRAC_PI_2;
+use std::f64::consts::FRAC_PI_2;
 use std::sync::Arc;
-use ultraviolet::{Rotor3, UVec2, Vec3};
+use ultraviolet::UVec2;
 
 pub struct PrismScene;
 
@@ -33,8 +34,8 @@ impl DemoScene for PrismScene {
 
 //noinspection DuplicatedCode
 fn ground() -> SceneObject {
-    let min = Vec3::new(-100.0, -5.0, -100.0);
-    let max = Vec3::new(100.0, 0.0, 100.0);
+    let min = Vector3::new(-100.0, -5.0, -100.0);
+    let max = Vector3::new(100.0, 0.0, 100.0);
     let cube = Aabb::new(min, max);
 
     let oren_nayar = OrenNayar::new(Spectrum::white(), SIGMA);
@@ -52,15 +53,15 @@ fn prism() -> SceneObject {
 
     {
         let bounds = prism.bounds();
-        let unit_scale = Vec3::broadcast(2.0) / bounds.size();
+        let unit_scale = Vector3::broadcast(2.0) / bounds.size();
         prism.scale(unit_scale);
     }
     {
-        prism.rotate(Rotor3::from_rotation_yz(-FRAC_PI_2));
+        prism.rotate(Rotation3::from_rotation_yz(-FRAC_PI_2 as Float));
     }
     {
         let center = prism.bounds().center();
-        let translation = Vec3::unit_y() - center;
+        let translation = Vector3::unit_y() - center;
         prism.translate(translation);
     }
 
@@ -81,7 +82,7 @@ fn prism() -> SceneObject {
 }
 
 fn light_bulb() -> SceneObject {
-    let center = Vec3::new(-2.0, 1.5, 0.0);
+    let center = Vector3::new(-2.0, 1.5, 0.0);
     let light_bulb = Sphere::new(center, 0.5);
 
     let bsdf = BSDF::empty();
@@ -95,9 +96,9 @@ fn light_bulb() -> SceneObject {
 }
 
 fn light_bulb_rectifier() -> SceneObject {
-    let position = Vec3::new(-4.0, 1.5, 0.0);
-    let left_end = position + Vec3::new(-2.0, 0.5, 0.0);
-    let right_end = position + Vec3::new(2.0, -0.5, 0.0);
+    let position = Vector3::new(-4.0, 1.5, 0.0);
+    let left_end = position + Vector3::new(-2.0, 0.5, 0.0);
+    let right_end = position + Vector3::new(2.0, -0.5, 0.0);
 
     let rectifier = Cylinder::new((left_end, right_end), 0.51);
     let lambertian = LambertianReflection::new(Spectrum::grey());
@@ -110,7 +111,7 @@ fn light_bulb_rectifier() -> SceneObject {
 }
 
 fn global_light() -> SceneObject {
-    let point = Point(Vec3::unit_y() * 100.0);
+    let point = Point(Vector3::unit_y() * 100.0);
     let bsdf = BSDF::empty();
 
     let emitter = Arc::new(Emitter::new(
@@ -123,14 +124,14 @@ fn global_light() -> SceneObject {
 
 //noinspection DuplicatedCode
 fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
-    let position = Vec3::new(0.0, 3.0, 10.0);
-    let target = Vec3::new(0.0, 0.0, 0.0);
+    let position = Vector3::new(0.0, 3.0, 10.0);
+    let target = Vector3::new(0.0, 0.0, 0.0);
 
     let camera = PerspectiveCamera::new(
         PixelSamplerType::Random,
         position,
         target,
-        Vec3::unit_y(),
+        Vector3::unit_y(),
         FOVY / 2.0,
         resolution,
     );

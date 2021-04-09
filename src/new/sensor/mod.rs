@@ -78,4 +78,3 @@ impl Sensor {
         self.tiles.len()
     }
 }
-

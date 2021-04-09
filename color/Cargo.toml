@@ -17,4 +17,4 @@ utility = { path = "../utility" }
 definitions = { path = "../definitions" }
 
 [features]
-f64 = ["definitions/f64"]
+f64 = ["definitions/f64", "ultraviolet/f64", "utility/f64"]
