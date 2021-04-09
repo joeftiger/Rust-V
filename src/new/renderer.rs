@@ -42,7 +42,7 @@ impl Renderer {
         let progress_bar = {
             let bar = ProgressBar::new(0);
             bar.set_style(ProgressStyle::default_bar().template(
-                "[{elapsed} elapsed] {wide_bar:.cyan/white} {percent}% [{eta} remaining]",
+                "[{elapsed_precise} elapsed] {wide_bar:.cyan/white} {percent}% [{eta_precise} remaining]\nrender-blocks: {per_sec}",
             ));
             Arc::new(Mutex::new(bar))
         };
