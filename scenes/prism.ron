@@ -48,13 +48,13 @@
                         // 0: LEFT BACK
                         (
                             x: -1,
-                            y: 0.000000059604645,
+                            y: 0.001,
                             z: -1,
                         ),
                         // 1: RIGHT BACK
                         (
                             x: 1,
-                            y: 0.000000059604645,
+                            y: 0.001,
                             z: -1,
                         ),
                         // 2: TOP BACK
@@ -66,13 +66,13 @@
                         // 3: LEFT FRONT
                         (
                             x: -1,
-                            y: 0.000000059604645,
+                            y: 0.001,
                             z: 1,
                         ),
                         // 4: RIGHT FRONT
                         (
                             x: 1,
-                            y: 0.000000059604645,
+                            y: 0.001,
                             z: 1,
                         ),
                         // 5: TOP FRONT
@@ -128,7 +128,7 @@
                     Bounds: (
                         min: (
                             x: -1,
-                            y: 0.000000059604645,
+                            y: 0.001,
                             z: -1,
                         ),
                         max: (
@@ -165,11 +165,11 @@
             geometry: {
                 "Sphere": (
                     center: (
-                        x: -3,
+                        x: -2,
                         y: 1,
                         z: 0,
                     ),
-                    radius: 0.1,
+                    radius: 0.05,
                 ),
             },
             bsdf: (
@@ -182,7 +182,7 @@
     ],
     camera: {
         "PerspectiveCamera": (
-            Sampler: NoOp,
+            Sampler: Random,
             // Position: (
             //     x: 5,
             //     y: 5,
@@ -210,8 +210,8 @@
             // ),
             FovY: 35,
             Resolution: (
-                x: 1024,
-                y: 1024,
+                x: 2048,
+                y: 2048,
             ),
         ),
     },
