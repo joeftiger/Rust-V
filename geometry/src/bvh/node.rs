@@ -3,12 +3,13 @@ use crate::bvh::item::Item;
 use crate::bvh::plane::Plane;
 use crate::bvh::side::Side;
 use crate::{Aabb, ContainerGeometry, Ray};
+use definitions::Float;
 use std::collections::HashSet;
 use std::sync::Arc;
-use utility::floats::fast_clamp;
+use utility::floats::FloatExt;
 
-const K_T: f32 = 15.;
-const K_I: f32 = 20.;
+const K_T: Float = 15.0;
+const K_I: Float = 20.0;
 
 #[derive(Clone)]
 pub struct InternalNode<T> {
@@ -46,7 +47,7 @@ where
         let (cost, best_index, n_l, n_r) = Self::partition(n, &space, &candidates);
 
         // Check that the cost of the splitting is not higher than the cost of the leaf.
-        if cost > K_I * n as f32 {
+        if cost > K_I * n as Float {
             // Create the set of primitives
             let items = candidates
                 .iter()
@@ -81,8 +82,8 @@ where
         n: usize,
         space: &Aabb,
         candidates: &[Candidate<T>],
-    ) -> (f32, usize, usize, usize) {
-        let mut best_cost = f32::INFINITY;
+    ) -> (Float, usize, usize, usize) {
+        let mut best_cost = Float::INFINITY;
         let mut best_candidate_index = 0;
 
         // Variables to keep count the number of items in both subspace for each dimension
@@ -119,17 +120,17 @@ where
         (best_cost, best_candidate_index, best_n_l, best_n_r)
     }
 
-    fn cost(p: &Plane, v: &Aabb, n_l: usize, n_r: usize) -> f32 {
+    fn cost(p: &Plane, v: &Aabb, n_l: usize, n_r: usize) -> Float {
         let (left, right) = Self::split_space(v, p);
 
         let volume_left = left.volume();
         if volume_left == 0.0 {
-            return f32::INFINITY;
+            return Float::INFINITY;
         }
 
         let volume_right = right.volume();
         if volume_right == 0.0 {
-            return f32::INFINITY;
+            return Float::INFINITY;
         }
 
         let total_volume = volume_left + volume_right;
@@ -140,8 +141,8 @@ where
         factor
             * (K_T
                 + K_I
-                    * (n_l as f32 * volume_left / total_volume
-                        + n_r as f32 * volume_right / total_volume))
+                    * (n_l as Float * volume_left / total_volume
+                        + n_r as Float * volume_right / total_volume))
     }
 
     fn split_space(space: &Aabb, plane: &Plane) -> (Aabb, Aabb) {
@@ -149,17 +150,17 @@ where
         let mut right = *space;
         match plane {
             Plane::X(x) => {
-                let clamp = fast_clamp(*x, space.min.x, space.max.x);
+                let clamp = x.fast_clamp(space.min.x, space.max.x);
                 left.max.x = clamp;
                 right.min.x = clamp;
             }
             Plane::Y(y) => {
-                let clamp = fast_clamp(*y, space.min.y, space.max.y);
+                let clamp = y.fast_clamp(space.min.y, space.max.y);
                 left.max.y = clamp;
                 right.min.y = clamp;
             }
             Plane::Z(z) => {
-                let clamp = fast_clamp(*z, space.min.z, space.max.z);
+                let clamp = z.fast_clamp(space.min.z, space.max.z);
                 left.max.z = clamp;
                 right.min.z = clamp;
             }

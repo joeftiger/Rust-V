@@ -1,5 +1,5 @@
 [package]
-name = "utility"
+name = "definitions"
 version = "0.1.0"
 authors = ["Julius Oeftiger <j.oeftiger@protonmail.com>"]
 edition = "2018"
@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-definitions = { path = "../definitions" }
+ultraviolet = { path = "../ultraviolet", features = ["int"] }
 
 [features]
-f64 = ["definitions/f64"]
+f64 = ["ultraviolet/f64"]

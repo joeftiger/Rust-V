@@ -1,5 +1,5 @@
 use crate::spectral_data::LAMBDA_NUM;
-use crate::ColorArray;
+use crate::*;
 use serde::{Deserialize, Serialize};
 use std::ops::{Index, IndexMut};
 use std::slice::SliceIndex;
@@ -13,6 +13,10 @@ pub struct IntSpectrum {
 impl IntSpectrum {
     pub fn new(data: [u32; LAMBDA_NUM]) -> Self {
         Self { data }
+    }
+
+    pub fn size() -> usize {
+        LAMBDA_NUM
     }
 
     pub fn broadcast(val: u32) -> Self {
@@ -49,5 +53,39 @@ where
 {
     fn index_mut(&mut self, index: I) -> &mut Self::Output {
         &mut self.data[index]
+    }
+}
+
+impl Mul<IntSpectrum> for Spectrum {
+    type Output = Self;
+
+    fn mul(mut self, rhs: IntSpectrum) -> Self::Output {
+        self *= rhs;
+        self
+    }
+}
+
+impl MulAssign<IntSpectrum> for Spectrum {
+    fn mul_assign(&mut self, rhs: IntSpectrum) {
+        for i in 0..LAMBDA_NUM {
+            self[i] *= rhs[i] as Float
+        }
+    }
+}
+
+impl Div<IntSpectrum> for Spectrum {
+    type Output = Self;
+
+    fn div(mut self, rhs: IntSpectrum) -> Self::Output {
+        self /= rhs;
+        self
+    }
+}
+
+impl DivAssign<IntSpectrum> for Spectrum {
+    fn div_assign(&mut self, rhs: IntSpectrum) {
+        for i in 0..LAMBDA_NUM {
+            self[i] /= rhs[i] as Float
+        }
     }
 }

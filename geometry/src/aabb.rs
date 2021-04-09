@@ -2,16 +2,16 @@ use crate::ray::Ray;
 #[cfg(test)]
 use crate::UNIT_VECTORS;
 use crate::{Boundable, Container, Geometry, Intersectable, Intersection};
+use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
-use ultraviolet::Vec3;
-use utility::floats::BIG_EPSILON;
+use utility::floats::FloatExt;
 
 /// A cube represents an axis-aligned bounding box in 3 dimension. It is very efficient using only
 /// 2 coordinates to represent such a box.
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Aabb {
-    pub min: Vec3,
-    pub max: Vec3,
+    pub min: Vector3,
+    pub max: Vector3,
 }
 
 impl Aabb {
@@ -26,7 +26,7 @@ impl Aabb {
     ///
     /// # Returns
     /// * Self
-    pub fn new(min: Vec3, max: Vec3) -> Self {
+    pub fn new(min: Vector3, max: Vector3) -> Self {
         debug_assert_eq!(min, min.min_by_component(max));
 
         Self { min, max }
@@ -37,8 +37,8 @@ impl Aabb {
     /// This cube is effectively **invalid**, but might be useful to compute bounding boxes
     /// of many objects, taking this empty cube as starting point.
     pub fn empty() -> Self {
-        let min = Vec3::one() * f32::INFINITY;
-        let max = Vec3::one() * f32::NEG_INFINITY;
+        let min = Vector3::one() * Float::INFINITY;
+        let max = Vector3::one() * Float::NEG_INFINITY;
 
         Self { min, max }
     }
@@ -47,7 +47,7 @@ impl Aabb {
     ///
     /// # Returns
     /// * The size
-    pub fn size(&self) -> Vec3 {
+    pub fn size(&self) -> Vector3 {
         self.max - self.min
     }
 
@@ -55,7 +55,7 @@ impl Aabb {
     ///
     /// # Returns
     /// * The volume
-    pub fn volume(&self) -> f32 {
+    pub fn volume(&self) -> Float {
         let size = self.size();
         size.x * size.y * size.z
     }
@@ -64,7 +64,7 @@ impl Aabb {
     ///
     /// # Returns
     /// * The center
-    pub fn center(&self) -> Vec3 {
+    pub fn center(&self) -> Vector3 {
         (self.min + self.max) / 2.0
     }
 
@@ -83,7 +83,7 @@ impl Aabb {
 }
 
 impl Container for Aabb {
-    fn contains(&self, point: &Vec3) -> bool {
+    fn contains(&self, point: &Vector3) -> bool {
         *point == point.clamped(self.min, self.max)
     }
 }
@@ -121,10 +121,10 @@ impl Intersectable for Aabb {
         let half_size = self.size() / 2.0;
         let center = self.min + half_size;
         let direction = point - center;
-        let bias = 1.0 + BIG_EPSILON;
+        let bias = 1.0 + Float::big_epsilon();
 
         let mut normal = direction * bias / half_size;
-        normal.apply(|f| f as i32 as f32);
+        normal.apply(|f| f as i32 as Float);
         normal.normalize();
 
         Some(Intersection::new(point, normal, t, *ray))
@@ -153,7 +153,7 @@ impl Default for Aabb {
     /// # Returns
     /// * `[-1, 1]` Self
     fn default() -> Self {
-        Self::new(-Vec3::one(), Vec3::one())
+        Self::new(-Vector3::one(), Vector3::one())
     }
 }
 
@@ -178,7 +178,7 @@ fn intersect_outside() {
 
 #[test]
 fn intersect_inside() {
-    let origins = [Vec3::zero(); UNIT_VECTORS.len()];
+    let origins = [Vector3::zero(); UNIT_VECTORS.len()];
     let directions = UNIT_VECTORS;
 
     let cube = Aabb::default();

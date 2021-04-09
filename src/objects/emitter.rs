@@ -4,10 +4,10 @@ use crate::debug_utils::{is_finite, is_normalized, within_01};
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use color::{Color, IndexSpectral};
+use definitions::{Float, Vector2, Vector3};
 use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 use serde::{Deserialize, Serialize};
-use ultraviolet::{Vec2, Vec3};
-use utility::floats::BIG_EPSILON;
+use utility::floats::FloatExt;
 
 /// An emitter is similar to a receiver, consisting of a geometry and a BSDF. Additionally, the
 /// emitter also has an emission.
@@ -36,7 +36,7 @@ impl Emitter {
         }
     }
 
-    pub fn emission_light_wave(&self, light_wave_index: usize) -> f32 {
+    pub fn emission_light_wave(&self, light_wave_index: usize) -> Float {
         debug_assert!(light_wave_index < Spectrum::size());
 
         self.emission.index_spectral(light_wave_index)
@@ -57,7 +57,7 @@ impl Emitter {
     /// # Returns
     /// * The radiated spectrum
     #[inline]
-    pub fn radiance(&self, incident: &Vec3, normal: &Vec3) -> Spectrum {
+    pub fn radiance(&self, incident: &Vector3, normal: &Vector3) -> Spectrum {
         debug_assert!(is_finite(incident));
         debug_assert!(is_normalized(incident));
         debug_assert!(is_finite(normal));
@@ -68,16 +68,16 @@ impl Emitter {
         if dot > 0.0 {
             self.emission
         } else {
-            Spectrum::new_const(0.0)
+            Spectrum::broadcast(0.0)
         }
     }
 
     pub fn radiance_light_wave(
         &self,
-        incident: &Vec3,
-        normal: &Vec3,
+        incident: &Vector3,
+        normal: &Vector3,
         light_wave_index: usize,
-    ) -> f32 {
+    ) -> Float {
         debug_assert!(is_finite(incident));
         debug_assert!(is_normalized(incident));
         debug_assert!(is_finite(normal));
@@ -104,7 +104,7 @@ impl Emitter {
     ///
     /// # Returns
     /// * An emitter sample
-    pub fn sample(&self, point: &Vec3, sample: &Vec2) -> EmitterSample<Spectrum> {
+    pub fn sample(&self, point: &Vector3, sample: &Vector2) -> EmitterSample<Spectrum> {
         debug_assert!(is_finite(point));
         debug_assert!(within_01(sample));
 
@@ -120,10 +120,10 @@ impl Emitter {
 
     pub fn sample_light_wave(
         &self,
-        point: &Vec3,
-        sample: &Vec2,
+        point: &Vector3,
+        sample: &Vector2,
         light_wave_index: usize,
-    ) -> EmitterSample<f32> {
+    ) -> EmitterSample<Float> {
         debug_assert!(is_finite(point));
         debug_assert!(within_01(sample));
         debug_assert!(light_wave_index < Spectrum::size());
@@ -163,8 +163,8 @@ impl Intersectable for Emitter {
 /// * An `occlusion tester` to test against a scene
 pub struct EmitterSample<T> {
     pub radiance: T,
-    pub incident: Vec3,
-    pub pdf: f32,
+    pub incident: Vector3,
+    pub pdf: Float,
     pub occlusion_tester: OcclusionTester,
 }
 
@@ -183,7 +183,12 @@ impl<T> EmitterSample<T> {
     ///
     /// # Returns
     /// * Self
-    pub fn new(radiance: T, incident: Vec3, pdf: f32, occlusion_tester: OcclusionTester) -> Self {
+    pub fn new(
+        radiance: T,
+        incident: Vector3,
+        pdf: Float,
+        occlusion_tester: OcclusionTester,
+    ) -> Self {
         debug_assert!(is_finite(&incident));
         debug_assert!(is_normalized(&incident));
 
@@ -217,7 +222,7 @@ impl OcclusionTester {
     ///
     /// # Returns
     /// * Self
-    pub fn between(origin: Vec3, target: Vec3) -> Self {
+    pub fn between(origin: Vector3, target: Vector3) -> Self {
         debug_assert!(is_finite(&origin));
         debug_assert!(is_finite(&target));
         debug_assert!(origin != target);
@@ -225,8 +230,8 @@ impl OcclusionTester {
         let direction = target - origin;
         let distance = direction.mag();
 
-        let mut t_start = BIG_EPSILON;
-        let mut t_end = distance - BIG_EPSILON;
+        let mut t_start = Float::big_epsilon();
+        let mut t_end = distance - Float::big_epsilon();
 
         if t_end < t_start {
             // edge case when distance very small
@@ -265,9 +270,9 @@ impl OcclusionTester {
 
 /// Describes a `point`, `normal` and `pdf` of a sampled surface.
 pub struct SurfaceSample {
-    pub point: Vec3,
-    pub normal: Vec3,
-    pub pdf: f32,
+    pub point: Vector3,
+    pub normal: Vector3,
+    pub pdf: Float,
 }
 
 impl SurfaceSample {
@@ -287,7 +292,7 @@ impl SurfaceSample {
     ///
     /// # Returns
     /// * Self
-    pub fn new(point: Vec3, normal: Vec3, pdf: f32) -> Self {
+    pub fn new(point: Vector3, normal: Vector3, pdf: Float) -> Self {
         debug_assert!(is_finite(&point));
         debug_assert!(is_normalized(&normal));
         debug_assert!(pdf >= 0.0);
@@ -304,7 +309,7 @@ pub trait Sampleable: Geometry + Send + Sync {
     ///
     /// # Returns
     /// * The surface area
-    fn surface_area(&self) -> f32;
+    fn surface_area(&self) -> Float;
 
     /// Samples the surface from the given point in the "solid angle" form.
     ///
@@ -318,5 +323,5 @@ pub trait Sampleable: Geometry + Send + Sync {
     ///
     /// # Returns
     /// * A surface sample
-    fn sample_surface(&self, origin: &Vec3, sample: &Vec2) -> SurfaceSample;
+    fn sample_surface(&self, origin: &Vector3, sample: &Vector2) -> SurfaceSample;
 }

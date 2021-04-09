@@ -44,7 +44,7 @@ fn ground() -> SceneObject {
     let max = Vec3::new(10000.0, FLOOR, 10000.0);
     let cube = Aabb::new(min, max);
 
-    let lambertian = LambertianReflection::new(Spectrum::new_const(1.0));
+    let lambertian = LambertianReflection::new(Spectrum::broadcast(1.0));
     let bxdf = Box::new(lambertian);
 
     let bsdf = BSDF::new(vec![bxdf]);
@@ -60,7 +60,7 @@ fn cylinder() -> SceneObject {
 
     let cylinder = Cylinder::new((bot, top), RADIUS);
 
-    let specular = SpecularReflection::new(Spectrum::new_const(1.0), FresnelType::NoOp);
+    let specular = SpecularReflection::new(Spectrum::broadcast(1.0), FresnelType::NoOp);
     let bxdf = Box::new(specular);
 
     let bsdf = BSDF::new(vec![bxdf]);
@@ -74,7 +74,7 @@ fn sphere() -> SceneObject {
     let sphere = Sphere::new(center, RADIUS);
 
     let specular = SpecularTransmission::new(
-        Spectrum::new_const(1.0),
+        Spectrum::broadcast(1.0),
         RefractiveType::Air,
         RefractiveType::Glass,
     );
@@ -96,7 +96,7 @@ fn sphere_emitter() -> SceneObject {
     let emitter = Arc::new(Emitter::new(
         Box::new(sphere),
         bsdf,
-        Spectrum::new_const(1.0),
+        Spectrum::broadcast(1.0),
     ));
     SceneObject::Emitter(emitter)
 }
@@ -109,7 +109,7 @@ fn create_emitter() -> SceneObject {
     let emitter = Arc::new(Emitter::new(
         Box::new(point),
         bsdf,
-        Spectrum::new_const(0.1),
+        Spectrum::broadcast(0.1),
     ));
     SceneObject::Emitter(emitter)
 }

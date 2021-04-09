@@ -1,12 +1,14 @@
+use definitions::Float;
+
 #[derive(Clone, PartialEq)]
 pub enum Plane {
-    X(f32),
-    Y(f32),
-    Z(f32),
+    X(Float),
+    Y(Float),
+    Z(Float),
 }
 
 impl Plane {
-    pub fn val(&self) -> f32 {
+    pub fn val(&self) -> Float {
         match self {
             Plane::X(v) => *v,
             Plane::Y(v) => *v,

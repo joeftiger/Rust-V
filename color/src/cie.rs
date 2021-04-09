@@ -2,11 +2,12 @@
 #![allow(clippy::excessive_precision)]
 
 use crate::Xyz;
+use definitions::Float;
 
 pub const CIE_SAMPLES: usize = 471;
 
 //noinspection RsApproxConstant
-pub const CIE_X_2: [f32; CIE_SAMPLES] = {
+pub const CIE_X_2: [Float; CIE_SAMPLES] = {
     [
         0.0001299,
         0.000145847,
@@ -482,7 +483,7 @@ pub const CIE_X_2: [f32; CIE_SAMPLES] = {
     ]
 };
 
-pub const CIE_Y_2: [f32; CIE_SAMPLES] = {
+pub const CIE_Y_2: [Float; CIE_SAMPLES] = {
     [
         0.000003917,
         0.000004393581,
@@ -958,7 +959,7 @@ pub const CIE_Y_2: [f32; CIE_SAMPLES] = {
     ]
 };
 
-pub const CIE_Z_2: [f32; CIE_SAMPLES] = {
+pub const CIE_Z_2: [Float; CIE_SAMPLES] = {
     [
         0.0006061,
         0.0006808792,
@@ -1439,35 +1440,35 @@ pub const CIE_Z_2: [f32; CIE_SAMPLES] = {
 
 /// A piecewise-Gaussian function.
 #[inline]
-pub fn gaussian(lambda: f32, alpha: f32, mu: f32, sigma1: f32, sigma2: f32) -> f32 {
+pub fn gaussian(lambda: Float, alpha: Float, mu: Float, sigma1: Float, sigma2: Float) -> Float {
     let t = (lambda - mu) / if lambda < mu { sigma1 } else { sigma2 };
-    alpha * f32::exp(-(t * t) / 2.0)
+    alpha * Float::exp(-(t * t) / 2.0)
 }
 
 #[inline]
-pub fn x_bar(lambda: f32) -> f32 {
+pub fn x_bar(lambda: Float) -> Float {
     gaussian(lambda, 1.056, 5998.0, 379.0, 310.0)
         + gaussian(lambda, 0.362, 4420.0, 160.0, 267.0)
         + gaussian(lambda, -0.065, 5011.0, 204.0, 262.0)
 }
 
 #[inline]
-pub fn y_bar(lambda: f32) -> f32 {
+pub fn y_bar(lambda: Float) -> Float {
     gaussian(lambda, 0.821, 5688.0, 469.0, 405.0) + gaussian(lambda, 0.286, 5309.0, 163.0, 311.0)
 }
 
 #[inline]
-pub fn z_bar(lambda: f32) -> f32 {
+pub fn z_bar(lambda: Float) -> Float {
     gaussian(lambda, 1.217, 4370.0, 118.0, 360.0) + gaussian(lambda, 0.681, 4590.0, 260.0, 138.0)
 }
 
 #[inline]
-fn mu_m_to_angstrom(lambda: f32) -> f32 {
+fn mu_m_to_angstrom(lambda: Float) -> Float {
     10_000.0 * lambda
 }
 
 #[inline]
-pub fn xyz_of(mut lambda: f32) -> Xyz {
+pub fn xyz_of(mut lambda: Float) -> Xyz {
     lambda = mu_m_to_angstrom(lambda);
     Xyz::new([x_bar(lambda), y_bar(lambda), z_bar(lambda)])
 }

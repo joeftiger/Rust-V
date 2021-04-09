@@ -3,15 +3,15 @@ use crate::ray::Ray;
 #[cfg(test)]
 use crate::UNIT_VECTORS;
 use crate::{Aabb, Boundable, Container, Geometry, Intersectable, Intersection};
+use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
-use ultraviolet::Vec3;
 use utility::math::solve_quadratic;
 
 /// A sphere consists of a center and a radius.
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Sphere {
-    pub center: Vec3,
-    pub radius: f32,
+    pub center: Vector3,
+    pub radius: Float,
 }
 
 impl Sphere {
@@ -26,7 +26,7 @@ impl Sphere {
     ///
     /// # Returns
     /// Self
-    pub fn new(center: Vec3, radius: f32) -> Self {
+    pub fn new(center: Vector3, radius: Float) -> Self {
         debug_assert!(is_finite(&center));
         debug_assert!(radius > 0.0);
 
@@ -35,14 +35,14 @@ impl Sphere {
 }
 
 impl Container for Sphere {
-    fn contains(&self, point: &Vec3) -> bool {
+    fn contains(&self, point: &Vector3) -> bool {
         (*point - self.center).mag_sq() <= self.radius * self.radius
     }
 }
 
 impl Boundable for Sphere {
     fn bounds(&self) -> Aabb {
-        let diff = Vec3::one() * self.radius;
+        let diff = Vector3::one() * self.radius;
         let min = self.center - diff;
         let max = self.center + diff;
 
@@ -104,7 +104,7 @@ impl Default for Sphere {
     /// # Returns
     /// * Self
     fn default() -> Self {
-        Self::new(Vec3::zero(), 1.0)
+        Self::new(Vector3::zero(), 1.0)
     }
 }
 
@@ -129,7 +129,7 @@ fn intersect_outside() {
 
 #[test]
 fn intersect_inside() {
-    let origins = [Vec3::zero(); UNIT_VECTORS.len()];
+    let origins = [Vector3::zero(); UNIT_VECTORS.len()];
     let directions = UNIT_VECTORS;
 
     let sphere = Sphere::default();

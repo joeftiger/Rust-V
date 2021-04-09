@@ -1,14 +1,14 @@
-use crate::renderer::Renderer;
+use crate::new::renderer::Renderer;
 use bitflags::_core::time::Duration;
 use show_image::{make_window_full, KeyCode, Window, WindowOptions};
 
-pub struct RenderWindow {
+pub struct RenderWindow<'a> {
     window: Window,
-    renderer: Renderer,
+    renderer: &'a mut Renderer,
 }
 
-impl RenderWindow {
-    pub fn new(name: String, renderer: Renderer) -> Result<Self, String> {
+impl<'a> RenderWindow<'a> {
+    pub fn new(name: String, renderer: &'a mut Renderer) -> Result<Self, String> {
         let width = 900;
         let height = 900;
 

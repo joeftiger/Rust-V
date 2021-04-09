@@ -6,6 +6,8 @@
 //! * Sellmeier data taken from [here](https://en.wikipedia.org/wiki/Sellmeier_equation) on
 //! 2021-02-21.
 
+use definitions::Float;
+
 /// Computes the refractive index of **sapphire** according to the Sellmeier equation.
 ///
 /// # Performance
@@ -20,16 +22,16 @@
 /// # Returns
 /// * The refractive index
 #[inline(always)]
-pub fn sellmeier_n(lambda: f32) -> f32 {
+pub fn sellmeier_n(lambda: Float) -> Float {
     let l2 = lambda * lambda;
     let one = 1.43134930 * l2 / (l2 - 5.2799261e-3);
     let two = 0.65054713 * l2 / (l2 - 1.42382647e-2);
     let three = 5.3414021 * l2 / (l2 - 325.017834);
 
-    f32::sqrt(1.0 + one + two + three)
+    Float::sqrt(1.0 + one + two + three)
 }
 
-pub static INDEX_K: [f32; 612] = {
+pub static INDEX_K: [Float; 612] = {
     [
         0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.31, 0.32, 0.33, 0.34, 0.35,
         0.36, 0.37, 0.38, 0.39, 0.4, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48, 0.49, 0.5,
@@ -84,7 +86,7 @@ pub static INDEX_K: [f32; 612] = {
         55.5556,
     ]
 };
-pub static K: [f32; 612] = {
+pub static K: [Float; 612] = {
     [
         -0.052, -0.039, -0.026, -0.019, -0.016, -0.01, -0.004, -0.001, 0.001, 0.007, 0.01, 0.012,
         0.013, 0.014, 0.015, 0.017, 0.018, 0.018, 0.019, 0.019, 0.019, 0.019, 0.02, 0.021, 0.021,

@@ -1,8 +1,8 @@
 use crate::bxdf::{BxDF, Type};
 use crate::Spectrum;
+use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
 use std::f32::consts::FRAC_1_PI;
-use ultraviolet::Vec3;
 
 /// The lambertian reflection reflects equally into all directions of the hemisphere.
 #[derive(Serialize, Deserialize)]
@@ -30,12 +30,12 @@ impl BxDF for LambertianReflection {
         Type::DIFFUSE | Type::REFLECTION
     }
 
-    fn evaluate(&self, _: &Vec3, _: &Vec3) -> Spectrum {
-        self.r * FRAC_1_PI
+    fn evaluate(&self, _: &Vector3, _: &Vector3) -> Spectrum {
+        self.r * FRAC_1_PI as Float
     }
 
-    fn evaluate_light_wave(&self, _: &Vec3, _: &Vec3, light_wave_index: usize) -> f32 {
-        self.r[light_wave_index] * FRAC_1_PI
+    fn evaluate_light_wave(&self, _: &Vector3, _: &Vector3, light_wave_index: usize) -> Float {
+        self.r[light_wave_index] * FRAC_1_PI as Float
     }
 }
 
@@ -64,11 +64,11 @@ impl BxDF for LambertianTransmission {
         Type::DIFFUSE | Type::TRANSMISSION
     }
 
-    fn evaluate(&self, _: &Vec3, _: &Vec3) -> Spectrum {
-        self.t * FRAC_1_PI
+    fn evaluate(&self, _: &Vector3, _: &Vector3) -> Spectrum {
+        self.t * FRAC_1_PI as Float
     }
 
-    fn evaluate_light_wave(&self, _: &Vec3, _: &Vec3, light_wave_index: usize) -> f32 {
-        self.t[light_wave_index] * FRAC_1_PI
+    fn evaluate_light_wave(&self, _: &Vector3, _: &Vector3, light_wave_index: usize) -> Float {
+        self.t[light_wave_index] * FRAC_1_PI as Float
     }
 }

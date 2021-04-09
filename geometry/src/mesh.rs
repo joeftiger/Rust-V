@@ -2,6 +2,7 @@ use crate::bvh::Tree;
 use crate::debug_util::is_finite;
 use crate::obj_file::ObjFile;
 use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
+use definitions::{Float, Matrix3, Rotation3, Vector3};
 use itertools::{Itertools, MinMaxResult};
 use serde::de::{Error, MapAccess, Visitor};
 use serde::ser::SerializeStruct;
@@ -11,11 +12,8 @@ use std::fmt;
 use std::fmt::Debug;
 use std::mem::swap;
 use std::path::Path;
-use ultraviolet::{Mat3, Rotor3, Vec3};
-#[cfg(feature = "watertight-mesh")]
-use utility::floats::fast_clamp;
 #[cfg(not(feature = "watertight-mesh"))]
-use utility::floats::{fast_clamp, in_range, EPSILON};
+use utility::floats::{in_range, EPSILON};
 
 /// The shading mode defines the shading of normals. In `Flat` mode, the surface of triangles will
 /// appear flat. In `Phong` however, they will be interpolated to create a smooth looking surface.
@@ -27,7 +25,7 @@ pub enum ShadingMode {
 
 /// Returns the index of the maximum component of a vector.
 #[inline(always)]
-fn max_index(v: &Vec3) -> usize {
+fn max_index(v: &Vector3) -> usize {
     if v.x > v.y {
         if v.x > v.z {
             return 0;
@@ -53,7 +51,7 @@ impl Face {
         Self { v, vn }
     }
 
-    pub fn get_vertices(&self, vertices: &[Vec3]) -> (Vec3, Vec3, Vec3) {
+    pub fn get_vertices(&self, vertices: &[Vector3]) -> (Vector3, Vector3, Vector3) {
         (
             vertices[self.v.0 as usize],
             vertices[self.v.1 as usize],
@@ -61,7 +59,7 @@ impl Face {
         )
     }
 
-    pub fn get_normals(&self, normals: &[Vec3]) -> Option<(Vec3, Vec3, Vec3)> {
+    pub fn get_normals(&self, normals: &[Vector3]) -> Option<(Vector3, Vector3, Vector3)> {
         if let Some((n0, n1, n2)) = self.vn {
             Some((
                 normals[n0 as usize],
@@ -73,7 +71,7 @@ impl Face {
         }
     }
 
-    pub fn face_normal(&self, vertices: &[Vec3]) -> Vec3 {
+    pub fn face_normal(&self, vertices: &[Vector3]) -> Vector3 {
         let (v0, v1, v2) = self.get_vertices(vertices);
 
         (v1 - v0).cross(v2 - v0).normalized()
@@ -83,7 +81,7 @@ impl Face {
         self.vn.is_some()
     }
 
-    pub fn bounds(&self, vertices: &[Vec3]) -> Aabb {
+    pub fn bounds(&self, vertices: &[Vector3]) -> Aabb {
         let (v0, v1, v2) = self.get_vertices(vertices);
 
         let min = v0.min_by_component(v1.min_by_component(v2));
@@ -143,19 +141,22 @@ impl Face {
         }
 
         // fallback to test against edges using double precision
-        if u == 0.0 {
-            u = (cx as f64 * by as f64 - cy as f64 * bx as f64) as f32;
-        }
-        if v == 0.0 {
-            v = (ax as f64 * cy as f64 - ay as f64 * cx as f64) as f32;
-        }
-        if w == 0.0 {
-            w = (bx as f64 * ay as f64 - by as f64 * ax as f64) as f32;
-        }
+        #[cfg(not(feature = "f64"))]
+        {
+            if u == 0.0 {
+                u = (cx as f64 * by as f64 - cy as f64 * bx as f64) as Float;
+            }
+            if v == 0.0 {
+                v = (ax as f64 * cy as f64 - ay as f64 * cx as f64) as Float;
+            }
+            if w == 0.0 {
+                w = (bx as f64 * ay as f64 - by as f64 * ax as f64) as Float;
+            }
 
-        // perform edge tests
-        if u < 0.0 || v < 0.0 || w < 0.0 {
-            return None;
+            // perform edge tests
+            if u < 0.0 || v < 0.0 || w < 0.0 {
+                return None;
+            }
         }
 
         // calculate determinant
@@ -254,7 +255,7 @@ impl Face {
 
     #[cfg(feature = "watertight-mesh")]
     #[allow(clippy::many_single_char_names)]
-    fn intersects(&self, vertices: &[Vec3], ray: &Ray) -> bool {
+    fn intersects(&self, vertices: &[Vector3], ray: &Ray) -> bool {
         let (v0, v1, v2) = self.get_vertices(vertices);
 
         let dir = &ray.direction;
@@ -303,19 +304,22 @@ impl Face {
         }
 
         // fallback to test against edges using double precision
-        if u == 0.0 {
-            u = (cx as f64 * by as f64 - cy as f64 * bx as f64) as f32;
-        }
-        if v == 0.0 {
-            v = (ax as f64 * cy as f64 - ay as f64 * cx as f64) as f32;
-        }
-        if w == 0.0 {
-            w = (bx as f64 * ay as f64 - by as f64 * ax as f64) as f32;
-        }
+        #[cfg(not(feature = "f64"))]
+        {
+            if u == 0.0 {
+                u = (cx as f64 * by as f64 - cy as f64 * bx as f64) as Float;
+            }
+            if v == 0.0 {
+                v = (ax as f64 * cy as f64 - ay as f64 * cx as f64) as Float;
+            }
+            if w == 0.0 {
+                w = (bx as f64 * ay as f64 - by as f64 * ax as f64) as Float;
+            }
 
-        // perform edge tests
-        if u < 0.0 || v < 0.0 || w < 0.0 {
-            return false;
+            // perform edge tests
+            if u < 0.0 || v < 0.0 || w < 0.0 {
+                return false;
+            }
         }
 
         // calculate determinant
@@ -337,7 +341,7 @@ impl Face {
     }
 
     #[cfg(not(feature = "watertight-mesh"))]
-    fn intersects(&self, vertices: &[Vec3], ray: &Ray) -> bool {
+    fn intersects(&self, vertices: &[Vector3], ray: &Ray) -> bool {
         let (v0, v1, v2) = self.get_vertices(vertices);
 
         let edge1 = v1 - v0;
@@ -373,8 +377,8 @@ impl Face {
 /// A mesh consists of vertices and triangles, allowing queries for intersections.
 /// Depending on the [`MeshMode`](MeshMode), the intersection normals will be interpolated.
 pub struct Mesh {
-    vertices: Vec<Vec3>,
-    vertex_normals: Vec<Vec3>,
+    vertices: Vec<Vector3>,
+    vertex_normals: Vec<Vector3>,
     faces: Vec<Face>,
     bounds: Aabb,
     shading_mode: ShadingMode,
@@ -383,8 +387,8 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn new(
-        vertices: Vec<Vec3>,
-        vertex_normals: Vec<Vec3>,
+        vertices: Vec<Vector3>,
+        vertex_normals: Vec<Vector3>,
         faces: Vec<Face>,
         bounds: Aabb,
         shading_mode: ShadingMode,
@@ -435,38 +439,38 @@ impl Mesh {
         )
     }
 
-    /// Determines the weights by which to scale triangle (p0, p1, p2)'s normal when
-    /// accumulating the vertex normal for vertices 0, 1, 2.
-    ///
-    /// # Constraints
-    /// * `p0` - All values should be finite (neither infinite nor `NaN`).
-    /// * `p1` - All values should be finite.
-    /// * `p2` - All values should be finite.
-    ///
-    /// # Arguments
-    /// * `p0` - The position 0 of a triangle
-    /// * `p1` - The position 1 of a triangle
-    /// * `p2` - The position 2 of a triangle
-    ///
-    /// # Returns
-    /// * `w0` - The weight for vertex 0
-    /// * `w1` - The weight for vertex 1
-    /// * `w2` - The weight for vertex 2
-    fn angle_weights(p0: Vec3, p1: Vec3, p2: Vec3) -> (f32, f32, f32) {
-        debug_assert!(is_finite(&p0));
-        debug_assert!(is_finite(&p1));
-        debug_assert!(is_finite(&p2));
-
-        let e01 = (p1 - p0).normalized();
-        let e12 = (p2 - p1).normalized();
-        let e20 = (p0 - p2).normalized();
-
-        let w0 = fast_clamp(e01.dot(-e20), -1.0, 1.0);
-        let w1 = fast_clamp(e12.dot(-e01), -1.0, 1.0);
-        let w2 = fast_clamp(e20.dot(-e12), -1.0, 1.0);
-
-        (w0, w1, w2)
-    }
+    // /// Determines the weights by which to scale triangle (p0, p1, p2)'s normal when
+    // /// accumulating the vertex normal for vertices 0, 1, 2.
+    // ///
+    // /// # Constraints
+    // /// * `p0` - All values should be finite (neither infinite nor `NaN`).
+    // /// * `p1` - All values should be finite.
+    // /// * `p2` - All values should be finite.
+    // ///
+    // /// # Arguments
+    // /// * `p0` - The position 0 of a triangle
+    // /// * `p1` - The position 1 of a triangle
+    // /// * `p2` - The position 2 of a triangle
+    // ///
+    // /// # Returns
+    // /// * `w0` - The weight for vertex 0
+    // /// * `w1` - The weight for vertex 1
+    // /// * `w2` - The weight for vertex 2
+    // fn angle_weights(p0: Vector3, p1: Vector3, p2: Vector3) -> (Float, Float, Float) {
+    //     debug_assert!(is_finite(&p0));
+    //     debug_assert!(is_finite(&p1));
+    //     debug_assert!(is_finite(&p2));
+    //
+    //     let e01 = (p1 - p0).normalized();
+    //     let e12 = (p2 - p1).normalized();
+    //     let e20 = (p0 - p2).normalized();
+    //
+    //     let w0 = fast_clamp(e01.dot(-e20), -1.0, 1.0);
+    //     let w1 = fast_clamp(e12.dot(-e01), -1.0, 1.0);
+    //     let w2 = fast_clamp(e20.dot(-e12), -1.0, 1.0);
+    //
+    //     (w0, w1, w2)
+    // }
 
     /// Translates the vertices of this mesh, updating the `bounds`.
     ///
@@ -480,7 +484,7 @@ impl Mesh {
     ///
     /// # Returns
     /// * Self for chained transformations.
-    pub fn translate(&mut self, translation: Vec3) -> &mut Self {
+    pub fn translate(&mut self, translation: Vector3) -> &mut Self {
         debug_assert!(is_finite(&translation));
 
         self.vertices.iter_mut().for_each(|v| *v += translation);
@@ -502,7 +506,7 @@ impl Mesh {
     ///
     /// # Returns
     /// * Self for chained transformations.
-    pub fn scale(&mut self, scale: Vec3) -> &mut Self {
+    pub fn scale(&mut self, scale: Vector3) -> &mut Self {
         debug_assert!(is_finite(&scale));
 
         for v in &mut self.vertices {
@@ -532,7 +536,7 @@ impl Mesh {
     ///
     /// # Returns
     /// * Self for chained transformations.
-    pub fn rotate(&mut self, rotation: Rotor3) -> &mut Self {
+    pub fn rotate(&mut self, rotation: Rotation3) -> &mut Self {
         self.transform(rotation.into_matrix())
     }
 
@@ -546,7 +550,7 @@ impl Mesh {
     ///
     /// # Returns
     /// * Self for chained transformations.
-    pub fn transform(&mut self, transformation: Mat3) -> &mut Self {
+    pub fn transform(&mut self, transformation: Matrix3) -> &mut Self {
         let mut new_bounds = Aabb::empty();
         self.vertices.iter_mut().for_each(|v| {
             *v = transformation * *v;

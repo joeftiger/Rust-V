@@ -1,7 +1,7 @@
 use crate::{Aabb, Boundable, Container, Intersectable, Intersection, Ray};
+use definitions::Vector3;
 use std::ops::Deref;
-use ultraviolet::Vec3;
-use utility::floats::fast_cmp;
+use utility::floats::FloatExt;
 
 pub struct Composite<T> {
     content: Vec<T>,
@@ -18,7 +18,7 @@ impl<T> Container for Composite<T>
 where
     T: Deref<Target = dyn Container>,
 {
-    fn contains(&self, point: &Vec3) -> bool {
+    fn contains(&self, point: &Vector3) -> bool {
         self.content.iter().any(|c| c.contains(point))
     }
 }
@@ -49,7 +49,7 @@ where
                     i
                 })
             })
-            .min_by(|a, b| fast_cmp(a.t, b.t))
+            .min_by(|a, b| a.t.fast_cmp(b.t))
             .map(|mut i| {
                 i.ray = *ray;
                 i

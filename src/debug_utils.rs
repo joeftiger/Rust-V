@@ -1,26 +1,26 @@
 #![allow(dead_code)]
 
-use ultraviolet::{Vec2, Vec3};
-use utility::floats::BIG_EPSILON;
+use utility::floats::FloatExt;
 
-pub use utility::floats::{in_range, in_range_incl, in_range_incl_left};
+use definitions::{Float, Vector2, Vector3};
 
 #[inline(always)]
-pub fn is_finite(v: &Vec3) -> bool {
+pub fn is_finite(v: &Vector3) -> bool {
     v.x.is_finite() && v.y.is_finite() && v.z.is_finite()
 }
 
 #[inline(always)]
-pub fn is_not_nan(v: &Vec3) -> bool {
+pub fn is_not_nan(v: &Vector3) -> bool {
     !(v.x.is_nan() && v.y.is_nan() && v.z.is_nan())
 }
 
 #[inline(always)]
-pub fn is_normalized(v: &Vec3) -> bool {
-    in_range(v.mag(), 1.0 - BIG_EPSILON, 1.0 + BIG_EPSILON)
+pub fn is_normalized(v: &Vector3) -> bool {
+    v.mag()
+        .in_range(1.0 - Float::big_epsilon(), 1.0 + Float::big_epsilon())
 }
 
 #[inline(always)]
-pub fn within_01(v: &Vec2) -> bool {
-    in_range_incl_left(v.x, 0.0, 1.0) && in_range_incl_left(v.y, 0.0, 1.0)
+pub fn within_01(v: &Vector2) -> bool {
+    v.x.in_range_incl_left(0.0, 1.0) && v.y.in_range_incl_left(0.0, 1.0)
 }

@@ -1,11 +1,12 @@
 use crate::bxdf::Type;
 use crate::integrator::{direct_illumination, Integrator};
+use crate::new::sensor::pixel::Pixel;
 use crate::objects::SceneObject;
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use color::{Color, Colors};
-use geometry::offset_ray_towards;
+use geometry::{offset_ray_towards, Ray};
 
 /// The Whitted integrator is a common integrator following specular reflection/transmission recursively.
 #[derive(Clone)]
@@ -25,6 +26,38 @@ impl Whitted {
         Self { max_depth }
     }
 
+    fn illumination(
+        &self,
+        scene: &Scene,
+        intersection: &SceneIntersection,
+        sampler: &dyn Sampler,
+        depth: u32,
+    ) -> Spectrum {
+        let object = &intersection.object;
+        let bsdf = object.bsdf();
+
+        let mut illumination = Spectrum::black();
+
+        if let SceneObject::Emitter(e) = object {
+            illumination += e.emission; //e.radiance(&outgoing, &normal);
+        }
+
+        illumination += direct_illumination(scene, sampler, intersection, bsdf);
+
+        let new_depth = depth + 1;
+        if new_depth < self.max_depth {
+            let reflection = Type::SPECULAR | Type::REFLECTION;
+            let transmission = Type::SPECULAR | Type::TRANSMISSION;
+            let both = reflection | transmission;
+            illumination += self.integrate_typ(scene, intersection, sampler, new_depth, reflection);
+            illumination +=
+                self.integrate_typ(scene, intersection, sampler, new_depth, transmission);
+            illumination += self.integrate_typ(scene, intersection, sampler, new_depth, both);
+        }
+
+        illumination
+    }
+
     /// Computes a specific `Type` at the given scene intersection, calling
     /// `illumination()` with a newly generated reflected ray.
     ///
@@ -37,7 +70,7 @@ impl Whitted {
     ///
     /// # Returns
     /// * The illumination at the intersection
-    fn illumination_target(
+    fn integrate_typ(
         &self,
         scene: &Scene,
         intersection: &SceneIntersection,
@@ -55,7 +88,7 @@ impl Whitted {
 
         let bxdf_sample_option = bsdf.sample(&normal, &outgoing, typ, &sample);
 
-        let mut reflection = Spectrum::black();
+        let mut reflection = Spectrum::broadcast(0.0);
 
         if let Some(bxdf_sample) = bxdf_sample_option {
             if bxdf_sample.pdf > 0.0 && !bxdf_sample.spectrum.is_black() {
@@ -87,36 +120,19 @@ impl Whitted {
 }
 
 impl Integrator for Whitted {
-    fn illumination(
+    fn integrate(
         &self,
+        pixel: &mut Pixel,
         scene: &Scene,
-        intersection: &SceneIntersection,
+        primary_ray: &Ray,
         sampler: &dyn Sampler,
-        depth: u32,
-    ) -> Spectrum {
-        let object = &intersection.object;
-        let bsdf = object.bsdf();
+    ) {
+        if let Some(i) = scene.intersect(primary_ray) {
+            let illumination = self.illumination(scene, &i, sampler, 0);
 
-        let mut illumination = Spectrum::black();
-
-        if let SceneObject::Emitter(e) = object {
-            illumination += e.emission; //e.radiance(&outgoing, &normal);
+            pixel.add(illumination);
+        } else {
+            pixel.add_black();
         }
-
-        illumination += direct_illumination(scene, sampler, intersection, bsdf);
-
-        let new_depth = depth + 1;
-        if new_depth < self.max_depth {
-            let reflection = Type::SPECULAR | Type::REFLECTION;
-            let transmission = Type::SPECULAR | Type::TRANSMISSION;
-            let both = reflection | transmission;
-            illumination +=
-                self.illumination_target(scene, intersection, sampler, new_depth, reflection);
-            illumination +=
-                self.illumination_target(scene, intersection, sampler, new_depth, transmission);
-            illumination += self.illumination_target(scene, intersection, sampler, new_depth, both);
-        }
-
-        illumination
     }
 }

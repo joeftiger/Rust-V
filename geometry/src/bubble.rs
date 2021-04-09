@@ -1,7 +1,7 @@
 use crate::debug_util::is_finite;
 use crate::{Aabb, Boundable, Container, Geometry, Intersectable, Intersection, Ray, Sphere};
+use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
-use ultraviolet::Vec3;
 
 #[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct Bubble {
@@ -10,7 +10,12 @@ pub struct Bubble {
 }
 
 impl Bubble {
-    pub fn new(center: Vec3, outer_radius: f32, thickness: f32, inner_offset: Vec3) -> Self {
+    pub fn new(
+        center: Vector3,
+        outer_radius: Float,
+        thickness: Float,
+        inner_offset: Vector3,
+    ) -> Self {
         debug_assert!(is_finite(&center));
         debug_assert!(outer_radius.is_finite());
         debug_assert!(outer_radius > 0.0);
@@ -34,7 +39,7 @@ impl Boundable for Bubble {
 }
 
 impl Container for Bubble {
-    fn contains(&self, point: &Vec3) -> bool {
+    fn contains(&self, point: &Vector3) -> bool {
         self.outer.contains(point) && !self.inner.contains(point)
     }
 }

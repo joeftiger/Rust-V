@@ -1,5 +1,6 @@
-use crate::floats::{BIG_EPSILON, EPSILON};
-use std::f32::consts::PI;
+use crate::floats::FloatExt;
+use definitions::Float;
+use std::f64::consts::PI;
 
 /// Solves a quadratic equation, handling generics.
 ///
@@ -19,13 +20,13 @@ use std::f32::consts::PI;
 /// * `Option<(f32, f32)>` - The solutions in ascending order (if any)
 #[inline]
 #[must_use]
-pub fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {
+pub fn solve_quadratic(a: Float, b: Float, c: Float) -> Option<(Float, Float)> {
     debug_assert!(a.is_finite());
     debug_assert!(b.is_finite());
     debug_assert!(c.is_finite());
 
-    if a < BIG_EPSILON {
-        if b < BIG_EPSILON {
+    if a < Float::epsilon() {
+        if b < Float::epsilon() {
             return None;
         }
 
@@ -39,7 +40,7 @@ pub fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {
         return None;
     }
 
-    let a_x1 = -0.5 * (b + f32::copysign(discriminant.sqrt(), b));
+    let a_x1 = -0.5 * (b + Float::copysign(discriminant.sqrt(), b));
 
     let x0 = a_x1 / a;
     let x1 = c / a_x1;
@@ -49,22 +50,6 @@ pub fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {
     } else {
         Some((x1, x0))
     }
-}
-
-#[inline(always)]
-pub fn lerp(from: f32, to: f32, t: f32) -> f32 {
-    (1.0 - t) * from + to * t
-}
-
-#[inline(always)]
-pub fn inv_lerp(from: f32, to: f32, res: f32) -> f32 {
-    (res - from) / (to - from)
-}
-
-#[inline(always)]
-pub fn lerp_map(from_lerp: (f32, f32), to_lerp: (f32, f32), res: f32) -> f32 {
-    let t = inv_lerp(from_lerp.0, from_lerp.1, res);
-    lerp(to_lerp.0, to_lerp.1, t)
 }
 
 /// Computes the `sinc()` function.
@@ -78,15 +63,15 @@ pub fn lerp_map(from_lerp: (f32, f32), to_lerp: (f32, f32), res: f32) -> f32 {
 /// # Returns
 /// * The sinc of `x`
 #[inline(always)]
-pub fn sinc(mut x: f32) -> f32 {
+pub fn sinc(mut x: Float) -> Float {
     debug_assert!(x.is_finite());
 
     x = x.abs();
 
-    if x < EPSILON {
+    if x < Float::epsilon() {
         1.0
     } else {
-        let pix = PI * x;
-        f32::sin(pix) / pix
+        let pix = PI as Float * x;
+        Float::sin(pix) / pix
     }
 }

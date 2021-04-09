@@ -67,8 +67,8 @@ fn prism() -> SceneObject {
     prism.build_bvh();
 
     let specular = FresnelSpecular::new(
-        Spectrum::new_const(1.0),
-        Spectrum::new_const(1.0),
+        Spectrum::broadcast(1.0),
+        Spectrum::broadcast(1.0),
         RefractiveType::Air,
         RefractiveType::Sapphire,
     );

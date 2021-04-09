@@ -1,16 +1,16 @@
-use crate::debug_util::{in_range_incl, is_finite, is_normalized};
-
-use ultraviolet::Vec3;
+use crate::debug_util::{is_finite, is_normalized};
+use definitions::{Float, Vector3};
+use utility::floats::FloatExt;
 
 /// A ray consists of of an origin and a direction.
 /// Additionally, a ray contains information about the `start` and `end` to contain a range along
 /// the ray's direction.
 #[derive(Copy, Clone)]
 pub struct Ray {
-    pub origin: Vec3,
-    pub direction: Vec3,
-    pub t_start: f32,
-    pub t_end: f32,
+    pub origin: Vector3,
+    pub direction: Vector3,
+    pub t_start: Float,
+    pub t_end: Float,
 }
 
 impl Ray {
@@ -30,7 +30,7 @@ impl Ray {
     ///
     /// # Returns
     /// * Self
-    pub fn new(origin: Vec3, direction: Vec3, t_start: f32, t_end: f32) -> Self {
+    pub fn new(origin: Vector3, direction: Vector3, t_start: Float, t_end: Float) -> Self {
         debug_assert!(is_finite(&origin));
         debug_assert!(is_finite(&direction));
         debug_assert!(is_normalized(&direction));
@@ -57,12 +57,12 @@ impl Ray {
     ///
     /// # Returns
     /// * Self
-    pub fn new_fast(origin: Vec3, direction: Vec3) -> Self {
+    pub fn new_fast(origin: Vector3, direction: Vector3) -> Self {
         debug_assert!(is_finite(&origin));
         debug_assert!(is_finite(&direction));
         debug_assert!(is_normalized(&direction));
 
-        Self::new(origin, direction, 0.0, f32::INFINITY)
+        Self::new(origin, direction, 0.0, Float::INFINITY)
     }
 
     /// Constructs a ray from the given `origin` to the given `target`, effectively limiting
@@ -78,7 +78,7 @@ impl Ray {
     ///
     /// # Returns
     /// * Self
-    pub fn between(origin: Vec3, target: Vec3) -> Self {
+    pub fn between(origin: Vector3, target: Vector3) -> Self {
         debug_assert!(is_finite(&origin));
         debug_assert!(is_finite(&target));
 
@@ -98,10 +98,10 @@ impl Ray {
     /// # Returns
     /// * Whether the ray constraints contain the given `t`.
     #[inline(always)]
-    pub fn contains(&self, t: f32) -> bool {
+    pub fn contains(&self, t: Float) -> bool {
         debug_assert!(!t.is_nan());
 
-        in_range_incl(t, self.t_start, self.t_end)
+        t.in_range_incl(self.t_start, self.t_end)
     }
 
     /// Calculates the position in space after applying the given ray parameter.
@@ -114,7 +114,7 @@ impl Ray {
     ///
     /// # Returns
     /// * The resulting position in space
-    pub fn at(&self, t: f32) -> Vec3 {
+    pub fn at(&self, t: Float) -> Vector3 {
         debug_assert!(!t.is_nan());
 
         self.origin + self.direction * t

@@ -3,7 +3,7 @@ use crate::bvh::plane::Plane;
 use crate::Aabb;
 use std::cmp::Ordering;
 use std::sync::Arc;
-use utility::floats::fast_cmp;
+use utility::floats::FloatExt;
 
 pub type Candidates<T> = Vec<Candidate<T>>;
 
@@ -54,7 +54,7 @@ where
     T: Clone,
 {
     fn cmp(&self, other: &Self) -> Ordering {
-        fast_cmp(self.plane.val(), other.plane.val())
+        self.plane.val().fast_cmp(other.plane.val())
     }
 }
 

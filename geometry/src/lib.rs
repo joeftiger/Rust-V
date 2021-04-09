@@ -15,31 +15,29 @@ mod sphere;
 
 pub use plane::*;
 
-use ultraviolet::Vec3;
-
-use crate::debug_util::{in_range_incl, is_finite, is_normalized};
+use crate::debug_util::{is_finite, is_normalized};
 pub use aabb::*;
 pub use bubble::*;
 pub use composite::*;
 pub use cylinder::*;
+use definitions::{Float, Vector3};
 pub use disk::*;
 pub use lenses::*;
 pub use mesh::*;
 pub use point::*;
 pub use ray::*;
 pub use sphere::*;
-use std::f32::consts::{PI, TAU};
-use utility::floats::BIG_EPSILON;
+use utility::floats::FloatExt;
 
 /// The unit vectors in all directions.
 #[rustfmt::skip]
-pub const UNIT_VECTORS: [Vec3; 6] = [
-    Vec3 { x: 1.0, y: 0.0, z: 0.0 },
-    Vec3 { x: -1.0, y: 0.0, z: 0.0 },
-    Vec3 { x: 0.0, y: 1.0, z: 0.0 },
-    Vec3 { x: 0.0, y: -1.0, z: 0.0 },
-    Vec3 { x: 0.0, y: 0.0, z: 1.0 },
-    Vec3 { x: 0.0, y: 0.0, z: -1.0 },
+pub const UNIT_VECTORS: [Vector3; 6] = [
+    Vector3 { x: 1.0, y: 0.0, z: 0.0 },
+    Vector3 { x: -1.0, y: 0.0, z: 0.0 },
+    Vector3 { x: 0.0, y: 1.0, z: 0.0 },
+    Vector3 { x: 0.0, y: -1.0, z: 0.0 },
+    Vector3 { x: 0.0, y: 0.0, z: 1.0 },
+    Vector3 { x: 0.0, y: 0.0, z: -1.0 },
 ];
 
 /// Offsets a point by an epsilon into the normal direction, depending on the angle to the given
@@ -59,16 +57,16 @@ pub const UNIT_VECTORS: [Vec3; 6] = [
 ///
 /// # Returns
 /// * The offset point
-pub fn offset_point(point: Vec3, normal: Vec3, direction: Vec3) -> Vec3 {
+pub fn offset_point(point: Vector3, normal: Vector3, direction: Vector3) -> Vector3 {
     debug_assert!(is_finite(&point));
     debug_assert!(is_finite(&normal));
     debug_assert!(is_normalized(&normal));
     debug_assert!(is_finite(&direction));
 
     let offset = if direction.dot(normal) >= 0.0 {
-        normal * BIG_EPSILON
+        normal * Float::big_epsilon()
     } else {
-        normal * -BIG_EPSILON
+        normal * -Float::big_epsilon()
     };
 
     point + offset
@@ -95,7 +93,7 @@ pub fn offset_point(point: Vec3, normal: Vec3, direction: Vec3) -> Vec3 {
 ///
 /// # Returns
 /// * Ray from this intersection, offset by an epsilon
-pub fn offset_ray_towards(point: Vec3, normal: Vec3, direction: Vec3) -> Ray {
+pub fn offset_ray_towards(point: Vector3, normal: Vector3, direction: Vector3) -> Ray {
     debug_assert!(is_finite(&point));
     debug_assert!(is_finite(&normal));
     debug_assert!(is_normalized(&normal));
@@ -128,7 +126,7 @@ pub fn offset_ray_towards(point: Vec3, normal: Vec3, direction: Vec3) -> Ray {
 ///
 /// # Returns
 /// * Ray from this intersection to the target, offset by an epsilon
-pub fn offset_ray_to(point: Vec3, normal: Vec3, target: Vec3) -> Ray {
+pub fn offset_ray_to(point: Vector3, normal: Vector3, target: Vector3) -> Ray {
     debug_assert!(is_finite(&point));
     debug_assert!(is_finite(&normal));
     debug_assert!(is_normalized(&normal));
@@ -157,9 +155,17 @@ pub fn offset_ray_to(point: Vec3, normal: Vec3, target: Vec3) -> Ray {
 ///
 /// # Returns
 /// * The corresponding cartesian vector
-pub fn spherical_to_cartesian_frame(theta: f32, phi: f32, frame: &CoordinateSystem) -> Vec3 {
-    debug_assert!(in_range_incl(theta, 0.0, TAU));
-    debug_assert!(in_range_incl(phi, 0.0, PI));
+pub fn spherical_to_cartesian_frame(theta: Float, phi: Float, frame: &CoordinateSystem) -> Vector3 {
+    #[cfg(feature = "f64")]
+    {
+        debug_assert!(theta.in_range_incl(0.0, std::f64::consts::TAU));
+        debug_assert!(phi.in_range_incl(0.0, std::f64::consts::PI));
+    }
+    #[cfg(not(feature = "f64"))]
+    {
+        debug_assert!(theta.in_range_incl(0.0, std::f32::consts::TAU));
+        debug_assert!(phi.in_range_incl(0.0, std::f32::consts::PI));
+    }
 
     let (sin_theta, cos_theta) = theta.sin_cos();
     let (sin_phi, cos_phi) = phi.sin_cos();
@@ -192,16 +198,16 @@ pub fn spherical_to_cartesian_frame(theta: f32, phi: f32, frame: &CoordinateSyst
 /// # Returns
 /// * The corresponding cartesian vector
 pub fn spherical_to_cartesian_frame_trig(
-    sin_theta: f32,
-    cos_theta: f32,
-    sin_phi: f32,
-    cos_phi: f32,
+    sin_theta: Float,
+    cos_theta: Float,
+    sin_phi: Float,
+    cos_phi: Float,
     frame: &CoordinateSystem,
-) -> Vec3 {
-    debug_assert!(in_range_incl(sin_theta, -1.0, 1.0));
-    debug_assert!(in_range_incl(cos_theta, -1.0, 1.0));
-    debug_assert!(in_range_incl(sin_phi, -1.0, 1.0));
-    debug_assert!(in_range_incl(cos_phi, -1.0, 1.0));
+) -> Vector3 {
+    debug_assert!(sin_theta.in_range_incl(-1.0, 1.0));
+    debug_assert!(cos_theta.in_range_incl(-1.0, 1.0));
+    debug_assert!(sin_phi.in_range_incl(-1.0, 1.0));
+    debug_assert!(cos_phi.in_range_incl(-1.0, 1.0));
 
     let x = frame.x_axis * sin_phi * sin_theta;
     let y = frame.y_axis * cos_phi;
@@ -225,9 +231,17 @@ pub fn spherical_to_cartesian_frame_trig(
 ///
 /// # Returns
 /// * The corresponding cartesian vector
-pub fn spherical_to_cartesian(theta: f32, phi: f32) -> Vec3 {
-    debug_assert!(in_range_incl(theta, 0.0, TAU));
-    debug_assert!(in_range_incl(phi, 0.0, PI));
+pub fn spherical_to_cartesian(theta: Float, phi: Float) -> Vector3 {
+    #[cfg(feature = "f64")]
+    {
+        debug_assert!(theta.in_range_incl(0.0, std::f64::consts::TAU));
+        debug_assert!(phi.in_range_incl(0.0, std::f64::consts::PI));
+    }
+    #[cfg(not(feature = "f64"))]
+    {
+        debug_assert!(theta.in_range_incl(0.0, std::f32::consts::TAU));
+        debug_assert!(phi.in_range_incl(0.0, std::f32::consts::PI));
+    }
 
     let (sin_theta, cos_theta) = theta.sin_cos();
     let (sin_phi, cos_phi) = phi.sin_cos();
@@ -259,21 +273,21 @@ pub fn spherical_to_cartesian(theta: f32, phi: f32) -> Vec3 {
 /// # Returns
 /// * The corresponding cartesian vector
 pub fn spherical_to_cartesian_trig(
-    sin_theta: f32,
-    cos_theta: f32,
-    sin_phi: f32,
-    cos_phi: f32,
-) -> Vec3 {
-    debug_assert!(in_range_incl(sin_theta, -1.0, 1.0));
-    debug_assert!(in_range_incl(cos_theta, -1.0, 1.0));
-    debug_assert!(in_range_incl(sin_phi, -1.0, 1.0));
-    debug_assert!(in_range_incl(cos_phi, -1.0, 1.0));
+    sin_theta: Float,
+    cos_theta: Float,
+    sin_phi: Float,
+    cos_phi: Float,
+) -> Vector3 {
+    debug_assert!(sin_theta.in_range_incl(-1.0, 1.0));
+    debug_assert!(cos_theta.in_range_incl(-1.0, 1.0));
+    debug_assert!(sin_phi.in_range_incl(-1.0, 1.0));
+    debug_assert!(cos_phi.in_range_incl(-1.0, 1.0));
 
     let x = sin_phi * sin_theta;
     let y = cos_phi;
     let z = sin_phi * cos_theta;
 
-    Vec3::new(x, y, z)
+    Vector3::new(x, y, z)
 }
 
 /// An intersection consists of the following 4 properties:
@@ -283,9 +297,9 @@ pub fn spherical_to_cartesian_trig(
 /// * `ray` - The reference to the intersecting ray
 #[derive(Clone)]
 pub struct Intersection {
-    pub point: Vec3,
-    pub normal: Vec3,
-    pub t: f32,
+    pub point: Vector3,
+    pub normal: Vector3,
+    pub t: Float,
     pub ray: Ray,
 }
 
@@ -304,7 +318,7 @@ impl Intersection {
     ///
     /// # Returns
     /// * Self
-    pub fn new(point: Vec3, normal: Vec3, t: f32, ray: Ray) -> Self {
+    pub fn new(point: Vector3, normal: Vector3, t: Float, ray: Ray) -> Self {
         debug_assert!(ray.contains(t));
         debug_assert!(is_normalized(&normal));
 
@@ -320,9 +334,9 @@ impl Intersection {
 /// A coordinate system represents 3 (orthogonal) vectors in 3D space.
 #[derive(Copy, Clone, Debug)]
 pub struct CoordinateSystem {
-    pub x_axis: Vec3,
-    pub y_axis: Vec3,
-    pub z_axis: Vec3,
+    pub x_axis: Vector3,
+    pub y_axis: Vector3,
+    pub z_axis: Vector3,
 }
 
 impl CoordinateSystem {
@@ -343,7 +357,7 @@ impl CoordinateSystem {
     ///
     /// # Returns
     /// * Self
-    pub fn new(x: Vec3, y: Vec3, z: Vec3) -> Self {
+    pub fn new(x: Vector3, y: Vector3, z: Vector3) -> Self {
         debug_assert!(is_finite(&x));
         debug_assert!(is_normalized(&x));
         debug_assert!(is_finite(&y));
@@ -370,14 +384,14 @@ impl CoordinateSystem {
     /// # Returns
     /// * Self
     // TODO: Make more efficient
-    pub fn from_x(x_axis: Vec3) -> Self {
+    pub fn from_x(x_axis: Vector3) -> Self {
         debug_assert!(is_finite(&x_axis));
         debug_assert!(is_normalized(&x_axis));
 
-        if x_axis == Vec3::unit_x() {
-            Self::new(Vec3::unit_x(), Vec3::unit_y(), Vec3::unit_z())
+        if x_axis == Vector3::unit_x() {
+            Self::new(Vector3::unit_x(), Vector3::unit_y(), Vector3::unit_z())
         } else {
-            let z = x_axis.cross(Vec3::unit_x()).normalized();
+            let z = x_axis.cross(Vector3::unit_x()).normalized();
             let y = z.cross(x_axis).normalized();
 
             Self::new(x_axis, y, z)
@@ -396,23 +410,23 @@ impl CoordinateSystem {
     /// # Returns
     /// * Self
     // TODO: Make more efficient
-    pub fn from_y(y_axis: Vec3) -> Self {
+    pub fn from_y(y_axis: Vector3) -> Self {
         debug_assert!(is_finite(&y_axis));
         debug_assert!(is_normalized(&y_axis));
 
         let s = if y_axis.x.abs() > y_axis.y.abs() {
             let l = (y_axis.x * y_axis.x + y_axis.z * y_axis.z).sqrt();
-            Vec3::new(-y_axis.z / l, 0.0, y_axis.x / l)
+            Vector3::new(-y_axis.z / l, 0.0, y_axis.x / l)
         } else {
             let l = (y_axis.y * y_axis.y + y_axis.z * y_axis.z).sqrt();
-            Vec3::new(0.0, y_axis.z / l, -y_axis.y / l)
+            Vector3::new(0.0, y_axis.z / l, -y_axis.y / l)
         };
         Self::new(s, y_axis, y_axis.cross(s))
 
-        // if y_axis == Vec3::unit_y() {
-        //     Self::new(Vec3::unit_x(), Vec3::unit_y(), Vec3::unit_z())
+        // if y_axis == Vector3::unit_y() {
+        //     Self::new(Vector3::unit_x(), Vector3::unit_y(), Vector3::unit_z())
         // } else {
-        //     let x = y_axis.cross(Vec3::unit_y()).normalized();
+        //     let x = y_axis.cross(Vector3::unit_y()).normalized();
         //     let z = x.cross(y_axis).normalized();
         //
         //     Self::new(x, y_axis, z)
@@ -431,14 +445,14 @@ impl CoordinateSystem {
     /// # Returns
     /// * Self
     // TODO: Make more efficient
-    pub fn from_z(z_axis: Vec3) -> Self {
+    pub fn from_z(z_axis: Vector3) -> Self {
         debug_assert!(is_finite(&z_axis));
         debug_assert!(is_normalized(&z_axis));
 
-        if z_axis == Vec3::unit_z() {
-            Self::new(Vec3::unit_x(), Vec3::unit_y(), Vec3::unit_z())
+        if z_axis == Vector3::unit_z() {
+            Self::new(Vector3::unit_x(), Vector3::unit_y(), Vector3::unit_z())
         } else {
-            let x = z_axis.cross(Vec3::unit_z()).normalized();
+            let x = z_axis.cross(Vector3::unit_z()).normalized();
             let y = z_axis.cross(x).normalized();
 
             Self::new(x, y, z_axis)
@@ -448,7 +462,7 @@ impl CoordinateSystem {
 
 impl Default for CoordinateSystem {
     fn default() -> Self {
-        Self::new(Vec3::unit_x(), Vec3::unit_y(), Vec3::unit_z())
+        Self::new(Vector3::unit_x(), Vector3::unit_y(), Vector3::unit_z())
     }
 }
 
@@ -461,7 +475,7 @@ pub trait Container {
     ///
     /// # Returns
     /// * Whether the given point is inside-inclusive this object
-    fn contains(&self, point: &Vec3) -> bool;
+    fn contains(&self, point: &Vector3) -> bool;
 }
 
 /// A trait for objects that can report a cube as their bounds.
@@ -486,22 +500,22 @@ pub trait Intersectable {
     /// To obtain the normal from inside the object, one can use following
     /// ```rust
     /// use geometry::{Aabb, Intersectable, Ray};
-    /// use ultraviolet::Vec3;
+    /// use definitions::Vector3;
     ///
     /// let cube = Aabb::default();
-    /// let mut ray = Ray::new_fast(Vec3::zero(), Vec3::unit_x());
+    /// let mut ray = Ray::new_fast(Vector3::zero(), Vector3::unit_x());
     ///
     /// let intersection = cube.intersect(&mut ray).unwrap(); // intersects surely
     ///
     /// let mut normal = intersection.normal;
-    /// assert_eq!(Vec3::unit_x(), normal); // normal points to the outside
+    /// assert_eq!(Vector3::unit_x(), normal); // normal points to the outside
     ///
     /// // true geometric normal is inverted if both vectors point into the same general direction
     /// if normal.dot(ray.direction) > 0.0 {
     ///     normal = -normal;
     /// }
     ///
-    /// assert_eq!(-Vec3::unit_x(), normal); // normal points to the outside
+    /// assert_eq!(-Vector3::unit_x(), normal); // normal points to the outside
     /// ```
     ///
     /// # Returns

@@ -5,6 +5,8 @@
 //! 2021-02-21.
 //! * Sellmeier data taken from the paper [Linear refractive index and absorption measurements of nonlinear optical liquids in the visible and near-infrared spectral region](https://d-nb.info/102770462X/34) on 2021-02-21.
 
+use definitions::Float;
+
 /// Computes the refractive index of **air** according to the Sellmeier equation.
 ///
 /// # Performance
@@ -19,7 +21,7 @@
 /// # Returns
 /// * The refractive index
 #[inline(always)]
-pub fn sellmeier_n(lambda: f32) -> f32 {
+pub fn sellmeier_n(lambda: Float) -> Float {
     debug_assert!(lambda.is_finite());
 
     let l2 = lambda * lambda;
@@ -27,5 +29,5 @@ pub fn sellmeier_n(lambda: f32) -> f32 {
     let one = 0.75831 * l2 / (l2 - 0.01007);
     let two = 0.08495 * l2 / (l2 - 8.91377);
 
-    f32::sqrt(1.0 + one + two)
+    Float::sqrt(1.0 + one + two)
 }

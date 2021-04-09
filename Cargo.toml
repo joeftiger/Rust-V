@@ -1,6 +1,6 @@
 [workspace]
-members = [ "color", "demos", "geometry", "utility" ]
-default-members = [ "color", "demos", "geometry", "utility" ]
+members = [ "color", "demos", "geometry", "utility", "definitions" ]
+default-members = [ "color", "demos", "geometry", "utility", "definitions" ]
 
 [package]
 name = "rust-v"
@@ -35,6 +35,7 @@ typetag = ""
 ron = ""
 
 color = { path = "./color" }
+definitions = { path = "./definitions" }
 geometry = { path = "./geometry" }
 utility = { path = "./utility" }
 
@@ -47,10 +48,10 @@ harness = false
 
 [features]
 default = []
-live-window = ["show-image"]
+f64 = ["definitions/f64", "ultraviolet/f64", "color/f64", "geometry/f64", "utility/f64"]
 
 [profile.release]
-#codegen-units = 1
+codegen-units = 1
 opt-level = 3
 lto = true
 incremental = true

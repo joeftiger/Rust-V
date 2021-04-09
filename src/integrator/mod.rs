@@ -18,72 +18,48 @@
 
 mod debug_normals;
 mod path;
-mod path_enhanced;
 mod spectral_path;
 mod whitted;
 
 pub use debug_normals::DebugNormals;
 pub use path::Path;
-pub use path_enhanced::PathEnhanced;
 pub use spectral_path::SpectralPath;
 pub use whitted::Whitted;
 
 use crate::bxdf::{Type, BSDF};
+use crate::new::sensor::pixel::Pixel;
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
 use color::Color;
+use definitions::Float;
 use geometry::Ray;
 
 pub trait IntegratorAverage {}
 
 /// An integrator to calculate the color of a pixel / ray.
-///
-/// This trait provides generic methods like `specular_reflection` and `specular_transmission`.
 pub trait Integrator: Send + Sync {
-    /// Integrates the given scene with the primary ray and the sampler
+    /// Integrates the given scene with the primary ray and the sampler for a given pixel.
     ///
     /// # Arguments
+    /// * `pixel` - The pixel to integrate for
     /// * `scene` - The scene to integrate
     /// * `primary_ray` - The primary ray shot into the scene
     /// * `sampler` - A sampler to generate values
     ///
     /// # Returns
     /// * The color spectrum of the given ray
-    fn integrate(&self, scene: &Scene, primary_ray: &Ray, sampler: &dyn Sampler) -> Spectrum {
-        if let Some(si) = scene.intersect(primary_ray) {
-            self.illumination(scene, &si, sampler, 0)
-        } else {
-            Spectrum::new_const(0.0)
-        }
-    }
-
-    /// Calculates the illumination (recursively if needed) at the given intersection.
-    ///
-    /// # Arguments
-    /// * `scene` - The scene being integratd
-    /// * `intersection` - The scene intersection we illuminate
-    /// * `sampler` - A sampler to generate values
-    /// * `depth` - The current recursive depth (if needed)
-    ///
-    /// # Returns
-    /// * The illumination at the intersection
-    fn illumination(
-        &self,
-        scene: &Scene,
-        intersection: &SceneIntersection,
-        sampler: &dyn Sampler,
-        depth: u32,
-    ) -> Spectrum;
+    fn integrate(&self, pixel: &mut Pixel, scene: &Scene, primary_ray: &Ray, sampler: &dyn Sampler);
 }
 
+#[inline]
 fn direct_illumination(
     scene: &Scene,
     sampler: &dyn Sampler,
     intersection: &SceneIntersection,
     bsdf: &BSDF,
 ) -> Spectrum {
-    let mut illumination = Spectrum::new_const(0.0);
+    let mut illumination = Spectrum::broadcast(0.0);
 
     if bsdf.is_empty() {
         return illumination;
@@ -119,13 +95,14 @@ fn direct_illumination(
     illumination
 }
 
+#[inline]
 fn direct_illumination_light_wave(
     scene: &Scene,
     sampler: &dyn Sampler,
     intersection: &SceneIntersection,
     bsdf: &BSDF,
     light_wave_index: usize,
-) -> f32 {
+) -> Float {
     let mut illumination = 0.0;
 
     if bsdf.is_empty() {

@@ -1,4 +1,5 @@
 use crate::sampler::Sampler;
+use definitions::Float;
 
 /// A no-op Sampler only returning `0.5`.
 #[derive(Clone)]
@@ -10,7 +11,7 @@ impl Sampler for NoOpSampler {
     /// # Returns
     /// * `0.5`
     #[inline(always)]
-    fn get_1d(&self) -> f32 {
+    fn get_1d(&self) -> Float {
         0.5
     }
 }

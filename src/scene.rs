@@ -1,19 +1,19 @@
 use crate::camera::{Camera, NoOpCamera};
 use crate::objects::{Emitter, SceneObject};
+use definitions::{Float, Vector3};
 use geometry::bvh::Tree;
 use geometry::{Aabb, Boundable, Intersectable, Intersection, Ray};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use ultraviolet::Vec3;
 
 /// A scene intersection is a more detailed `Intersection`, also containing a reference to the
 /// intersected object.
 #[derive(Clone)]
 pub struct SceneIntersection {
-    pub point: Vec3,
-    pub normal: Vec3,
+    pub point: Vector3,
+    pub normal: Vector3,
     pub ray: Ray,
-    pub t: f32,
+    pub t: Float,
     pub object: SceneObject,
 }
 

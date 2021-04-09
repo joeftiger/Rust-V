@@ -93,13 +93,13 @@ fn random_bsdf(color: Spectrum) -> (bool, BSDF) {
             out = true;
             BSDF::empty()
         } else if rand < 0.8 {
-            let specular = SpecularReflection::new(Spectrum::new_const(1.0), FresnelType::NoOp);
+            let specular = SpecularReflection::new(Spectrum::broadcast(1.0), FresnelType::NoOp);
             let bxdf = Box::new(specular);
 
             BSDF::new(vec![bxdf])
         } else {
             let specular = SpecularTransmission::new(
-                Spectrum::new_const(1.0),
+                Spectrum::broadcast(1.0),
                 RefractiveType::Air,
                 RefractiveType::Glass,
             );

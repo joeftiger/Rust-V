@@ -1,19 +1,19 @@
 use crate::Face;
+use definitions::Vector3;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 use std::str::SplitWhitespace;
-use ultraviolet::Vec3;
 
 #[derive(Serialize, Deserialize)]
 pub struct ObjFile {
-    pub vertices: Vec<Vec3>,
-    pub vertex_normals: Vec<Vec3>,
+    pub vertices: Vec<Vector3>,
+    pub vertex_normals: Vec<Vector3>,
     pub faces: Vec<Face>,
 }
 
 impl ObjFile {
-    pub fn new(vertices: Vec<Vec3>, vertex_normals: Vec<Vec3>, faces: Vec<Face>) -> Self {
+    pub fn new(vertices: Vec<Vector3>, vertex_normals: Vec<Vector3>, faces: Vec<Face>) -> Self {
         Self {
             vertices,
             vertex_normals,
@@ -26,16 +26,16 @@ impl ObjFile {
     }
 }
 
-impl Into<String> for ObjFile {
-    fn into(self) -> String {
-        let v: Vec<String> = self
+impl From<ObjFile> for String {
+    fn from(obj_file: ObjFile) -> Self {
+        let v: Vec<String> = obj_file
             .vertices
             .iter()
             .map(|v| format!("v {} {} {}", v.x, v.y, v.z))
             .collect();
 
         // offset by one because indexing starts at 1 in obj files
-        let mut f: Vec<String> = self
+        let mut f: Vec<String> = obj_file
             .faces
             .iter()
             .map(|f| {
@@ -55,7 +55,7 @@ impl Into<String> for ObjFile {
             })
             .collect();
 
-        let mut vn = self
+        let mut vn = obj_file
             .vertex_normals
             .iter()
             .map(|vn| format!("vn {} {} {}", vn.x, vn.y, vn.z))
@@ -91,8 +91,8 @@ where
                 .unwrap_or_else(|| panic!("Invalid length at line {}", num));
 
             match id {
-                "v" => vertices.push(parse_vec3(&mut iter)),
-                "vn" => vertex_normals.push(parse_vec3(&mut iter).normalized()),
+                "v" => vertices.push(parse_vector3(&mut iter)),
+                "vn" => vertex_normals.push(parse_vector3(&mut iter).normalized()),
                 "f" => faces.push(parse_face(&mut iter)),
                 &_ => eprintln!("Unsupported: {}", id),
             }
@@ -102,12 +102,12 @@ where
     }
 }
 
-fn parse_vec3(iter: &mut SplitWhitespace) -> Vec3 {
+fn parse_vector3(iter: &mut SplitWhitespace) -> Vector3 {
     let x = iter.next().unwrap().parse().unwrap();
     let y = iter.next().unwrap().parse().unwrap();
     let z = iter.next().unwrap().parse().unwrap();
 
-    Vec3::new(x, y, z)
+    Vector3::new(x, y, z)
 }
 
 fn parse_face(iter: &mut SplitWhitespace) -> Face {

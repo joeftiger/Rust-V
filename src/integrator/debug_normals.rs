@@ -3,25 +3,34 @@
 #![allow(unused_variables)]
 
 use crate::integrator::Integrator;
+use crate::new::sensor::pixel::Pixel;
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
-use color::Color;
-use ultraviolet::Vec3;
+use color::{Color, Srgb};
+use definitions::Vector3;
+use geometry::Ray;
+use std::convert::TryFrom;
 
 #[derive(Clone)]
 pub struct DebugNormals;
 
 impl Integrator for DebugNormals {
-    fn illumination(
+    fn integrate(
         &self,
-        _: &Scene,
-        intersection: &SceneIntersection,
-        _: &dyn Sampler,
-        _: u32,
-    ) -> Spectrum {
-        Spectrum::new_const(0.0)
-        // let color = (intersection.normal + Vec3::one()) / 2.0;
-        // color.into()
+        pixel: &mut Pixel,
+        scene: &Scene,
+        primary_ray: &Ray,
+        sampler: &dyn Sampler,
+    ) {
+        if let Some(i) = scene.intersect(primary_ray) {
+            let color = (i.normal + Vector3::one()) / 2.0;
+            // Spectrum::try_from(color)
+            //     .expect("Cannot parse Spectrum from Vector3")
+
+            todo!()
+        } else {
+            pixel.add_black()
+        }
     }
 }

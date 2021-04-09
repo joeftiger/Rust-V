@@ -3,9 +3,10 @@
 use crate::refractive_index::RefractiveType;
 use crate::Spectrum;
 use color::Color;
+use definitions::Float;
 use serde::{Deserialize, Serialize};
 use std::mem::swap;
-use utility::floats::{fast_clamp, fast_max};
+use utility::floats::FloatExt;
 
 #[derive(Serialize, Deserialize)]
 pub enum FresnelType {
@@ -17,14 +18,14 @@ pub enum FresnelType {
 }
 
 impl Fresnel for FresnelType {
-    fn evaluate(&self, cos_i: f32) -> Spectrum {
+    fn evaluate(&self, cos_i: Float) -> Spectrum {
         match self {
             FresnelType::Dielectric(t) => t.evaluate(cos_i),
-            FresnelType::NoOp => Spectrum::new_const(1.0),
+            FresnelType::NoOp => Spectrum::broadcast(1.0),
         }
     }
 
-    fn evaluate_lambda(&self, lambda: f32, cos_i: f32) -> f32 {
+    fn evaluate_lambda(&self, lambda: Float, cos_i: Float) -> Float {
         match self {
             FresnelType::Dielectric(t) => t.evaluate_lambda(lambda, cos_i),
             FresnelType::NoOp => 1.0,
@@ -43,7 +44,7 @@ impl Fresnel for FresnelType {
 /// # Returns
 /// * The amount of light reflected
 #[inline(always)]
-pub fn dielectric_parallel(cos_i: f32, cos_t: f32, eta_i: f32, eta_t: f32) -> f32 {
+pub fn dielectric_parallel(cos_i: Float, cos_t: Float, eta_i: Float, eta_t: Float) -> Float {
     let it = eta_i * cos_t;
     let ti = eta_t * cos_i;
 
@@ -61,7 +62,7 @@ pub fn dielectric_parallel(cos_i: f32, cos_t: f32, eta_i: f32, eta_t: f32) -> f3
 /// # Returns
 /// * The amount of light reflected
 #[inline(always)]
-pub fn dielectric_perpendicular(cos_i: f32, cos_t: f32, eta_i: f32, eta_t: f32) -> f32 {
+pub fn dielectric_perpendicular(cos_i: Float, cos_t: Float, eta_i: Float, eta_t: Float) -> Float {
     let tt = eta_t * cos_t;
     let ii = eta_i * cos_i;
 
@@ -77,8 +78,8 @@ pub fn dielectric_perpendicular(cos_i: f32, cos_t: f32, eta_i: f32, eta_t: f32) 
 ///
 /// # Returns
 /// * The Fresnel reflectance
-pub fn fresnel_dielectric(mut cos_i: f32, mut eta_i: f32, mut eta_t: f32) -> f32 {
-    cos_i = fast_clamp(cos_i, -1.0, 1.0);
+pub fn fresnel_dielectric(mut cos_i: Float, mut eta_i: Float, mut eta_t: Float) -> Float {
+    cos_i = cos_i.fast_clamp(-1.0, 1.0);
     // potentially swap indices of refraction
     let entering = cos_i > 0.0;
     if !entering {
@@ -87,7 +88,7 @@ pub fn fresnel_dielectric(mut cos_i: f32, mut eta_i: f32, mut eta_t: f32) -> f32
     }
 
     // compute cos_t using Snell's law
-    let sin_i = fast_max(0.0, cos_i.mul_add(-cos_i, 1.0)).sqrt();
+    let sin_i = cos_i.mul_add(-cos_i, 1.0).fast_max(0.0).sqrt();
     let sin_t = eta_i * sin_i / eta_t;
 
     // handle total internal reflection
@@ -95,7 +96,7 @@ pub fn fresnel_dielectric(mut cos_i: f32, mut eta_i: f32, mut eta_t: f32) -> f32
         return 1.0;
     }
 
-    let cos_t = fast_max(0.0, sin_t.mul_add(-sin_t, 1.0)).sqrt();
+    let cos_t = sin_t.mul_add(-sin_t, 1.0).fast_max(0.0).sqrt();
     let r_par = dielectric_parallel(cos_i, cos_t, eta_i, eta_t);
     let r_perp = dielectric_perpendicular(cos_i, cos_t, eta_i, eta_t);
 
@@ -111,9 +112,9 @@ pub trait Fresnel: Send + Sync {
     ///
     /// # Returns
     /// * The reflectance
-    fn evaluate(&self, cos_i: f32) -> Spectrum;
+    fn evaluate(&self, cos_i: Float) -> Spectrum;
 
-    fn evaluate_lambda(&self, lambda: f32, cos_i: f32) -> f32;
+    fn evaluate_lambda(&self, lambda: Float, cos_i: Float) -> Float;
 }
 
 /// An implementation of `Fresnel` for dielectric materials.
@@ -138,13 +139,13 @@ impl FresnelDielectric {
 }
 
 impl Fresnel for FresnelDielectric {
-    fn evaluate(&self, cos_i: f32) -> Spectrum {
+    fn evaluate(&self, cos_i: Float) -> Spectrum {
         let fresnel = fresnel_dielectric(cos_i, self.eta_i.n_uniform(), self.eta_t.n_uniform());
 
-        Spectrum::new_const(fresnel)
+        Spectrum::broadcast(fresnel)
     }
 
-    fn evaluate_lambda(&self, lambda: f32, cos_i: f32) -> f32 {
+    fn evaluate_lambda(&self, lambda: Float, cos_i: Float) -> Float {
         fresnel_dielectric(cos_i, self.eta_i.n(lambda), self.eta_t.n(lambda))
     }
 }

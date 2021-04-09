@@ -25,7 +25,7 @@ impl UniformSuperSampling {
     pub fn new(sample_space: UVec2) -> Self {
         assert!((sample_space.x * sample_space.y) <= u8::MAX as u32);
 
-        let step = Vec2::one() / Vec2::new(sample_space.x as f32, sample_space.y as f32);
+        let step = Vec2::one() / Vec2::new(sample_space.x as Float, sample_space.y as Float);
 
         Self {
             step,
@@ -47,8 +47,8 @@ impl PixelSampler for UniformSuperSampling {
         };
 
         let coordinate = Vec2::new(
-            (i % self.sample_space.x as u8) as f32,
-            i as f32 / self.sample_space.x as f32,
+            (i % self.sample_space.x as u8) as Float,
+            i as Float / self.sample_space.x as Float,
         );
 
         let out = self.step * 0.5 + self.step * coordinate;

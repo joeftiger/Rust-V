@@ -3,7 +3,6 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, 
 
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
-use ultraviolet::{Lerp, Mat3, Vec3};
 
 use serde_big_array::big_array;
 big_array! {
@@ -24,7 +23,9 @@ pub use srgb::*;
 pub use xyz::*;
 
 use crate::spectral_data::LAMBDA_NUM;
+use definitions::{Float, Matrix3, Vector3};
 use spectral_data::{LAMBDA_END, LAMBDA_START};
+use utility::floats::FloatExt;
 
 #[macro_export]
 macro_rules! color {
@@ -50,7 +51,7 @@ macro_rules! color {
                     let mut light_waves = [LightWave::default(); $size];
 
                     for i in 0..$size {
-                        light_waves[i].lambda = LAMBDA_START.lerp(LAMBDA_END, i as f32 / $size as f32);
+                        light_waves[i].lambda = LAMBDA_START.lerp(LAMBDA_END, i as Float / $size as Float);
                         light_waves[i].intensity = self[i];
                     }
 
@@ -93,7 +94,7 @@ macro_rules! color {
                         .for_each(|((a, b), c)| *a = b.mul_add(*c, *a));
                 }
 
-                fn new_const(value: $storage) -> Self {
+                fn broadcast(value: $storage) -> Self {
                     Self::new([value; $size])
                 }
 
@@ -318,17 +319,17 @@ macro_rules! color {
 #[derive(Copy, Clone, Default)]
 pub struct LightWave {
     /// The wavelength in μm.
-    pub lambda: f32,
+    pub lambda: Float,
     /// The intensity of the light wave.
-    pub intensity: f32,
+    pub intensity: Float,
 }
 
 impl LightWave {
-    pub fn new(lambda: f32, intensity: f32) -> Self {
+    pub fn new(lambda: Float, intensity: Float) -> Self {
         Self { lambda, intensity }
     }
 
-    pub fn with_intensity(&self, intensity: f32) -> Self {
+    pub fn with_intensity(&self, intensity: Float) -> Self {
         Self::new(self.lambda, intensity)
     }
 }
@@ -336,7 +337,7 @@ impl LightWave {
 /// A trait for colors. Allows arithmetic operations to be performed and gives utility functions
 /// like `is_black()`.
 #[allow(clippy::len_without_is_empty)]
-pub trait Color<T = f32>:
+pub trait Color<T = Float>:
     Add
     + AddAssign
     + Sub
@@ -373,7 +374,7 @@ pub trait Color<T = f32>:
     ///
     /// # Returns
     /// * Self
-    fn new_const(value: T) -> Self;
+    fn broadcast(value: T) -> Self;
 
     /// Returns the length (number of entries) of this color.
     ///
@@ -450,7 +451,7 @@ pub trait IndexSpectral<T> {
 ///  * cyan
 ///  * blue
 ///  * pink
-pub trait Colors<T = f32>: Color<T> {
+pub trait Colors<T = Float>: Color<T> {
     fn black() -> Self;
 
     fn grey() -> Self;
@@ -476,12 +477,12 @@ pub trait Colors<T = f32>: Color<T> {
 /// * Conversion matrix
 #[allow(clippy::excessive_precision)]
 #[inline]
-pub fn xyz_to_srgb_mat() -> Mat3 {
+pub fn xyz_to_srgb_mat() -> Matrix3 {
     // https://en.wikipedia.org/wiki/SRGB#The_forward_transformation_(CIE_XYZ_to_sRGB)
-    Mat3::new(
-        Vec3::new(3.24096994, -0.96924364, 0.05563008),
-        Vec3::new(-1.53738318, 1.8759675, -0.20397696),
-        Vec3::new(-0.49861076, 0.04155506, 1.05697151),
+    Matrix3::new(
+        Vector3::new(3.24096994, -0.96924364, 0.05563008),
+        Vector3::new(-1.53738318, 1.8759675, -0.20397696),
+        Vector3::new(-0.49861076, 0.04155506, 1.05697151),
     )
 }
 
@@ -491,12 +492,12 @@ pub fn xyz_to_srgb_mat() -> Mat3 {
 /// * Conversion matrix
 #[allow(clippy::excessive_precision)]
 #[inline]
-pub fn srgb_to_xyz_mat() -> Mat3 {
+pub fn srgb_to_xyz_mat() -> Matrix3 {
     // https://en.wikipedia.org/wiki/SRGB#The_reverse_transformation
-    Mat3::new(
-        Vec3::new(0.41239080, 0.21263901, 0.01933082),
-        Vec3::new(0.35758434, 0.71516868, 0.07219232),
-        Vec3::new(0.18048079, 0.07219232, 0.95053215),
+    Matrix3::new(
+        Vector3::new(0.41239080, 0.21263901, 0.01933082),
+        Vector3::new(0.35758434, 0.71516868, 0.07219232),
+        Vector3::new(0.18048079, 0.07219232, 0.95053215),
     )
 }
 
@@ -512,7 +513,7 @@ pub fn srgb_to_xyz_mat() -> Mat3 {
 /// * Linear `Srgb` value
 #[allow(clippy::excessive_precision)]
 #[inline]
-pub fn srgb_to_linear(val: f32) -> f32 {
+pub fn srgb_to_linear(val: Float) -> Float {
     // assert!(val >= 0.0);
     // assert!(val <= 1.0);
     // https://entropymine.com/imageworsener/srgbformula/
@@ -534,7 +535,7 @@ pub fn srgb_to_linear(val: f32) -> f32 {
 /// # Returns
 /// * Linear `Srgb` vector
 #[inline]
-pub fn srgbs_to_linear(val: Vec3) -> Vec3 {
+pub fn srgbs_to_linear(val: Vector3) -> Vector3 {
     val.map(srgb_to_linear)
 }
 
@@ -550,7 +551,7 @@ pub fn srgbs_to_linear(val: Vec3) -> Vec3 {
 /// * `Srgb` value
 #[allow(clippy::excessive_precision)]
 #[inline]
-pub fn linear_to_srgb(val: f32) -> f32 {
+pub fn linear_to_srgb(val: Float) -> Float {
     // assert!(val >= 0.0);
     // assert!(val <= 1.0);
     // https://entropymine.com/imageworsener/srgbformula/
@@ -572,6 +573,6 @@ pub fn linear_to_srgb(val: f32) -> f32 {
 /// # Returns
 /// * `Srgb` vector
 #[inline]
-pub fn linears_to_srgb(val: Vec3) -> Vec3 {
+pub fn linears_to_srgb(val: Vector3) -> Vector3 {
     val.map(linear_to_srgb)
 }

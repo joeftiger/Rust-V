@@ -48,5 +48,5 @@ args:
       takes_value: true
   - BLOCK_SIZE:
       long: block-size
-      help: "The block size for to render in chunks. E.g. 64 for 64x64 blocks. (Default: 8)"
+      help: "The block size for to render in chunks. E.g. 64,64 for 64x64 blocks. (Default: 8,8)"
       takes_value: true

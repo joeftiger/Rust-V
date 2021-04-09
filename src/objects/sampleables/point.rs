@@ -1,6 +1,6 @@
 use crate::objects::emitter::{Sampleable, SurfaceSample};
+use definitions::{Float, Vector2, Vector3};
 use geometry::Point;
-use ultraviolet::{Vec2, Vec3};
 
 #[typetag::serde]
 impl Sampleable for Point {
@@ -8,7 +8,7 @@ impl Sampleable for Point {
     ///
     /// # Returns
     /// * `0.0`
-    fn surface_area(&self) -> f32 {
+    fn surface_area(&self) -> Float {
         0.0
     }
 
@@ -23,7 +23,7 @@ impl Sampleable for Point {
     ///
     /// # Returns
     /// * An emitter sample with normal towards the `point`
-    fn sample_surface(&self, point: &Vec3, _: &Vec2) -> SurfaceSample {
+    fn sample_surface(&self, point: &Vector3, _: &Vector2) -> SurfaceSample {
         let normal = *point - self.0;
 
         SurfaceSample::new(self.0, normal.normalized(), 1.0)

@@ -1,6 +1,5 @@
 use crate::sampler::Sampler;
-
-use crate::debug_utils::in_range_incl_left;
+use definitions::Float;
 
 /// A simple random sampler using `fastrand` to generate random valuates.
 ///
@@ -17,9 +16,10 @@ impl Default for RandomSampler {
 
 impl Sampler for RandomSampler {
     #[inline]
-    fn get_1d(&self) -> f32 {
-        let rand = fastrand::f32();
-        debug_assert!(in_range_incl_left(rand, 0.0, 1.0));
-        rand
+    fn get_1d(&self) -> Float {
+        #[cfg(feature = "f64")]
+        return fastrand::f64() as Float;
+        #[cfg(not(feature = "f64"))]
+        return fastrand::f32() as Float;
     }
 }

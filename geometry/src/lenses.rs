@@ -1,6 +1,6 @@
 use crate::{Aabb, Boundable, Container, Geometry, Intersectable, Intersection, Ray, Sphere};
+use definitions::Vector3;
 use serde::{Deserialize, Serialize};
-use ultraviolet::Vec3;
 
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BiconvexLens {
@@ -18,7 +18,7 @@ impl Boundable for BiconvexLens {
     fn bounds(&self) -> Aabb {
         // not tight fitting, but okay enough
         let max = self.sphere0.radius.max(self.sphere1.radius);
-        let offset = Vec3::one() * max;
+        let offset = Vector3::one() * max;
         let center = (self.sphere0.center + self.sphere1.center) / 2.0;
 
         Aabb::new(center - offset, center + offset)
@@ -26,7 +26,7 @@ impl Boundable for BiconvexLens {
 }
 
 impl Container for BiconvexLens {
-    fn contains(&self, point: &Vec3) -> bool {
+    fn contains(&self, point: &Vector3) -> bool {
         self.sphere0.contains(point) && self.sphere1.contains(point)
     }
 }

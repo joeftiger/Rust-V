@@ -94,7 +94,7 @@ impl From<UVec2> for RenderPixel {
     fn from(pixel: UVec2) -> Self {
         Self {
             pixel,
-            average: Spectrum::new_const(0.0),
+            average: Spectrum::broadcast(0.0),
             samples: 0,
         }
     }
@@ -238,7 +238,7 @@ impl Renderer {
 
         let ray = self.scene.camera.primary_ray(pixel);
 
-        let mut spectra = [Spectrum::new_const(0.0); RAY_PACKETS];
+        let mut spectra = [Spectrum::broadcast(0.0); RAY_PACKETS];
         for s in &mut spectra {
             *s = self.integrator.integrate(&self.scene, &ray, &*self.sampler)
         }
@@ -283,7 +283,7 @@ impl Renderer {
         let num_threads = self.config.threads;
         let mut handles = Vec::with_capacity(num_threads as usize);
 
-        let should_stop = Arc::new(AtomicBool::default());
+        let should_stop = Arc::new(AtomicBool::new(false));
         for i in 0..num_threads {
             let mut this = self.clone();
             let this_should_stop = should_stop.clone();

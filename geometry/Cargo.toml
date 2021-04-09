@@ -14,8 +14,11 @@ serde = { version = "", features = ["derive"] }
 typetag = ""
 itertools = ""
 
+definitions = { path = "../definitions" }
+
 utility = { path = "../utility" }
 
 [features]
 default = ["watertight-mesh"]
 watertight-mesh = []
+f64 = ["definitions/f64"]

@@ -96,8 +96,8 @@ fn create_buddha() -> SceneObject {
     buddha.build_bvh();
 
     let specular = FresnelSpecular::new(
-        Spectrum::new_const(1.0),
-        Spectrum::new_const(1.0),
+        Spectrum::broadcast(1.0),
+        Spectrum::broadcast(1.0),
         RefractiveType::Air,
         RefractiveType::Glass,
     );
@@ -117,8 +117,8 @@ fn create_sphere() -> SceneObject {
     let sphere = Sphere::new(center, RADIUS * 2.0);
 
     let specular = FresnelSpecular::new(
-        Spectrum::new_const(1.0),
-        Spectrum::new_const(1.0),
+        Spectrum::broadcast(1.0),
+        Spectrum::broadcast(1.0),
         RefractiveType::Air,
         RefractiveType::Glass,
     );
@@ -138,8 +138,8 @@ fn create_bubble() -> SceneObject {
     let bubble = Bubble::new(center, RADIUS * 2.0, THICKNESS, offset);
 
     let specular = FresnelSpecular::new(
-        Spectrum::new_const(1.0),
-        Spectrum::new_const(1.0),
+        Spectrum::broadcast(1.0),
+        Spectrum::broadcast(1.0),
         RefractiveType::Air,
         RefractiveType::Glass,
     );
@@ -163,8 +163,8 @@ fn create_biconvex_lens() -> SceneObject {
     let lens = BiconvexLens::new(sphere0, sphere1);
 
     let specular = FresnelSpecular::new(
-        Spectrum::new_const(1.0),
-        Spectrum::new_const(1.0),
+        Spectrum::broadcast(1.0),
+        Spectrum::broadcast(1.0),
         RefractiveType::Air,
         RefractiveType::Glass,
     );

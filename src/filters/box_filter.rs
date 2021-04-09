@@ -1,35 +1,35 @@
 use crate::filters::Filter;
+use definitions::{Float, Vector2};
 use serde::{Deserialize, Serialize};
-use ultraviolet::Vec2;
 
 /// Sample weights considered equally.
 #[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct BoxFilter {
-    pub radius: Vec2,
-    pub inv_radius: Vec2,
+    pub radius: Vector2,
+    pub inv_radius: Vector2,
 }
 
 impl BoxFilter {
-    pub fn new(radius: Vec2) -> Self {
+    pub fn new(radius: Vector2) -> Self {
         Self {
             radius,
-            inv_radius: Vec2::one() / radius,
+            inv_radius: Vector2::one() / radius,
         }
     }
 }
 
 #[typetag::serde]
 impl Filter for BoxFilter {
-    fn radius(&self) -> Vec2 {
+    fn radius(&self) -> Vector2 {
         self.radius
     }
 
-    fn inv_radius(&self) -> Vec2 {
+    fn inv_radius(&self) -> Vector2 {
         self.inv_radius
     }
 
     #[inline(always)]
-    fn evaluate(&self, _: &Vec2) -> f32 {
+    fn evaluate(&self, _: &Vector2) -> Float {
         1.0
     }
 }

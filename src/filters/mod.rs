@@ -10,12 +10,12 @@ pub use lanczos_sinc_filter::*;
 pub use mitchell_filter::*;
 pub use triangle_filter::*;
 
-use ultraviolet::Vec2;
+use definitions::{Float, Vector2};
 
 #[typetag::serde]
 pub trait Filter {
-    fn radius(&self) -> Vec2;
-    fn inv_radius(&self) -> Vec2;
+    fn radius(&self) -> Vector2;
+    fn inv_radius(&self) -> Vector2;
 
     /// Evaluates a relative sample point to filter center position.
     ///
@@ -28,5 +28,5 @@ pub trait Filter {
     ///
     /// # Returns
     /// * The evaluated value
-    fn evaluate(&self, point: &Vec2) -> f32;
+    fn evaluate(&self, point: &Vector2) -> Float;
 }

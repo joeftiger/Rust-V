@@ -1,6 +1,6 @@
 use crate::filters::Filter;
+use definitions::{Float, Vector2};
 use serde::{Deserialize, Serialize};
-use ultraviolet::Vec2;
 use utility::math::sinc;
 
 /// Sample weights considered with a combination of `sinc()` calls.
@@ -8,22 +8,22 @@ use utility::math::sinc;
 /// Suffers a bit from ringing, but less blurring.
 #[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct LanczosSincFilter {
-    pub radius: Vec2,
-    pub inv_radius: Vec2,
-    tau: f32,
+    pub radius: Vector2,
+    pub inv_radius: Vector2,
+    tau: Float,
 }
 
 impl LanczosSincFilter {
-    pub fn new(radius: Vec2, tau: f32) -> Self {
+    pub fn new(radius: Vector2, tau: Float) -> Self {
         Self {
             radius,
-            inv_radius: Vec2::one() / radius,
+            inv_radius: Vector2::one() / radius,
             tau,
         }
     }
 
     #[inline]
-    fn windowed_sinc(&self, mut x: f32, radius: f32) -> f32 {
+    fn windowed_sinc(&self, mut x: Float, radius: Float) -> Float {
         x = x.abs();
 
         if x > radius {
@@ -38,15 +38,15 @@ impl LanczosSincFilter {
 
 #[typetag::serde]
 impl Filter for LanczosSincFilter {
-    fn radius(&self) -> Vec2 {
+    fn radius(&self) -> Vector2 {
         self.radius
     }
 
-    fn inv_radius(&self) -> Vec2 {
+    fn inv_radius(&self) -> Vector2 {
         self.inv_radius
     }
 
-    fn evaluate(&self, point: &Vec2) -> f32 {
+    fn evaluate(&self, point: &Vector2) -> Float {
         self.windowed_sinc(point.x, self.radius.x) * self.windowed_sinc(point.y, self.radius.y)
     }
 }

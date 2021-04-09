@@ -1,15 +1,15 @@
 use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
-use ultraviolet::Vec3;
-use utility::floats::{approx_zero_tolerance, BIG_EPSILON};
+use definitions::{Float, Vector3};
+use utility::floats::FloatExt;
 
 pub struct Disk {
-    pub center: Vec3,
-    pub normal: Vec3,
-    pub radius: f32,
+    pub center: Vector3,
+    pub normal: Vector3,
+    pub radius: Float,
 }
 
 impl Disk {
-    pub fn new(center: Vec3, normal: Vec3, radius: f32) -> Self {
+    pub fn new(center: Vector3, normal: Vector3, radius: Float) -> Self {
         Self {
             center,
             normal,
@@ -20,7 +20,7 @@ impl Disk {
 
 impl Boundable for Disk {
     fn bounds(&self) -> Aabb {
-        let offset = Vec3::one() * self.radius;
+        let offset = Vector3::one() * self.radius;
         let min = self.center - offset;
         let max = self.center + offset;
 
@@ -32,7 +32,7 @@ impl Intersectable for Disk {
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         let denom = self.normal.dot(ray.direction);
 
-        if approx_zero_tolerance(denom, BIG_EPSILON) {
+        if denom.is_approx_zero() {
             return None;
         }
 
@@ -54,7 +54,7 @@ impl Intersectable for Disk {
     fn intersects(&self, ray: &Ray) -> bool {
         let denom = self.normal.dot(ray.direction);
 
-        if approx_zero_tolerance(denom, BIG_EPSILON) {
+        if denom.is_approx_zero() {
             return false;
         }
 

@@ -1,37 +1,38 @@
 use crate::camera::Camera;
 use crate::sampler::pixel_samplers::{PixelSampler, PixelSamplerType};
+use definitions::{Float, Matrix4, Vector2, Vector3};
 use geometry::Ray;
 use serde::{Deserialize, Serialize};
-use ultraviolet::{Mat4, UVec2, Vec2, Vec3};
+use ultraviolet::UVec2;
 
 #[derive(Serialize, Deserialize)]
 pub struct PerspectiveCameraSimone {
     resolution: UVec2,
     sampler: PixelSamplerType,
-    look_at: Mat4,
-    bottom_left: Vec2,
-    top_right: Vec2,
-    inv_resolution: Vec2,
+    look_at: Matrix4,
+    bottom_left: Vector2,
+    top_right: Vector2,
+    inv_resolution: Vector2,
 }
 
 impl PerspectiveCameraSimone {
     pub fn new(
         sampler: PixelSamplerType,
-        position: Vec3,
-        target: Vec3,
-        up: Vec3,
-        fov: f32,
+        position: Vector3,
+        target: Vector3,
+        up: Vector3,
+        fov: Float,
         resolution: UVec2,
     ) -> Self {
         let look_at = look_at(position, target, up);
 
         let y = (0.5 * fov).to_radians().tan();
-        let x = y * resolution.x as f32 / resolution.y as f32;
+        let x = y * resolution.x as Float / resolution.y as Float;
 
-        let top_right = Vec2::new(x, y);
+        let top_right = Vector2::new(x, y);
         let bottom_left = -top_right;
 
-        let inv_resolution = Vec2::new(1.0 / resolution.x as f32, 1.0 / resolution.y as f32);
+        let inv_resolution = Vector2::new(1.0 / resolution.x as Float, 1.0 / resolution.y as Float);
 
         Self {
             resolution,
@@ -55,21 +56,21 @@ impl Camera for PerspectiveCameraSimone {
             + (self.top_right - self.bottom_left)
                 * (to_vec2(pixel) * self.sampler.sample(pixel))
                 * self.inv_resolution;
-        let dir_3d = Vec3::new(dir_2d.x, dir_2d.y, -1.0);
+        let dir_3d = Vector3::new(dir_2d.x, dir_2d.y, -1.0);
 
-        let origin = self.look_at.transform_vec3(Vec3::zero());
+        let origin = self.look_at.transform_vec3(Vector3::zero());
         let direction = self.look_at.transform_vec3(dir_3d).normalized();
 
         Ray::new_fast(origin, direction)
     }
 }
 
-fn look_at(position: Vec3, target: Vec3, up: Vec3) -> Mat4 {
+fn look_at(position: Vector3, target: Vector3, up: Vector3) -> Matrix4 {
     let w = (position - target).normalized();
     let u = up.cross(w).normalized();
     let v = w.cross(u);
 
-    Mat4::new(
+    Matrix4::new(
         u.into_homogeneous_vector(),
         v.into_homogeneous_vector(),
         w.into_homogeneous_vector(),
@@ -77,6 +78,6 @@ fn look_at(position: Vec3, target: Vec3, up: Vec3) -> Mat4 {
     )
 }
 
-fn to_vec2(v: UVec2) -> Vec2 {
-    Vec2::new(v.x as f32, v.y as f32)
+fn to_vec2(v: UVec2) -> Vector2 {
+    Vector2::new(v.x as Float, v.y as Float)
 }

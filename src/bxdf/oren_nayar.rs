@@ -1,16 +1,16 @@
 use crate::bxdf::{cos_phi, cos_theta, sin_phi, sin_theta, BxDF, Type};
 use crate::Spectrum;
+use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
-use std::f32::consts::FRAC_1_PI;
-use ultraviolet::Vec3;
-use utility::floats::{in_range_incl_left, EPSILON};
+use std::f64::consts::FRAC_1_PI;
+use utility::floats::FloatExt;
 
 /// The Oren-Nayar reflectance model describes rough opaque diffuse surfaces where each facet is lambertian (diffuse).
 #[derive(Serialize, Deserialize)]
 pub struct OrenNayar {
     r: Spectrum,
-    a: f32,
-    b: f32,
+    a: Float,
+    b: Float,
 }
 
 impl OrenNayar {
@@ -25,8 +25,8 @@ impl OrenNayar {
     ///
     /// # Returns
     /// * Self
-    pub fn new(r: Spectrum, sigma: f32) -> Self {
-        debug_assert!(in_range_incl_left(sigma, 0.0, f32::INFINITY));
+    pub fn new(r: Spectrum, sigma: Float) -> Self {
+        debug_assert!(sigma.in_range_incl_left(0.0, Float::INFINITY));
 
         let sigma = sigma.to_radians();
         let sigma2 = sigma * sigma;
@@ -43,11 +43,11 @@ impl BxDF for OrenNayar {
         Type::DIFFUSE | Type::REFLECTION
     }
 
-    fn evaluate(&self, incident: &Vec3, outgoing: &Vec3) -> Spectrum {
+    fn evaluate(&self, incident: &Vector3, outgoing: &Vector3) -> Spectrum {
         let sin_theta_i = sin_theta(incident);
         let sin_theta_o = sin_theta(outgoing);
 
-        let max_cos = if sin_theta_i > EPSILON && sin_theta_o > EPSILON {
+        let max_cos = if sin_theta_i > Float::epsilon() && sin_theta_o > Float::epsilon() {
             let sin_phi_i = sin_phi(incident);
             let sin_phi_o = sin_phi(outgoing);
             let cos_phi_i = cos_phi(incident);
@@ -68,19 +68,19 @@ impl BxDF for OrenNayar {
             (sin_theta_i, sin_theta_o / cos_theta_o_abs)
         };
 
-        self.r * (FRAC_1_PI * (self.a + self.b * max_cos * sin_alpha * tan_beta))
+        self.r * (FRAC_1_PI as Float * (self.a + self.b * max_cos * sin_alpha * tan_beta))
     }
 
     fn evaluate_light_wave(
         &self,
-        incident: &Vec3,
-        outgoing: &Vec3,
+        incident: &Vector3,
+        outgoing: &Vector3,
         light_wave_index: usize,
-    ) -> f32 {
+    ) -> Float {
         let sin_theta_i = sin_theta(incident);
         let sin_theta_o = sin_theta(outgoing);
 
-        let max_cos = if sin_theta_i > EPSILON && sin_theta_o > EPSILON {
+        let max_cos = if sin_theta_i > Float::epsilon() && sin_theta_o > Float::epsilon() {
             let sin_phi_i = sin_phi(incident);
             let sin_phi_o = sin_phi(outgoing);
             let cos_phi_i = cos_phi(incident);
@@ -101,6 +101,7 @@ impl BxDF for OrenNayar {
             (sin_theta_i, sin_theta_o / cos_theta_o_abs)
         };
 
-        self.r[light_wave_index] * (FRAC_1_PI * (self.a + self.b * max_cos * sin_alpha * tan_beta))
+        self.r[light_wave_index]
+            * (FRAC_1_PI as Float * (self.a + self.b * max_cos * sin_alpha * tan_beta))
     }
 }

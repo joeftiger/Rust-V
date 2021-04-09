@@ -1,13 +1,13 @@
 use crate::debug_util::is_finite;
 use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
+use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
-use ultraviolet::Vec3;
 use utility::math::solve_quadratic;
 
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Cylinder {
-    caps: (Vec3, Vec3),
-    radius: f32,
+    caps: (Vector3, Vector3),
+    radius: Float,
 }
 
 impl Cylinder {
@@ -24,7 +24,7 @@ impl Cylinder {
     ///
     /// # Returns
     /// * Self
-    pub fn new(caps: (Vec3, Vec3), radius: f32) -> Self {
+    pub fn new(caps: (Vector3, Vector3), radius: Float) -> Self {
         debug_assert!(is_finite(&caps.0));
         debug_assert!(is_finite(&caps.1));
         debug_assert!(radius.is_finite());
@@ -37,7 +37,7 @@ impl Cylinder {
     ///
     /// # Returns
     /// * The center
-    pub fn center(&self) -> Vec3 {
+    pub fn center(&self) -> Vector3 {
         (self.caps.0 + self.caps.1) / 2.0
     }
 
@@ -45,7 +45,7 @@ impl Cylinder {
     ///
     /// # Returns
     /// * The axis
-    pub fn axis(&self) -> Vec3 {
+    pub fn axis(&self) -> Vector3 {
         (self.caps.1 - self.caps.0).normalized()
     }
 
@@ -53,7 +53,7 @@ impl Cylinder {
     ///
     /// # Returns
     /// * The height
-    pub fn height(&self) -> f32 {
+    pub fn height(&self) -> Float {
         (self.caps.1 - self.caps.0).mag()
     }
 }
@@ -61,7 +61,7 @@ impl Cylinder {
 impl Boundable for Cylinder {
     // TODO: Not a close-fit bounding box
     fn bounds(&self) -> Aabb {
-        let offset = Vec3::one() * self.radius;
+        let offset = Vector3::one() * self.radius;
         let min = self.caps.0.min_by_component(self.caps.1) - offset;
         let max = self.caps.0.max_by_component(self.caps.1) + offset;
 
@@ -87,7 +87,7 @@ impl Intersectable for Cylinder {
         let height = self.height();
         let center = self.center();
 
-        let filter = |t: f32| {
+        let filter = |t: Float| {
             if ray.contains(t) {
                 let point = ray.at(t);
                 let center_to_point = point - center;
@@ -129,7 +129,7 @@ impl Intersectable for Cylinder {
             let center = self.center();
             let height = self.height();
 
-            let filter = |t: f32| {
+            let filter = |t: Float| {
                 if ray.contains(t) {
                     let point = ray.at(t);
                     let center_to_point = point - center;

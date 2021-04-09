@@ -1,6 +1,9 @@
 #![allow(clippy::excessive_precision)]
 
+use definitions::Float;
 use serde::{Deserialize, Serialize};
+use utility::floats::FloatExt;
+
 ///! In optics, the **refractive index** of a material is a dimensionless number that describes
 ///! how fast light travels through the material.
 ///!
@@ -10,9 +13,6 @@ use serde::{Deserialize, Serialize};
 ///! To complement the refractive index, this trait also specifies to return an **optional extinction
 ///! coefficient**. The extinction coefficient describes how strongly a material absorbs light at given
 ///! wavelength.
-use utility::floats::fast_cmp;
-use utility::math::lerp_map;
-
 pub mod air;
 pub mod glass;
 pub mod sapphire;
@@ -33,7 +33,7 @@ impl RefractiveType {
     /// # Returns
     /// * The refractive index
     #[inline(always)]
-    pub fn n_uniform(&self) -> f32 {
+    pub fn n_uniform(&self) -> Float {
         match self {
             RefractiveType::Air => 1.00029,
             RefractiveType::Vacuum => 1.0,
@@ -49,7 +49,7 @@ impl RefractiveType {
     /// * `Some` extinction coefficient, or
     /// * `None`
     #[inline(always)]
-    pub fn k_uniform(&self) -> Option<f32> {
+    pub fn k_uniform(&self) -> Option<Float> {
         match self {
             RefractiveType::Air => None,
             RefractiveType::Vacuum => None,
@@ -66,7 +66,7 @@ impl RefractiveType {
     ///
     /// # Returns
     /// * The corresponding refractive index
-    pub fn n(&self, lambda: f32) -> f32 {
+    pub fn n(&self, lambda: Float) -> Float {
         match self {
             // RefractiveType::AIR => search_and_get(&air::INDEX, &air::N, lambda),
             RefractiveType::Air => air::sellmeier_n(lambda),
@@ -85,7 +85,7 @@ impl RefractiveType {
     /// # Returns
     /// * `Some` corresponding extinction coefficient, or
     /// * `None`
-    pub fn k(&self, lambda: f32) -> Option<f32> {
+    pub fn k(&self, lambda: Float) -> Option<Float> {
         match self {
             RefractiveType::Air => None,
             RefractiveType::Vacuum => None,
@@ -102,15 +102,19 @@ impl RefractiveType {
 /// If no such value is found, it will return the the indexes below/above the value, allowing to
 /// lerp further usages.
 #[inline]
-pub fn search_index(slice: &[f32], value: f32) -> Result<usize, (usize, usize)> {
-    match slice.binary_search_by(|a| fast_cmp(*a, value)) {
+pub fn search_index(slice: &[Float], value: Float) -> Result<usize, (usize, usize)> {
+    match slice.binary_search_by(|a| a.fast_cmp(value)) {
         Ok(index) => Ok(index),
         Err(index) => Err((index - 1, index)),
     }
 }
 
 #[inline]
-pub fn search_and_lerp(index_slice: &[f32], value_slice: &[f32], wavelength_nm: f32) -> f32 {
+pub fn search_and_lerp(
+    index_slice: &[Float],
+    value_slice: &[Float],
+    wavelength_nm: Float,
+) -> Float {
     match search_index(index_slice, wavelength_nm) {
         Ok(i) => value_slice[i],
         Err((min, max)) => {
@@ -118,9 +122,13 @@ pub fn search_and_lerp(index_slice: &[f32], value_slice: &[f32], wavelength_nm: 
                 return value_slice[min];
             }
 
-            let to_lerp = (value_slice[min], value_slice[max]);
-
-            lerp_map((min as f32, max as f32), to_lerp, wavelength_nm)
+            Float::lerp_map(
+                min as Float,
+                max as Float,
+                value_slice[min],
+                value_slice[max],
+                wavelength_nm,
+            )
         }
     }
 }

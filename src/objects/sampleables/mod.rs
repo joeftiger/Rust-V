@@ -1,6 +1,6 @@
 use crate::objects::SurfaceSample;
+use definitions::{Float, Vector2, Vector3};
 use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
-use ultraviolet::{Vec2, Vec3};
 
 mod point;
 mod sphere;
@@ -31,7 +31,7 @@ pub trait Sampleable: Geometry + Send + Sync {
     ///
     /// # Returns
     /// * The surface area
-    fn surface_area(&self) -> f32;
+    fn surface_area(&self) -> Float;
 
     /// Samples the surface from the given point in the "solid angle" form.
     ///
@@ -45,5 +45,5 @@ pub trait Sampleable: Geometry + Send + Sync {
     ///
     /// # Returns
     /// * A surface sample
-    fn sample_surface(&self, origin: &Vec3, sample: &Vec2) -> SurfaceSample;
+    fn sample_surface(&self, origin: &Vector3, sample: &Vector2) -> SurfaceSample;
 }

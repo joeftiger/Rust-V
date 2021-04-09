@@ -1,12 +1,10 @@
-#![allow(dead_code)]
-
 use crate::cie::xyz_of;
 use crate::spectral_data::*;
 use crate::*;
 use image::Rgb;
 
 color!(
-    Spectrum => f32, LAMBDA_NUM
+    Spectrum => Float, LAMBDA_NUM
 );
 
 impl Spectrum {
@@ -37,15 +35,15 @@ impl Spectrum {
     }
 }
 
-impl IndexSpectral<f32> for Spectrum {
-    fn index_spectral(&self, index: usize) -> f32 {
+impl IndexSpectral<Float> for Spectrum {
+    fn index_spectral(&self, index: usize) -> Float {
         self.data[index]
     }
 }
 
 impl Colors for Spectrum {
     fn black() -> Self {
-        Self::new_const(0.0)
+        Self::broadcast(0.0)
     }
 
     fn grey() -> Self {
@@ -81,72 +79,37 @@ impl Colors for Spectrum {
     }
 }
 
-impl Into<Xyz> for Spectrum {
-    fn into(self) -> Xyz {
-        self.as_light_waves()
+impl From<Spectrum> for Srgb {
+    fn from(spectrum: Spectrum) -> Self {
+        Srgb::from(Xyz::from(spectrum))
+    }
+}
+
+impl From<Spectrum> for Xyz {
+    fn from(spectrum: Spectrum) -> Self {
+        spectrum
+            .as_light_waves()
             .iter()
-            .fold(Xyz::new_const(0.0), |acc, next| {
+            .fold(Xyz::broadcast(0.0), |acc, next| {
                 acc + xyz_of(next.lambda) * next.intensity
             })
     }
 }
 
-impl Into<Srgb> for Spectrum {
-    fn into(self) -> Srgb {
-        self.as_xyz().to_srgb()
+impl From<Spectrum> for Rgb<u8> {
+    fn from(spectrum: Spectrum) -> Self {
+        Self::from(Srgb::from(spectrum))
     }
 }
 
-impl Into<Rgb<u8>> for Spectrum {
-    fn into(self) -> Rgb<u8> {
-        self.as_srgb().into()
+impl From<Spectrum> for Rgb<u16> {
+    fn from(spectrum: Spectrum) -> Self {
+        Self::from(Srgb::from(spectrum))
     }
 }
 
-impl Into<Rgb<u16>> for Spectrum {
-    fn into(self) -> Rgb<u16> {
-        self.as_srgb().into()
-    }
-}
-
-impl Into<Rgb<f32>> for Spectrum {
-    fn into(self) -> Rgb<f32> {
-        self.as_srgb().into()
-    }
-}
-
-impl Mul<IntSpectrum> for Spectrum {
-    type Output = Self;
-
-    fn mul(mut self, rhs: IntSpectrum) -> Self::Output {
-        self *= rhs;
-        self
-    }
-}
-
-impl MulAssign<IntSpectrum> for Spectrum {
-    fn mul_assign(&mut self, rhs: IntSpectrum) {
-        self.data
-            .iter_mut()
-            .zip(rhs.data.iter())
-            .for_each(|(l, h)| *l *= *h as f32)
-    }
-}
-
-impl Div<IntSpectrum> for Spectrum {
-    type Output = Self;
-
-    fn div(mut self, rhs: IntSpectrum) -> Self::Output {
-        self /= rhs;
-        self
-    }
-}
-
-impl DivAssign<IntSpectrum> for Spectrum {
-    fn div_assign(&mut self, rhs: IntSpectrum) {
-        self.data
-            .iter_mut()
-            .zip(rhs.data.iter())
-            .for_each(|(l, h)| *l /= *h as f32)
+impl From<Spectrum> for Rgb<Float> {
+    fn from(spectrum: Spectrum) -> Self {
+        Self::from(Srgb::from(spectrum))
     }
 }

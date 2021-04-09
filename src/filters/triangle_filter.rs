@@ -1,36 +1,37 @@
 use crate::filters::Filter;
+use definitions::{Float, Vector2};
 use serde::{Deserialize, Serialize};
-use ultraviolet::Vec2;
-use utility::floats::fast_max;
+use utility::floats::FloatExt;
 
 /// Sample weights fall off linearly from the center.
 #[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct TriangleFilter {
-    pub radius: Vec2,
-    pub inv_radius: Vec2,
+    pub radius: Vector2,
+    pub inv_radius: Vector2,
 }
 
 impl TriangleFilter {
-    pub fn new(radius: Vec2) -> Self {
+    pub fn new(radius: Vector2) -> Self {
         Self {
             radius,
-            inv_radius: Vec2::one() / radius,
+            inv_radius: Vector2::one() / radius,
         }
     }
 }
 
 #[typetag::serde]
 impl Filter for TriangleFilter {
-    fn radius(&self) -> Vec2 {
+    fn radius(&self) -> Vector2 {
         self.radius
     }
 
-    fn inv_radius(&self) -> Vec2 {
+    fn inv_radius(&self) -> Vector2 {
         self.inv_radius
     }
 
     #[inline(always)]
-    fn evaluate(&self, point: &Vec2) -> f32 {
-        fast_max(0.0, self.radius.x - point.x.abs()) * fast_max(0.0, self.radius.y - point.y.abs())
+    fn evaluate(&self, point: &Vector2) -> Float {
+        Float::fast_max(0.0, self.radius.x - point.x.abs())
+            * Float::fast_max(0.0, self.radius.y - point.y.abs())
     }
 }

@@ -6,6 +6,8 @@
 //! * Sellmeier data taken from [here](https://en.wikipedia.org/wiki/Sellmeier_equation) on
 //! 2021-02-21.
 
+use definitions::Float;
+
 /// Computes the refractive index of **glass** according to the Sellmeier equation.
 ///
 /// # Performance
@@ -20,7 +22,7 @@
 /// # Returns
 /// * The refractive index
 #[inline(always)]
-pub fn sellmeier_n(lambda: f32) -> f32 {
+pub fn sellmeier_n(lambda: Float) -> Float {
     debug_assert!(lambda.is_finite());
 
     let l2 = lambda * lambda;
@@ -28,16 +30,16 @@ pub fn sellmeier_n(lambda: f32) -> f32 {
     let two = 0.231792344 * l2 / (l2 - 2.00179144e-2);
     let three = 1.01046945 * l2 / (l2 - 103.560653);
 
-    f32::sqrt(1.0 + one + two + three)
+    Float::sqrt(1.0 + one + two + three)
 }
 
-pub static INDEX_K: [f32; 25] = {
+pub static INDEX_K: [Float; 25] = {
     [
         0.3, 0.31, 0.32, 0.334, 0.35, 0.365, 0.37, 0.38, 0.39, 0.4, 0.405, 0.42, 0.436, 0.46, 0.5,
         0.546, 0.58, 0.62, 0.66, 0.7, 1.06, 1.53, 1.97, 2.325, 2.5,
     ]
 };
-pub static K: [f32; 25] = {
+pub static K: [Float; 25] = {
     [
         0.0000028607,
         0.0000013679,

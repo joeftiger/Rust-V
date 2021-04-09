@@ -1,10 +1,10 @@
 use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
+use definitions::Vector3;
 use serde::{Deserialize, Serialize};
-use ultraviolet::Vec3;
 
 /// Represents a point in space.
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Point(pub Vec3);
+pub struct Point(pub Vector3);
 
 impl Boundable for Point {
     fn bounds(&self) -> Aabb {

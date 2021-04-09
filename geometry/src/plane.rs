@@ -1,18 +1,18 @@
 use crate::debug_util::is_normalized;
 use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
-use ultraviolet::Vec3;
-use utility::floats::{approx_zero_tolerance, BIG_EPSILON};
+use utility::floats::FloatExt;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct Plane {
-    normal: Vec3,
+    normal: Vector3,
     /// The distance of the plane into the normal direction
-    d: f32,
+    d: Float,
 }
 
 impl Plane {
-    pub fn new(normal: Vec3, d: f32) -> Self {
+    pub fn new(normal: Vector3, d: Float) -> Self {
         debug_assert!(is_normalized(&normal));
 
         Self { normal, d }
@@ -21,7 +21,7 @@ impl Plane {
 
 impl Boundable for Plane {
     fn bounds(&self) -> Aabb {
-        let max = Vec3::broadcast(f32::INFINITY);
+        let max = Vector3::broadcast(Float::INFINITY);
 
         Aabb::new(-max, max)
     }
@@ -31,7 +31,7 @@ impl Intersectable for Plane {
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         let denom = self.normal.dot(ray.direction);
 
-        if approx_zero_tolerance(denom, BIG_EPSILON) {
+        if denom.is_approx_zero() {
             return None;
         }
 
@@ -48,6 +48,6 @@ impl Intersectable for Plane {
 
     #[inline]
     fn intersects(&self, ray: &Ray) -> bool {
-        approx_zero_tolerance(self.normal.dot(ray.direction), BIG_EPSILON)
+        self.normal.dot(ray.direction).is_approx_zero()
     }
 }

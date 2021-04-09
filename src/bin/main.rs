@@ -4,15 +4,17 @@ extern crate clap;
 use clap::App;
 
 use ron::from_str;
-use rust_v::integrator::{DebugNormals, Integrator, Path, PathEnhanced, SpectralPath, Whitted};
-use rust_v::renderer::Renderer;
+use rust_v::integrator::{DebugNormals, Integrator, Path, SpectralPath, Whitted};
+use rust_v::new::config::Config;
+use rust_v::new::renderer::Renderer;
+use rust_v::new::sensor::bounds::UBounds2;
 use rust_v::sampler::{NoOpSampler, RandomSampler, Sampler};
 use rust_v::scene::Scene;
-use rust_v::RenderConfig;
-#[cfg(feature = "live-window")]
+#[cfg(feature = "show-image")]
 use rust_v::RenderWindow;
 use std::convert::TryInto;
 use std::sync::Arc;
+use ultraviolet::UVec2;
 
 const LIVE: &str = "LIVE_WINDOW";
 const VERBOSE: &str = "VERBOSE";
@@ -30,9 +32,9 @@ fn main() -> Result<(), String> {
 }
 
 fn create_config() -> MainConfig {
-    #[cfg(not(feature = "live-window"))]
+    #[cfg(not(feature = "show-image"))]
     let yaml = load_yaml!("cli.yml");
-    #[cfg(feature = "live-window")]
+    #[cfg(feature = "show-image")]
     let yaml = load_yaml!("cli-live.yml");
 
     let matches = App::from_yaml(yaml).get_matches();
@@ -48,11 +50,23 @@ fn create_config() -> MainConfig {
         Ok(passes) => passes,
         Err(err) => panic!("Cannot parse passes: {}", err),
     };
-    let block_size = match matches.value_of(BLOCK_SIZE).unwrap_or("8").parse() {
-        Ok(block_size) => block_size,
-        Err(err) => panic!("Cannot parse block size: {}", err),
+
+    let block_size = {
+        let mut split = matches.value_of(BLOCK_SIZE).unwrap_or("8,8").split(',');
+        let x = split
+            .next()
+            .expect("No block size <x> given")
+            .parse()
+            .expect("Cannot parse block size <x>");
+        let y = split
+            .next()
+            .expect("No block size <y> given")
+            .parse()
+            .expect("Cannot parse block size <y>");
+
+        UVec2::new(x, y)
     };
-    let live = cfg!(feature = "live-window") && matches.is_present(LIVE);
+    let live = cfg!(feature = "show-image") && matches.is_present(LIVE);
     let threads = match matches
         .value_of(THREADS)
         .unwrap_or(&num_cpus::get().to_string())
@@ -91,14 +105,16 @@ fn create_config() -> MainConfig {
         Some(output)
     };
 
-    let render_config = RenderConfig::new(depth, passes, block_size, threads);
-
     MainConfig {
-        render_config,
         verbose,
         live,
         input: input.to_owned(),
         output,
+        depth,
+        passes,
+        block_size,
+        threads,
+        bounds: None,
         pixel_type,
         integrator_type,
     }
@@ -106,11 +122,15 @@ fn create_config() -> MainConfig {
 
 #[derive(Debug, Clone)]
 struct MainConfig {
-    pub render_config: RenderConfig,
     pub verbose: bool,
     pub live: bool,
     pub input: String,
     pub output: Option<String>,
+    pub depth: u32,
+    pub passes: u32,
+    pub block_size: UVec2,
+    pub threads: u32,
+    pub bounds: Option<UBounds2>,
     pub pixel_type: PixelType,
     pub integrator_type: IntegratorType,
 }
@@ -123,16 +143,9 @@ impl MainConfig {
 
         let integrator: Arc<dyn Integrator> = match self.integrator_type {
             IntegratorType::Debug => Arc::new(DebugNormals),
-            IntegratorType::Whitted => Arc::new(Whitted::new(self.render_config.depth)),
-            IntegratorType::Path => Arc::new(Path::new(self.render_config.depth)),
-            IntegratorType::PathEnhanced => Arc::new(PathEnhanced::new(
-                self.render_config.depth,
-                self.render_config.depth * 4,
-            )),
-            IntegratorType::SpectralPath => Arc::new(SpectralPath::new(
-                self.render_config.depth,
-                self.render_config.depth * 4,
-            )),
+            IntegratorType::Whitted => Arc::new(Whitted::new(self.depth)),
+            IntegratorType::Path => Arc::new(Path::new(self.depth)),
+            IntegratorType::SpectralPath => Arc::new(SpectralPath::new(self.depth, 3)),
         };
 
         let sampler: Arc<dyn Sampler> = match self.integrator_type {
@@ -140,7 +153,18 @@ impl MainConfig {
             _ => Arc::new(RandomSampler::default()),
         };
 
-        Renderer::new(scene, sampler, integrator, self.render_config)
+        let config = Config {
+            resolution: scene.camera.resolution(),
+            filename: self.output.clone(),
+            bounds: self
+                .bounds
+                .unwrap_or_else(|| UBounds2::from(scene.camera.resolution())),
+            block_size: self.block_size,
+            passes: self.passes,
+            threads: self.threads,
+        };
+
+        Renderer::new(Arc::new(scene), sampler, integrator, config)
     }
 
     fn save_image(&self, renderer: &Renderer) -> Result<(), String> {
@@ -175,16 +199,14 @@ impl MainConfig {
 
         let mut renderer = self.create_renderer();
 
-        #[cfg(feature = "live-window")]
+        #[cfg(feature = "show-image")]
         if self.live {
-            let mut window = RenderWindow::new("Rust-V".to_string(), renderer)?;
+            let mut window = RenderWindow::new("Rust-V".to_string(), &mut renderer)?;
             window.render();
 
             if self.verbose {
                 println!("Closed window");
             }
-
-            return Ok(());
         }
 
         let job = renderer.render();
@@ -219,7 +241,6 @@ pub enum IntegratorType {
     Debug,
     Whitted,
     Path,
-    PathEnhanced,
     SpectralPath,
 }
 
@@ -231,7 +252,6 @@ impl TryInto<IntegratorType> for &str {
             "debug" => Ok(IntegratorType::Debug),
             "whitted" => Ok(IntegratorType::Whitted),
             "path" => Ok(IntegratorType::Path),
-            "pathenhanced" => Ok(IntegratorType::PathEnhanced),
             "spectralpath" => Ok(IntegratorType::SpectralPath),
             _ => Err(self.to_string()),
         }

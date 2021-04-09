@@ -2,8 +2,8 @@ use crate::bxdf::{same_hemisphere, world_to_bxdf, BxDF, BxDFSample, Type};
 use crate::debug_utils::is_normalized;
 use crate::sampler::Sample;
 use crate::Spectrum;
+use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
-use ultraviolet::Vec3;
 
 #[derive(Serialize, Deserialize)]
 pub struct BSDF {
@@ -31,13 +31,13 @@ impl BSDF {
         self.bxdfs.iter().filter(|bxdf| bxdf.is_type(t)).count()
     }
 
-    fn random_matching_bxdf(&self, t: Type, rand: f32) -> Option<&dyn BxDF> {
+    fn random_matching_bxdf(&self, t: Type, rand: Float) -> Option<&dyn BxDF> {
         let count = self.num_types(t);
         if count == 0 {
             return None;
         }
 
-        let index = (rand * count as f32) as usize;
+        let index = (rand * count as Float) as usize;
         self.bxdfs
             .iter()
             .filter_map(|bxdf| {
@@ -52,9 +52,9 @@ impl BSDF {
 
     pub fn evaluate(
         &self,
-        normal: &Vec3,
-        incident_world: &Vec3,
-        outgoing_world: &Vec3,
+        normal: &Vector3,
+        incident_world: &Vector3,
+        outgoing_world: &Vector3,
         mut types: Type,
     ) -> Spectrum {
         let rotation = world_to_bxdf(normal);
@@ -82,12 +82,12 @@ impl BSDF {
 
     pub fn evaluate_light_wave(
         &self,
-        normal: &Vec3,
-        incident_world: &Vec3,
-        outgoing_world: &Vec3,
+        normal: &Vector3,
+        incident_world: &Vector3,
+        outgoing_world: &Vector3,
         mut types: Type,
         light_wave_index: usize,
-    ) -> f32 {
+    ) -> Float {
         let rotation = world_to_bxdf(normal);
         let incident = rotation * *incident_world;
         let outgoing = rotation * *outgoing_world;
@@ -113,8 +113,8 @@ impl BSDF {
 
     pub fn sample(
         &self,
-        normal: &Vec3,
-        outgoing_world: &Vec3,
+        normal: &Vector3,
+        outgoing_world: &Vector3,
         types: Type,
         sample: &Sample,
     ) -> Option<BxDFSample<Spectrum>> {
@@ -137,12 +137,12 @@ impl BSDF {
 
     pub fn sample_light_wave(
         &self,
-        normal: &Vec3,
-        outgoing_world: &Vec3,
+        normal: &Vector3,
+        outgoing_world: &Vector3,
         types: Type,
         sample: &Sample,
         light_wave_index: usize,
-    ) -> Option<BxDFSample<f32>> {
+    ) -> Option<BxDFSample<Float>> {
         debug_assert!(is_normalized(normal));
         debug_assert!(is_normalized(outgoing_world));
 
@@ -163,11 +163,11 @@ impl BSDF {
 
     pub fn pdf(
         &self,
-        normal: &Vec3,
-        incident_world: &Vec3,
-        outgoing_world: &Vec3,
+        normal: &Vector3,
+        incident_world: &Vector3,
+        outgoing_world: &Vector3,
         types: Type,
-    ) -> f32 {
+    ) -> Float {
         let rotation = world_to_bxdf(normal);
         let incident = rotation * *incident_world;
         let outgoing = rotation * *outgoing_world;
@@ -185,7 +185,7 @@ impl BSDF {
             .fold((0.0, 0usize), |(a, num), b| (a + b, num + 1));
 
         if num > 0 {
-            pdf / num as f32
+            pdf / num as Float
         } else {
             0.0
         }

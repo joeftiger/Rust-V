@@ -1,22 +1,25 @@
 use crate::Spectrum;
-use color::{IntSpectrum, Color};
+use color::{Color, IntSpectrum};
+use definitions::Float;
+use serde::{Deserialize, Serialize};
+use ultraviolet::UVec2;
 
-pub struct Pixel<T> {
+#[derive(Default, Clone, Serialize, Deserialize)]
+pub struct Pixel {
+    pub position: UVec2,
     pub average: Spectrum,
-    samples: T,
+    samples: IntSpectrum,
 }
 
-impl Pixel<usize> {
-    pub fn add(&mut self, spectrum: Spectrum) {
-        let mut avg = self.average * self.samples as f32;
-        avg += spectrum;
-        self.samples += 1;
-
-        self.average = avg / self.samples as f32;
+impl Pixel {
+    pub fn new(position: UVec2) -> Self {
+        Self {
+            position,
+            average: Spectrum::broadcast(0.0),
+            samples: IntSpectrum::broadcast(0),
+        }
     }
-}
 
-impl Pixel<IntSpectrum> {
     pub fn add(&mut self, spectrum: Spectrum) {
         let mut avg = self.average * self.samples;
         avg += spectrum;
@@ -25,23 +28,26 @@ impl Pixel<IntSpectrum> {
         self.average = avg / self.samples;
     }
 
-    pub fn add_light_wave(&mut self, lambda: f32, light_wave_index: usize) {
-        let mut avg = self.average * self.samples;
-        avg[light_wave_index] += lambda;
-        self.samples[light_wave_index] += 1;
-
+    pub fn add_black(&mut self) {
+        let avg = self.average * self.samples;
+        self.samples.increment();
         self.average = avg / self.samples;
     }
-}
 
-impl<T> Default for Pixel<T>
-    where
-        T: Default,
-{
-    fn default() -> Self {
-        Self {
-            average: Spectrum::default(),
-            samples: T::default(),
-        }
+    pub fn add_light_wave(&mut self, lambda: Float, light_wave_index: usize) {
+        let before = self.samples[light_wave_index];
+        let after = self.samples[light_wave_index] + 1;
+
+        self.average[light_wave_index] =
+            (self.average[light_wave_index] * before as Float + lambda) / after as Float;
+        self.samples[light_wave_index] = after;
+    }
+
+    pub fn add_black_light_wave(&mut self, light_wave_index: usize) {
+        let before = self.samples[light_wave_index];
+        let after = self.samples[light_wave_index] + 1;
+
+        self.average[light_wave_index] *= before as Float / after as Float;
+        self.samples[light_wave_index] = after;
     }
 }

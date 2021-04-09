@@ -1,25 +1,26 @@
 use crate::camera::Camera;
 use crate::debug_utils::{is_finite, is_normalized};
 use crate::sampler::pixel_samplers::{PixelSampler, PixelSamplerType};
+use definitions::{Float, Vector3};
 use geometry::Ray;
 use serde::de::{Error, MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
-use ultraviolet::{UVec2, Vec3};
-use utility::floats::in_range;
+use ultraviolet::UVec2;
+use utility::floats::FloatExt;
 
 /// A perspective camera with a fov somewhere in space, looking at a target.
 pub struct PerspectiveCamera {
     sampler: PixelSamplerType,
-    position: Vec3,
-    target: Vec3,
-    up: Vec3,
-    fovy: f32,
+    position: Vector3,
+    target: Vector3,
+    up: Vector3,
+    fovy: Float,
     resolution: UVec2,
-    x_dir: Vec3,
-    y_dir: Vec3,
-    lower_left: Vec3,
+    x_dir: Vector3,
+    y_dir: Vector3,
+    lower_left: Vector3,
 }
 
 impl PerspectiveCamera {
@@ -43,24 +44,24 @@ impl PerspectiveCamera {
     /// * Self
     pub fn new(
         sampler: PixelSamplerType,
-        position: Vec3,
-        target: Vec3,
-        up: Vec3,
-        fovy: f32,
+        position: Vector3,
+        target: Vector3,
+        up: Vector3,
+        fovy: Float,
         resolution: UVec2,
     ) -> Self {
         debug_assert!(is_finite(&position));
         debug_assert!(is_finite(&target));
         debug_assert!(is_finite(&up));
         debug_assert!(is_normalized(&up));
-        debug_assert!(in_range(fovy, 0.0, 360.0));
+        debug_assert!(fovy.in_range(0.0, 360.0));
 
         // compute orientation and distance of eye to scene center
         let view = (target - position).normalized();
         let distance = (target - position).mag();
 
-        let w = resolution.x as f32;
-        let h = resolution.y as f32;
+        let w = resolution.x as Float;
+        let h = resolution.y as Float;
         let image_height = 2.0 * distance * (0.5 * fovy).to_radians().tan();
         let image_width = w / h * image_height;
 
@@ -98,8 +99,8 @@ impl Camera for PerspectiveCamera {
         let sample = self.sampler.sample(pixel);
 
         let direction = self.lower_left
-            + (pixel.x as f32 + sample.x) * self.x_dir
-            + (pixel.y as f32 + sample.y) * self.y_dir
+            + (pixel.x as Float + sample.x) * self.x_dir
+            + (pixel.y as Float + sample.y) * self.y_dir
             - self.position;
 
         Ray::new_fast(self.position, direction.normalized())

@@ -1,83 +1,80 @@
 use crate::*;
 use image::Rgb;
-use ultraviolet::Vec3;
 
 color!(
-    Xyz => f32, 3
+    Xyz => Float, 3
 );
-
-impl Xyz {
-    /// Converts itself to a vector.
-    ///
-    /// # Returns
-    /// * Self as vector
-    pub fn to_vec3(&self) -> Vec3 {
-        Vec3::from(self.data)
-    }
-
-    pub fn to_srgb(&self) -> Srgb {
-        Srgb::from(linears_to_srgb(xyz_to_srgb_mat() * self.to_vec3()))
-    }
-}
 
 impl Colors for Xyz {
     fn black() -> Self {
-        Srgb::black().to_xyz()
+        Self::from(Srgb::black())
     }
 
     fn grey() -> Self {
-        Srgb::grey().to_xyz()
+        Self::from(Srgb::grey())
     }
 
     fn white() -> Self {
-        Srgb::white().to_xyz()
+        Self::from(Srgb::white())
     }
 
     fn red() -> Self {
-        Srgb::red().to_xyz()
+        Self::from(Srgb::red())
     }
 
     fn yellow() -> Self {
-        Srgb::yellow().to_xyz()
+        Self::from(Srgb::yellow())
     }
 
     fn green() -> Self {
-        Srgb::green().to_xyz()
+        Self::from(Srgb::grey())
     }
 
     fn cyan() -> Self {
-        Srgb::cyan().to_xyz()
+        Self::from(Srgb::cyan())
     }
 
     fn blue() -> Self {
-        Srgb::blue().to_xyz()
+        Self::from(Srgb::black())
     }
 
     fn pink() -> Self {
-        Srgb::pink().to_xyz()
+        Self::from(Srgb::pink())
     }
 }
 
-impl Into<Rgb<u8>> for Xyz {
-    fn into(self) -> Rgb<u8> {
-        self.to_srgb().into()
+impl From<Xyz> for Rgb<u8> {
+    fn from(xyz: Xyz) -> Self {
+        Self::from(Srgb::from(xyz))
     }
 }
 
-impl Into<Rgb<u16>> for Xyz {
-    fn into(self) -> Rgb<u16> {
-        self.to_srgb().into()
+impl From<Xyz> for Rgb<u16> {
+    fn from(xyz: Xyz) -> Self {
+        Self::from(Srgb::from(xyz))
     }
 }
 
-impl Into<Rgb<f32>> for Xyz {
-    fn into(self) -> Rgb<f32> {
-        Rgb::from(self.data)
+impl From<Xyz> for Rgb<Float> {
+    fn from(xyz: Xyz) -> Self {
+        Self::from(Srgb::from(xyz))
     }
 }
 
-impl From<Vec3> for Xyz {
-    fn from(vec: Vec3) -> Self {
+impl From<Xyz> for Srgb {
+    fn from(xyz: Xyz) -> Self {
+        Srgb::from(linears_to_srgb(xyz_to_srgb_mat() * Vector3::from(xyz)))
+    }
+}
+
+impl From<Xyz> for Vector3 {
+    fn from(xyz: Xyz) -> Self {
+        Self::from(xyz.data)
+    }
+}
+
+impl From<Vector3> for Xyz {
+    fn from(vec: Vector3) -> Self {
         Self::new([vec.x, vec.y, vec.z])
     }
 }
