@@ -7,7 +7,7 @@ use crate::sampler::Sampler;
 use crate::scene::Scene;
 use image::{ImageBuffer, Rgb};
 use indicatif::{ProgressBar, ProgressStyle};
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
@@ -18,7 +18,7 @@ pub struct Renderer {
     integrator: Arc<dyn Integrator>,
     sensor: Arc<Sensor>,
     config: Config,
-    progress: Arc<AtomicU32>,
+    progress: Arc<AtomicUsize>,
     pub progress_bar: Arc<Mutex<ProgressBar>>,
 }
 
@@ -37,12 +37,12 @@ impl Renderer {
             clone.block_size,
         );
 
-        let progress = Arc::new(AtomicU32::new(0));
+        let progress = Arc::new(AtomicUsize::new(0));
 
         let progress_bar = {
             let bar = ProgressBar::new(0);
             bar.set_style(ProgressStyle::default_bar().template(
-                "[{elapsed_precise} elapsed] {wide_bar:.cyan/white} {percent}% [{eta_precise} remaining]\nrender-blocks: {per_sec}",
+                "{msg}\n[{elapsed_precise} elapsed] {wide_bar:.cyan/white} {percent}% [{eta_precise} remaining]\nrender-blocks: {per_sec}",
             ));
             Arc::new(Mutex::new(bar))
         };
@@ -59,16 +59,16 @@ impl Renderer {
     }
 
     /// Returns the current progress. It will/should be in the range `[0, z]` for
-    /// `z = render_blocks * depth`.
+    /// `z = render_blocks * passes`.
     ///
     /// # Returns
     /// * The current progress
-    pub fn get_progress(&self) -> u32 {
+    pub fn get_progress(&self) -> usize {
         self.progress.load(Ordering::Relaxed)
     }
 
     /// Returns whether the current progress is at/over the limit of `[0, z]` for
-    /// `z = render_blocks * depth`.
+    /// `z = render_blocks * passes`.
     ///
     /// # Returns
     /// * Whether the render is done
@@ -77,19 +77,22 @@ impl Renderer {
     }
 
     /// Returns whether the given progress is at/over the limit of `[0, z]` for
-    /// `z = render_blocks * depth`.
+    /// `z = render_blocks * passes`.
     ///
     /// # Returns
     /// * Whether the progress is at/over the limit
-    fn progress_out_of_range(&self, progress: u32) -> bool {
-        progress >= self.sensor.num_tiles() as u32 * self.config.passes
+    fn progress_out_of_range(&self, progress: usize) -> bool {
+        progress >= self.sensor.num_tiles() * self.config.passes as usize
     }
 
-    fn get_next_tile(&mut self) -> Option<&Mutex<SensorTile>> {
+    fn get_progress_and_next_tile(&mut self) -> Option<(usize, &Mutex<SensorTile>)> {
         let index = self.progress.fetch_add(1, Ordering::Relaxed);
 
-        if index < self.config.passes * self.sensor.num_tiles() as u32 {
-            Some(&self.sensor.tiles[index as usize % self.sensor.num_tiles()])
+        if index < self.config.passes as usize * self.sensor.num_tiles() {
+            Some((
+                index,
+                &self.sensor.tiles[index as usize % self.sensor.num_tiles()],
+            ))
         } else {
             None
         }
@@ -105,10 +108,14 @@ impl Renderer {
 
         let mut handles = Vec::with_capacity(self.config.threads as usize);
         let should_stop = Arc::new(AtomicBool::new(false));
+        let frames = Arc::new(AtomicIsize::new(0));
+
+        let tiles = self.sensor.num_tiles();
 
         for i in 0..self.config.threads {
             let this = self.clone();
             let this_should_stop = should_stop.clone();
+            let this_frames = frames.clone();
 
             let handle = thread::Builder::new()
                 .name(format!("Render thread {}", i))
@@ -118,7 +125,13 @@ impl Renderer {
                         break;
                     }
 
-                    if let Some(lock) = this.clone().get_next_tile() {
+                    if let Some((progress, lock)) = this.clone().get_progress_and_next_tile() {
+                        if progress % tiles == 0 {
+                            let frame = this_frames.fetch_add(1, Ordering::Relaxed);
+                            let bar = this.progress_bar.lock().expect("Progress bar poisoned");
+                            bar.set_message(format!("Frames rendered: {}", frame).as_str());
+                        }
+
                         let mut tile = lock.lock().expect("SensorTile is poisoned");
 
                         for px in &mut tile.pixels {
