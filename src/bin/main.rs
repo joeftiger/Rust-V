@@ -26,6 +26,7 @@ const DEPTH: &str = "DEPTH";
 const FORMAT: &str = "FORMAT";
 const INTEGRATOR_BACKEND: &str = "INTEGRATOR_BACKEND";
 const THREADS: &str = "THREADS";
+const BOUNDS: &str = "BOUNDS";
 
 fn main() -> Result<(), String> {
     create_config().run()
@@ -66,6 +67,31 @@ fn create_config() -> MainConfig {
 
         UVec2::new(x, y)
     };
+    let bounds = matches.value_of(BOUNDS).map(|arg| {
+        let mut split = arg.split(',');
+        let min_x = split
+            .next()
+            .expect("No <min_bound: x> given")
+            .parse()
+            .expect("Cannot parse <min_bound: x>");
+        let min_y = split
+            .next()
+            .expect("No <min_bound: y> given")
+            .parse()
+            .expect("Cannot parse <min_bound: y>");
+        let max_x = split
+            .next()
+            .expect("No <max_bound: x> given")
+            .parse()
+            .expect("Cannot parse <max_bound: x>");
+        let max_y = split
+            .next()
+            .expect("No <max_bound: y> given")
+            .parse()
+            .expect("Cannot parse <max_bound: y>");
+
+        UBounds2::new(UVec2::new(min_x, min_y), UVec2::new(max_x, max_y))
+    });
     let live = cfg!(feature = "show-image") && matches.is_present(LIVE);
     let threads = match matches
         .value_of(THREADS)
@@ -114,7 +140,7 @@ fn create_config() -> MainConfig {
         passes,
         block_size,
         threads,
-        bounds: None,
+        bounds,
         pixel_type,
         integrator_type,
     }

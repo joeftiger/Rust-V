@@ -54,3 +54,7 @@ args:
       long: block-size
       help: "The block size for to render in chunks. E.g. 64,64 for 64x64 blocks. (Default: 8,8)"
       takes_value: true
+  - BOUNDS:
+      long: bounds
+      help: "The bounds of the resolution for the sensor. E.g. 0,0,128,128 for (0,0) to (128, 128) to render. (Default: whole camera resolution)"
+      takes_value: true
