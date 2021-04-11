@@ -29,7 +29,7 @@ impl Filter for BoxFilter {
     }
 
     #[inline(always)]
-    fn evaluate(&self, _: &Vector2) -> Float {
+    fn evaluate(&self, _: Vector2) -> Float {
         1.0
     }
 }

@@ -51,7 +51,7 @@ impl Integrator for Path {
                 illumination += throughput * bounce_illum;
 
                 let sample = sampler.get_sample();
-                if let Some(bxdf_sample) = bsdf.sample(&normal, &outgoing, Type::ALL, &sample) {
+                if let Some(bxdf_sample) = bsdf.sample(normal, outgoing, Type::ALL, sample) {
                     if bxdf_sample.pdf == 0.0 || bxdf_sample.spectrum.is_black() {
                         break;
                     }

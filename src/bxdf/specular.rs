@@ -46,20 +46,20 @@ impl BxDF for SpecularReflection {
     ///
     /// # Returns
     /// * `0.0` spectrum
-    fn evaluate(&self, _: &Vector3, _: &Vector3) -> Spectrum {
+    fn evaluate(&self, _: Vector3, _: Vector3) -> Spectrum {
         Spectrum::broadcast(0.0)
     }
 
-    fn evaluate_light_wave(&self, _: &Vector3, _: &Vector3, _: usize) -> Float {
+    fn evaluate_light_wave(&self, _: Vector3, _: Vector3, _: usize) -> Float {
         0.0
     }
 
-    fn sample(&self, outgoing: &Vector3, _: &Vector2) -> Option<BxDFSample<Spectrum>> {
+    fn sample(&self, outgoing: Vector3, _: Vector2) -> Option<BxDFSample<Spectrum>> {
         debug_assert!(is_normalized(outgoing));
 
         let incident = bxdf_incident_to(outgoing);
 
-        let cos_i = cos_theta(&incident);
+        let cos_i = cos_theta(incident);
         let spectrum = self.fresnel.evaluate(cos_i) * self.r;
 
         Some(BxDFSample::new(spectrum, incident, 1.0, self.get_type()))
@@ -72,7 +72,7 @@ impl BxDF for SpecularReflection {
     ///
     /// # Returns
     /// * `0.0`
-    fn pdf(&self, _: &Vector3, _: &Vector3) -> Float {
+    fn pdf(&self, _: Vector3, _: Vector3) -> Float {
         0.0
     }
 }
@@ -121,15 +121,15 @@ impl BxDF for SpecularTransmission {
     ///
     /// # Returns
     /// * `0.0` spectrum
-    fn evaluate(&self, _: &Vector3, _: &Vector3) -> Spectrum {
+    fn evaluate(&self, _: Vector3, _: Vector3) -> Spectrum {
         Spectrum::broadcast(0.0)
     }
 
-    fn evaluate_light_wave(&self, _: &Vector3, _: &Vector3, _: usize) -> Float {
+    fn evaluate_light_wave(&self, _: Vector3, _: Vector3, _: usize) -> Float {
         0.0
     }
 
-    fn sample(&self, outgoing: &Vector3, _: &Vector2) -> Option<BxDFSample<Spectrum>> {
+    fn sample(&self, outgoing: Vector3, _: Vector2) -> Option<BxDFSample<Spectrum>> {
         debug_assert!(is_normalized(outgoing));
 
         let entering = cos_theta(outgoing) > 0.0;
@@ -139,12 +139,11 @@ impl BxDF for SpecularTransmission {
             (self.eta_t, self.eta_i, -bxdf_normal())
         };
 
-        if let Some(mut incident) =
-            refract(*outgoing, normal, eta_i.n_uniform() / eta_t.n_uniform())
+        if let Some(mut incident) = refract(outgoing, normal, eta_i.n_uniform() / eta_t.n_uniform())
         {
             incident.normalize();
 
-            let cos_i = cos_theta(&incident);
+            let cos_i = cos_theta(incident);
             let spectrum = self.t * (Spectrum::broadcast(1.0) - self.fresnel.evaluate(cos_i));
 
             Some(BxDFSample::new(spectrum, incident, 1.0, self.get_type()))
@@ -160,7 +159,7 @@ impl BxDF for SpecularTransmission {
     ///
     /// # Returns
     /// * `0.0`
-    fn pdf(&self, _: &Vector3, _: &Vector3) -> Float {
+    fn pdf(&self, _: Vector3, _: Vector3) -> Float {
         0.0
     }
 }
@@ -212,15 +211,15 @@ impl BxDF for FresnelSpecular {
     ///
     /// # Returns
     /// * `0.0` spectrum
-    fn evaluate(&self, _: &Vector3, _: &Vector3) -> Spectrum {
+    fn evaluate(&self, _: Vector3, _: Vector3) -> Spectrum {
         Spectrum::broadcast(0.0)
     }
 
-    fn evaluate_light_wave(&self, _: &Vector3, _: &Vector3, _: usize) -> Float {
+    fn evaluate_light_wave(&self, _: Vector3, _: Vector3, _: usize) -> Float {
         0.0
     }
 
-    fn sample(&self, outgoing: &Vector3, sample: &Vector2) -> Option<BxDFSample<Spectrum>> {
+    fn sample(&self, outgoing: Vector3, sample: Vector2) -> Option<BxDFSample<Spectrum>> {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
 
@@ -237,8 +236,8 @@ impl BxDF for FresnelSpecular {
         };
 
         if f < sample.x {
-            if let Some(incident) = refract(*outgoing, normal, eta_i / eta_t) {
-                let cos_i = cos_theta(&incident);
+            if let Some(incident) = refract(outgoing, normal, eta_i / eta_t) {
+                let cos_i = cos_theta(incident);
 
                 let spectrum = self.t * (Spectrum::broadcast(1.0) - self.fresnel.evaluate(cos_i));
                 let typ = Type::SPECULAR | Type::TRANSMISSION;
@@ -256,8 +255,8 @@ impl BxDF for FresnelSpecular {
 
     fn sample_light_wave(
         &self,
-        outgoing: &Vector3,
-        sample: &Vector2,
+        outgoing: Vector3,
+        sample: Vector2,
         light_wave_index: usize,
     ) -> Option<BxDFSample<Float>> {
         debug_assert!(is_normalized(outgoing));
@@ -279,8 +278,8 @@ impl BxDF for FresnelSpecular {
         };
 
         if f < sample.x {
-            if let Some(incident) = refract(*outgoing, normal, eta_i / eta_t) {
-                let cos_i = cos_theta(&incident);
+            if let Some(incident) = refract(outgoing, normal, eta_i / eta_t) {
+                let cos_i = cos_theta(incident);
 
                 let intensity = self.t.index_spectral(light_wave_index)
                     * (1.0 - self.fresnel.evaluate_lambda(lambda, cos_i));
@@ -304,7 +303,7 @@ impl BxDF for FresnelSpecular {
     ///
     /// # Returns
     /// * `0.0`
-    fn pdf(&self, _: &Vector3, _: &Vector3) -> Float {
+    fn pdf(&self, _: Vector3, _: Vector3) -> Float {
         0.0
     }
 }

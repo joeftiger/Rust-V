@@ -7,7 +7,7 @@ use geometry::{spherical_to_cartesian_frame_trig, CoordinateSystem, Sphere};
 use std::f64::consts::TAU;
 use utility::floats::FloatExt;
 
-fn sample_surface_inside(sphere: &Sphere, sample: &Vector2) -> SurfaceSample {
+fn sample_surface_inside(sphere: &Sphere, sample: Vector2) -> SurfaceSample {
     let normal = sample_unit_sphere(sample);
     let point = sphere.center + sphere.radius * normal;
     let pdf = 1.0 / sphere.surface_area();
@@ -22,11 +22,11 @@ impl Sampleable for Sphere {
     }
 
     // Copyright: https://github.com/mmp/pbrt-v3/blob/master/src/shapes/sphere.cpp
-    fn sample_surface(&self, origin: &Vector3, sample: &Vector2) -> SurfaceSample {
+    fn sample_surface(&self, origin: Vector3, sample: Vector2) -> SurfaceSample {
         debug_assert!(is_finite(origin));
         debug_assert!(within_01(sample));
 
-        let origin_to_center = self.center - *origin;
+        let origin_to_center = self.center - origin;
         let dist_sq = origin_to_center.mag_sq();
         let r2 = self.radius * self.radius;
 

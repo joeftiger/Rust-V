@@ -43,7 +43,7 @@ impl BxDF for OrenNayar {
         Type::DIFFUSE | Type::REFLECTION
     }
 
-    fn evaluate(&self, incident: &Vector3, outgoing: &Vector3) -> Spectrum {
+    fn evaluate(&self, incident: Vector3, outgoing: Vector3) -> Spectrum {
         let sin_theta_i = sin_theta(incident);
         let sin_theta_o = sin_theta(outgoing);
 
@@ -73,8 +73,8 @@ impl BxDF for OrenNayar {
 
     fn evaluate_light_wave(
         &self,
-        incident: &Vector3,
-        outgoing: &Vector3,
+        incident: Vector3,
+        outgoing: Vector3,
         light_wave_index: usize,
     ) -> Float {
         let sin_theta_i = sin_theta(incident);

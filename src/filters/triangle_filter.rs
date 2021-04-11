@@ -30,7 +30,7 @@ impl Filter for TriangleFilter {
     }
 
     #[inline(always)]
-    fn evaluate(&self, point: &Vector2) -> Float {
+    fn evaluate(&self, point: Vector2) -> Float {
         Float::fast_max(0.0, self.radius.x - point.x.abs())
             * Float::fast_max(0.0, self.radius.y - point.y.abs())
     }

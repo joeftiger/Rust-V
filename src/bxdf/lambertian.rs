@@ -30,11 +30,11 @@ impl BxDF for LambertianReflection {
         Type::DIFFUSE | Type::REFLECTION
     }
 
-    fn evaluate(&self, _: &Vector3, _: &Vector3) -> Spectrum {
+    fn evaluate(&self, _: Vector3, _: Vector3) -> Spectrum {
         self.r * FRAC_1_PI as Float
     }
 
-    fn evaluate_light_wave(&self, _: &Vector3, _: &Vector3, light_wave_index: usize) -> Float {
+    fn evaluate_light_wave(&self, _: Vector3, _: Vector3, light_wave_index: usize) -> Float {
         self.r[light_wave_index] * FRAC_1_PI as Float
     }
 }
@@ -64,11 +64,11 @@ impl BxDF for LambertianTransmission {
         Type::DIFFUSE | Type::TRANSMISSION
     }
 
-    fn evaluate(&self, _: &Vector3, _: &Vector3) -> Spectrum {
+    fn evaluate(&self, _: Vector3, _: Vector3) -> Spectrum {
         self.t * FRAC_1_PI as Float
     }
 
-    fn evaluate_light_wave(&self, _: &Vector3, _: &Vector3, light_wave_index: usize) -> Float {
+    fn evaluate_light_wave(&self, _: Vector3, _: Vector3, light_wave_index: usize) -> Float {
         self.t[light_wave_index] * FRAC_1_PI as Float
     }
 }

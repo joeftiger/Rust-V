@@ -1,10 +1,12 @@
-#![allow(unused_variables)]
-#![allow(dead_code)]
-
 // mod super_sampling;
 // pub use super_sampling::*;
 
-use definitions::{Float, Vector2};
+use crate::mc::{sample_unit_disk, sample_unit_disk_concentric};
+use definitions::Vector2;
+#[cfg(not(feature = "f64"))]
+use fastrand::f32 as rand;
+#[cfg(feature = "f64")]
+use fastrand::f64 as rand;
 use serde::{Deserialize, Serialize};
 use ultraviolet::UVec2;
 
@@ -14,16 +16,28 @@ pub enum PixelSamplerType {
     NoOp,
     /// Generates random samples
     Random,
+    Concentric,
+    NonConcentric,
     // UniformSuperSampling(UniformSuperSampling),
 }
 
+#[inline]
+fn rand_vec() -> Vector2 {
+    Vector2::new(rand(), rand())
+}
+
 impl PixelSampler for PixelSamplerType {
-    fn sample(&self, pixel: UVec2) -> Vector2 {
+    fn sample(&self, _pixel: UVec2) -> Vector2 {
         match self {
             PixelSamplerType::NoOp => Vector2::broadcast(0.5),
-            PixelSamplerType::Random => {
-                Vector2::new(fastrand::f64() as Float, fastrand::f64() as Float)
-            } // PixelSamplerType::UniformSuperSampling(s) => s.sample(pixel),
+            PixelSamplerType::Random => rand_vec(),
+            PixelSamplerType::Concentric => {
+                sample_unit_disk_concentric(rand_vec()) + Vector2::broadcast(0.5)
+            }
+            PixelSamplerType::NonConcentric => {
+                sample_unit_disk(rand_vec()) + Vector2::broadcast(0.5)
+            }
+            // PixelSamplerType::UniformSuperSampling(s) => s.sample(pixel),
         }
     }
 }

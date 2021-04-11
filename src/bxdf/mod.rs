@@ -41,14 +41,14 @@ pub fn bxdf_normal() -> Vector3 {
 }
 
 #[inline(always)]
-pub fn bxdf_incident_to(v: &Vector3) -> Vector3 {
+pub fn bxdf_incident_to(v: Vector3) -> Vector3 {
     debug_assert!(is_finite(v));
 
     Vector3::new(-v.x, v.y, -v.z)
 }
 
 #[inline(always)]
-pub fn is_neg(v: &Vector3) -> bool {
+pub fn is_neg(v: Vector3) -> bool {
     debug_assert!(is_finite(v));
 
     v.y < 0.0
@@ -56,65 +56,65 @@ pub fn is_neg(v: &Vector3) -> bool {
 
 #[inline(always)]
 pub fn flip_if_neg(mut v: Vector3) -> Vector3 {
-    debug_assert!(is_finite(&v));
+    debug_assert!(is_finite(v));
 
-    if is_neg(&v) {
+    if is_neg(v) {
         v.y = -v.y;
     }
     v
 }
 
 #[inline(always)]
-pub fn bxdf_is_parallel(v: &Vector3) -> bool {
+pub fn bxdf_is_parallel(v: Vector3) -> bool {
     debug_assert!(is_finite(v));
 
     v.y == 0.0
 }
 
 #[inline(always)]
-pub fn cos_theta(v: &Vector3) -> Float {
+pub fn cos_theta(v: Vector3) -> Float {
     debug_assert!(is_finite(v));
 
     v.y
 }
 
 #[inline(always)]
-pub fn cos2_theta(v: &Vector3) -> Float {
+pub fn cos2_theta(v: Vector3) -> Float {
     debug_assert!(is_finite(v));
 
     cos_theta(v) * cos_theta(v)
 }
 
 #[inline(always)]
-pub fn sin2_theta(v: &Vector3) -> Float {
+pub fn sin2_theta(v: Vector3) -> Float {
     debug_assert!(is_finite(v));
 
     0.0.fast_max(1.0 - cos2_theta(v))
 }
 
 #[inline(always)]
-pub fn sin_theta(v: &Vector3) -> Float {
+pub fn sin_theta(v: Vector3) -> Float {
     debug_assert!(is_finite(v));
 
     sin2_theta(v).sqrt()
 }
 
 #[inline(always)]
-pub fn tan_theta(v: &Vector3) -> Float {
+pub fn tan_theta(v: Vector3) -> Float {
     debug_assert!(is_finite(v));
 
     sin_theta(v) / cos_theta(v)
 }
 
 #[inline(always)]
-pub fn tan2_theta(v: &Vector3) -> Float {
+pub fn tan2_theta(v: Vector3) -> Float {
     debug_assert!(is_finite(v));
 
     sin2_theta(v) / cos2_theta(v)
 }
 
 #[inline(always)]
-pub fn cos_phi(v: &Vector3) -> Float {
+pub fn cos_phi(v: Vector3) -> Float {
     debug_assert!(is_finite(v));
 
     let sin_theta = sin_theta(v);
@@ -126,7 +126,7 @@ pub fn cos_phi(v: &Vector3) -> Float {
 }
 
 #[inline(always)]
-pub fn sin_phi(v: &Vector3) -> Float {
+pub fn sin_phi(v: Vector3) -> Float {
     debug_assert!(is_finite(v));
 
     let sin_theta = sin_theta(v);
@@ -138,7 +138,7 @@ pub fn sin_phi(v: &Vector3) -> Float {
 }
 
 #[inline(always)]
-pub fn cos2_phi(v: &Vector3) -> Float {
+pub fn cos2_phi(v: Vector3) -> Float {
     debug_assert!(is_finite(v));
 
     let cos_phi = cos_phi(v);
@@ -146,13 +146,13 @@ pub fn cos2_phi(v: &Vector3) -> Float {
 }
 
 #[inline(always)]
-pub fn sin2_phi(v: &Vector3) -> Float {
+pub fn sin2_phi(v: Vector3) -> Float {
     let sin_phi = sin_phi(v);
     sin_phi * sin_phi
 }
 
 #[inline(always)]
-pub fn cos_d_phi(a: &Vector3, b: &Vector3) -> Float {
+pub fn cos_d_phi(a: Vector3, b: Vector3) -> Float {
     debug_assert!(is_finite(a));
     debug_assert!(is_finite(b));
 
@@ -189,7 +189,7 @@ pub fn face_forward(v: Vector3, n: Vector3) -> Vector3 {
 }
 
 #[inline(always)]
-pub fn same_hemisphere(a: &Vector3, b: &Vector3) -> bool {
+pub fn same_hemisphere(a: Vector3, b: Vector3) -> bool {
     debug_assert!(is_finite(a));
     debug_assert!(is_finite(b));
 
@@ -197,20 +197,20 @@ pub fn same_hemisphere(a: &Vector3, b: &Vector3) -> bool {
 }
 
 #[inline(always)]
-pub fn world_to_bxdf(v: &Vector3) -> Rotation3 {
+pub fn world_to_bxdf(v: Vector3) -> Rotation3 {
     debug_assert!(is_finite(v));
 
-    if *v == Vector3::unit_y() {
+    if v == Vector3::unit_y() {
         Rotation3::default()
-    } else if *v == -Vector3::unit_y() {
+    } else if v == -Vector3::unit_y() {
         Rotation3::from_rotation_xy(PI as Float)
     } else {
-        Rotation3::from_rotation_between(*v, bxdf_normal())
+        Rotation3::from_rotation_between(v, bxdf_normal())
     }
 }
 
 pub fn bxdf_to_world(v: Vector3) -> Rotation3 {
-    debug_assert!(is_finite(&v));
+    debug_assert!(is_finite(v));
 
     if v == Vector3::unit_y() {
         Rotation3::default()
@@ -312,7 +312,7 @@ where
     /// # Returns
     /// * Self
     pub fn new(spectrum: T, incident: Vector3, pdf: Float, typ: Type) -> Self {
-        debug_assert!(is_normalized(&incident));
+        debug_assert!(is_normalized(incident));
 
         Self {
             spectrum,
@@ -382,12 +382,12 @@ pub trait BxDF: Send + Sync {
     ///
     /// # Results
     /// * A scaling spectrum
-    fn evaluate(&self, incident: &Vector3, outgoing: &Vector3) -> Spectrum;
+    fn evaluate(&self, incident: Vector3, outgoing: Vector3) -> Spectrum;
 
     fn evaluate_light_wave(
         &self,
-        incident: &Vector3,
-        outgoing: &Vector3,
+        incident: Vector3,
+        outgoing: Vector3,
         light_wave_index: usize,
     ) -> Float;
 
@@ -405,23 +405,23 @@ pub trait BxDF: Send + Sync {
     ///
     /// # Results
     /// * The sampled spectrum, incident and pdf
-    fn sample(&self, outgoing: &Vector3, sample: &Vector2) -> Option<BxDFSample<Spectrum>> {
+    fn sample(&self, outgoing: Vector3, sample: Vector2) -> Option<BxDFSample<Spectrum>> {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
 
         let incident = sample_unit_hemisphere(sample);
         let incident = flip_if_neg(incident);
 
-        let spectrum = self.evaluate(&incident, outgoing);
-        let pdf = self.pdf(&incident, outgoing);
+        let spectrum = self.evaluate(incident, outgoing);
+        let pdf = self.pdf(incident, outgoing);
 
         Some(BxDFSample::new(spectrum, incident, pdf, self.get_type()))
     }
 
     fn sample_light_wave(
         &self,
-        outgoing: &Vector3,
-        sample: &Vector2,
+        outgoing: Vector3,
+        sample: Vector2,
         light_wave_index: usize,
     ) -> Option<BxDFSample<Float>> {
         debug_assert!(is_normalized(outgoing));
@@ -431,8 +431,8 @@ pub trait BxDF: Send + Sync {
         let incident = sample_unit_hemisphere(sample);
         let incident = flip_if_neg(incident);
 
-        let light_wave = self.evaluate_light_wave(&incident, outgoing, light_wave_index);
-        let pdf = self.pdf(&incident, outgoing);
+        let light_wave = self.evaluate_light_wave(incident, outgoing, light_wave_index);
+        let pdf = self.pdf(incident, outgoing);
 
         Some(BxDFSample::new(light_wave, incident, pdf, self.get_type()))
     }
@@ -452,7 +452,7 @@ pub trait BxDF: Send + Sync {
     /// # Results
     /// * The evaluated pdf
     #[inline]
-    fn pdf(&self, incident: &Vector3, outgoing: &Vector3) -> Float {
+    fn pdf(&self, incident: Vector3, outgoing: Vector3) -> Float {
         if same_hemisphere(incident, outgoing) {
             cos_theta(incident).abs() * FRAC_1_PI as Float
         } else {
@@ -489,14 +489,14 @@ impl BxDF for ScaledBxDF {
         self.bxdf.get_type()
     }
 
-    fn evaluate(&self, view: &Vector3, from: &Vector3) -> Spectrum {
+    fn evaluate(&self, view: Vector3, from: Vector3) -> Spectrum {
         self.scale * self.bxdf.evaluate(view, from)
     }
 
     fn evaluate_light_wave(
         &self,
-        incident: &Vector3,
-        outgoing: &Vector3,
+        incident: Vector3,
+        outgoing: Vector3,
         light_wave_index: usize,
     ) -> Float {
         self.scale[light_wave_index]
@@ -505,7 +505,7 @@ impl BxDF for ScaledBxDF {
                 .evaluate_light_wave(incident, outgoing, light_wave_index)
     }
 
-    fn sample(&self, outgoing: &Vector3, sample: &Vector2) -> Option<BxDFSample<Spectrum>> {
+    fn sample(&self, outgoing: Vector3, sample: Vector2) -> Option<BxDFSample<Spectrum>> {
         if let Some(mut sample) = self.bxdf.sample(outgoing, sample) {
             sample.spectrum *= self.scale;
 
@@ -515,7 +515,7 @@ impl BxDF for ScaledBxDF {
         }
     }
 
-    fn pdf(&self, incident: &Vector3, outgoing: &Vector3) -> Float {
+    fn pdf(&self, incident: Vector3, outgoing: Vector3) -> Float {
         self.bxdf.pdf(incident, outgoing)
     }
 }

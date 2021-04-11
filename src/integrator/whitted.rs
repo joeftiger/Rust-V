@@ -86,7 +86,7 @@ impl Whitted {
         let normal = intersection.normal;
         let sample = sampler.get_sample();
 
-        let bxdf_sample_option = bsdf.sample(&normal, &outgoing, typ, &sample);
+        let bxdf_sample_option = bsdf.sample(normal, outgoing, typ, sample);
 
         let mut reflection = Spectrum::broadcast(0.0);
 

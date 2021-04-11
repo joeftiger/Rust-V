@@ -7,7 +7,7 @@ use utility::floats::FloatExt;
 pub fn sample_vector_from_angle(
     direction: Vector3,
     sin_theta_max: Float,
-    sample: &Vector2,
+    sample: Vector2,
 ) -> Vector3 {
     debug_assert!(within_01(sample));
 
@@ -32,7 +32,7 @@ pub fn sample_vector_from_angle(
 /// # Results
 /// * A non-concentric sample on the unit disk
 #[inline]
-pub fn sample_unit_disk(sample: &Vector2) -> Vector2 {
+pub fn sample_unit_disk(sample: Vector2) -> Vector2 {
     debug_assert!(within_01(sample));
 
     let theta = sample.x * TAU as Float;
@@ -52,11 +52,11 @@ pub fn sample_unit_disk(sample: &Vector2) -> Vector2 {
 /// # Results
 /// * A concentric sample on the unit disk
 #[inline]
-pub fn sample_unit_disk_concentric(sample: &Vector2) -> Vector2 {
+pub fn sample_unit_disk_concentric(sample: Vector2) -> Vector2 {
     debug_assert!(within_01(sample));
 
     // Map uniform random numbers to [-1,1]^2
-    let offset = 2.0 * *sample - Vector2::one();
+    let offset = 2.0 * sample - Vector2::one();
 
     // Handle degeneracy at the origin
     if offset.x == 0.0 || offset.y == 0.0 {
@@ -88,7 +88,7 @@ pub fn sample_unit_disk_concentric(sample: &Vector2) -> Vector2 {
 ///
 /// # Results
 /// * A point on the unit hemisphere around the `(0, 1, 0)` axis
-pub fn sample_unit_hemisphere(sample: &Vector2) -> Vector3 {
+pub fn sample_unit_hemisphere(sample: Vector2) -> Vector3 {
     debug_assert!(within_01(sample));
 
     let d = sample_unit_disk_concentric(sample);
@@ -111,7 +111,7 @@ pub fn sample_unit_hemisphere(sample: &Vector2) -> Vector3 {
 ///
 /// # Results
 /// * A point on the unit sphere around `(0, 0, 0)`
-pub fn sample_unit_sphere(sample: &Vector2) -> Vector3 {
+pub fn sample_unit_sphere(sample: Vector2) -> Vector3 {
     debug_assert!(within_01(sample));
 
     let z = sample.x.mul_add(-2.0, 1.0);
@@ -136,7 +136,7 @@ pub fn sample_unit_sphere(sample: &Vector2) -> Vector3 {
 ///
 /// # Results
 /// * `Vector3` - A direction in the cone around `(0, 1, 0)`
-pub fn sample_cone(sample: &Vector2, cos_theta_max: Float) -> Vector3 {
+pub fn sample_cone(sample: Vector2, cos_theta_max: Float) -> Vector3 {
     debug_assert!(within_01(sample));
 
     let cos_theta = cos_theta_max.lerp(1.0, sample.x);
@@ -157,9 +157,9 @@ pub fn sample_cone(sample: &Vector2, cos_theta_max: Float) -> Vector3 {
 /// * `frame` - The coordinate system frame. Y-axis is "up"-axis.
 ///
 /// # Results
-/// * `Vector3` - A direction in the cone around `frame.e2`
+// * `Vector3` - A direction in the cone around `frame.e2`
 pub fn uniform_sample_cone_frame(
-    sample: &Vector2,
+    sample: Vector2,
     cos_theta_max: Float,
     frame: &CoordinateSystem,
 ) -> Vector3 {

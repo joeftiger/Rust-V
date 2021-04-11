@@ -58,7 +58,7 @@ impl SpectralPath {
 
             let sample = sampler.get_sample();
             if let Some(bxdf_sample) =
-                bsdf.sample_light_wave(&normal, &outgoing, Type::ALL, &sample, light_wave_index)
+                bsdf.sample_light_wave(normal, outgoing, Type::ALL, sample, light_wave_index)
             {
                 if bxdf_sample.pdf == 0.0 || bxdf_sample.spectrum == 0.0 {
                     break;

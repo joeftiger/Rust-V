@@ -28,5 +28,5 @@ pub trait Filter {
     ///
     /// # Returns
     /// * The evaluated value
-    fn evaluate(&self, point: &Vector2) -> Float;
+    fn evaluate(&self, point: Vector2) -> Float;
 }

@@ -38,7 +38,7 @@ impl Filter for GaussianFilter {
         self.inv_radius
     }
 
-    fn evaluate(&self, point: &Vector2) -> Float {
+    fn evaluate(&self, point: Vector2) -> Float {
         self.gaussian(point.x, self.exp.x) * self.gaussian(point.y, self.exp.y)
     }
 }

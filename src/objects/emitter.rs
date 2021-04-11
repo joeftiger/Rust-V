@@ -57,13 +57,13 @@ impl Emitter {
     /// # Returns
     /// * The radiated spectrum
     #[inline]
-    pub fn radiance(&self, incident: &Vector3, normal: &Vector3) -> Spectrum {
+    pub fn radiance(&self, incident: Vector3, normal: Vector3) -> Spectrum {
         debug_assert!(is_finite(incident));
         debug_assert!(is_normalized(incident));
         debug_assert!(is_finite(normal));
         debug_assert!(is_normalized(normal));
 
-        let dot = incident.dot(*normal);
+        let dot = incident.dot(normal);
 
         if dot > 0.0 {
             self.emission
@@ -74,8 +74,8 @@ impl Emitter {
 
     pub fn radiance_light_wave(
         &self,
-        incident: &Vector3,
-        normal: &Vector3,
+        incident: Vector3,
+        normal: Vector3,
         light_wave_index: usize,
     ) -> Float {
         debug_assert!(is_finite(incident));
@@ -84,7 +84,7 @@ impl Emitter {
         debug_assert!(is_normalized(normal));
         debug_assert!(light_wave_index < Spectrum::size());
 
-        let dot = incident.dot(*normal);
+        let dot = incident.dot(normal);
         if dot > 0.0 {
             self.emission_light_wave(light_wave_index)
         } else {
@@ -104,24 +104,24 @@ impl Emitter {
     ///
     /// # Returns
     /// * An emitter sample
-    pub fn sample(&self, point: &Vector3, sample: &Vector2) -> EmitterSample<Spectrum> {
+    pub fn sample(&self, point: Vector3, sample: Vector2) -> EmitterSample<Spectrum> {
         debug_assert!(is_finite(point));
         debug_assert!(within_01(sample));
 
         let surface_sample = self.geometry.sample_surface(point, sample);
 
-        let occlusion_tester = OcclusionTester::between(*point, surface_sample.point);
+        let occlusion_tester = OcclusionTester::between(point, surface_sample.point);
         let incident = occlusion_tester.ray.direction;
 
-        let radiance = self.radiance(&-incident, &surface_sample.normal);
+        let radiance = self.radiance(-incident, surface_sample.normal);
 
         EmitterSample::new(radiance, incident, surface_sample.pdf, occlusion_tester)
     }
 
     pub fn sample_light_wave(
         &self,
-        point: &Vector3,
-        sample: &Vector2,
+        point: Vector3,
+        sample: Vector2,
         light_wave_index: usize,
     ) -> EmitterSample<Float> {
         debug_assert!(is_finite(point));
@@ -130,11 +130,10 @@ impl Emitter {
 
         let surface_sample = self.geometry.sample_surface(point, sample);
 
-        let occlusion_tester = OcclusionTester::between(*point, surface_sample.point);
+        let occlusion_tester = OcclusionTester::between(point, surface_sample.point);
         let incident = occlusion_tester.ray.direction;
 
-        let radiance =
-            self.radiance_light_wave(&-incident, &surface_sample.normal, light_wave_index);
+        let radiance = self.radiance_light_wave(-incident, surface_sample.normal, light_wave_index);
 
         EmitterSample::new(radiance, incident, surface_sample.pdf, occlusion_tester)
     }
@@ -189,8 +188,8 @@ impl<T> EmitterSample<T> {
         pdf: Float,
         occlusion_tester: OcclusionTester,
     ) -> Self {
-        debug_assert!(is_finite(&incident));
-        debug_assert!(is_normalized(&incident));
+        debug_assert!(is_finite(incident));
+        debug_assert!(is_normalized(incident));
 
         Self {
             radiance,
@@ -223,8 +222,8 @@ impl OcclusionTester {
     /// # Returns
     /// * Self
     pub fn between(origin: Vector3, target: Vector3) -> Self {
-        debug_assert!(is_finite(&origin));
-        debug_assert!(is_finite(&target));
+        debug_assert!(is_finite(origin));
+        debug_assert!(is_finite(target));
         debug_assert!(origin != target);
 
         let direction = target - origin;
@@ -293,8 +292,8 @@ impl SurfaceSample {
     /// # Returns
     /// * Self
     pub fn new(point: Vector3, normal: Vector3, pdf: Float) -> Self {
-        debug_assert!(is_finite(&point));
-        debug_assert!(is_normalized(&normal));
+        debug_assert!(is_finite(point));
+        debug_assert!(is_normalized(normal));
         debug_assert!(pdf >= 0.0);
         debug_assert!(!pdf.is_nan());
 
@@ -323,5 +322,5 @@ pub trait Sampleable: Geometry + Send + Sync {
     ///
     /// # Returns
     /// * A surface sample
-    fn sample_surface(&self, origin: &Vector3, sample: &Vector2) -> SurfaceSample;
+    fn sample_surface(&self, origin: Vector3, sample: Vector2) -> SurfaceSample;
 }

@@ -53,8 +53,8 @@ impl Filter for MitchellFilter {
         self.inv_radius
     }
 
-    fn evaluate(&self, point: &Vector2) -> Float {
-        let var = *point * self.inv_radius;
+    fn evaluate(&self, point: Vector2) -> Float {
+        let var = point * self.inv_radius;
         self.mitchell_1d(var.x) * self.mitchell_1d(var.y)
     }
 }

@@ -50,10 +50,10 @@ impl PerspectiveCamera {
         fovy: Float,
         resolution: UVec2,
     ) -> Self {
-        debug_assert!(is_finite(&position));
-        debug_assert!(is_finite(&target));
-        debug_assert!(is_finite(&up));
-        debug_assert!(is_normalized(&up));
+        debug_assert!(is_finite(position));
+        debug_assert!(is_finite(target));
+        debug_assert!(is_finite(up));
+        debug_assert!(is_normalized(up));
         debug_assert!(fovy.in_range(0.0, 360.0));
 
         // compute orientation and distance of eye to scene center

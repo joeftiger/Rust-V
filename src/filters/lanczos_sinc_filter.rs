@@ -46,7 +46,7 @@ impl Filter for LanczosSincFilter {
         self.inv_radius
     }
 
-    fn evaluate(&self, point: &Vector2) -> Float {
+    fn evaluate(&self, point: Vector2) -> Float {
         self.windowed_sinc(point.x, self.radius.x) * self.windowed_sinc(point.y, self.radius.y)
     }
 }

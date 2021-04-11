@@ -11,7 +11,7 @@ mod noop_sampler;
 mod random_sampler;
 
 /// A sample consists of 3 random values packed together into a `Float` and a `Vector2`.
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Sample {
     pub one_d: Float,
     pub two_d: Vector2,
@@ -20,7 +20,7 @@ pub struct Sample {
 impl Sample {
     pub fn new(one_d: Float, two_d: Vector2) -> Self {
         debug_assert!(one_d.in_range_incl_left(0.0, 1.0));
-        debug_assert!(within_01(&two_d));
+        debug_assert!(within_01(two_d));
 
         Self { one_d, two_d }
     }

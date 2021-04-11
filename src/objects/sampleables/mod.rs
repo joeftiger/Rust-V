@@ -45,5 +45,5 @@ pub trait Sampleable: Geometry + Send + Sync {
     ///
     /// # Returns
     /// * A surface sample
-    fn sample_surface(&self, origin: &Vector3, sample: &Vector2) -> SurfaceSample;
+    fn sample_surface(&self, origin: Vector3, sample: Vector2) -> SurfaceSample;
 }
