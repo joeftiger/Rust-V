@@ -1,3 +1,4 @@
+use crate::new::renderer::Renderer;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
@@ -6,6 +7,7 @@ use std::thread::JoinHandle;
 /// A render job consists of thread handles.
 /// It can be stopped or joined at the end of execution.
 pub struct RenderJob<T> {
+    renderer: Renderer,
     should_stop: Arc<AtomicBool>,
     handles: Vec<JoinHandle<T>>,
 }
@@ -20,8 +22,13 @@ impl<T> RenderJob<T> {
     ///
     /// # Returns
     /// * Self
-    pub fn new(should_stop: Arc<AtomicBool>, handles: Vec<JoinHandle<T>>) -> Self {
+    pub fn new(
+        renderer: Renderer,
+        should_stop: Arc<AtomicBool>,
+        handles: Vec<JoinHandle<T>>,
+    ) -> Self {
         Self {
+            renderer,
             should_stop,
             handles,
         }
@@ -44,6 +51,12 @@ impl<T> RenderJob<T> {
         for handle in self.handles {
             handle.join()?;
         }
+
+        self.renderer
+            .progress_bar
+            .lock()
+            .expect("Progress bar poisoned")
+            .finish();
 
         Ok(())
     }

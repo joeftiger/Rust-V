@@ -56,41 +56,47 @@ fn create_config() -> MainConfig {
         let mut split = matches.value_of(BLOCK_SIZE).unwrap_or("8,8").split(',');
         let x = split
             .next()
-            .expect("No block size <x> given")
+            .expect("No block size [x] given")
             .parse()
-            .expect("Cannot parse block size <x>");
+            .expect("Cannot parse block size [x]");
         let y = split
             .next()
-            .expect("No block size <y> given")
+            .expect("No block size [y] given")
             .parse()
-            .expect("Cannot parse block size <y>");
+            .expect("Cannot parse block size [y]");
 
         UVec2::new(x, y)
     };
     let bounds = matches.value_of(BOUNDS).map(|arg| {
         let mut split = arg.split(',');
-        let min_x = split
-            .next()
-            .expect("No <min_bound: x> given")
-            .parse()
-            .expect("Cannot parse <min_bound: x>");
-        let min_y = split
-            .next()
-            .expect("No <min_bound: y> given")
-            .parse()
-            .expect("Cannot parse <min_bound: y>");
-        let max_x = split
-            .next()
-            .expect("No <max_bound: x> given")
-            .parse()
-            .expect("Cannot parse <max_bound: x>");
-        let max_y = split
-            .next()
-            .expect("No <max_bound: y> given")
-            .parse()
-            .expect("Cannot parse <max_bound: y>");
 
-        UBounds2::new(UVec2::new(min_x, min_y), UVec2::new(max_x, max_y))
+        let min = {
+            let next = split.next().expect("No bounds [min.x] given");
+            let min_x = next
+                .parse()
+                .expect(format!("Unable to parse [{}] as u32", next).as_str());
+            let next = split.next().expect("No bounds [min.y] given");
+            let min_y = next
+                .parse()
+                .expect(format!("Unable to parse [{}] as u32", next).as_str());
+
+            UVec2::new(min_x, min_y)
+        };
+
+        let max = {
+            let next = split.next().expect("No bounds [max.x] given");
+            let max_x = next
+                .parse()
+                .expect(format!("Unable to parse [{}] as u32", next).as_str());
+            let next = split.next().expect("No bounds [max.y] given");
+            let max_y = next
+                .parse()
+                .expect(format!("Unable to parse [{}] as u32", next).as_str());
+
+            UVec2::new(max_x, max_y)
+        };
+
+        UBounds2::new(min, max)
     });
     let live = cfg!(feature = "show-image") && matches.is_present(LIVE);
     let threads = match matches
@@ -194,6 +200,8 @@ impl MainConfig {
     }
 
     fn save_image(&self, renderer: &Renderer) -> Result<(), String> {
+        println!("Output file: {:?}", self.output);
+
         if let Some(path) = &self.output {
             if self.verbose {
                 println!("Saving image...");

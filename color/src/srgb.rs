@@ -59,7 +59,7 @@ impl From<Srgb> for Rgb<u8> {
         let mut data = [0; 3];
         data.iter_mut()
             .zip(srgb.data.iter())
-            .for_each(|(d0, d1)| *d0 = (d1 * 2u32.pow(16) as Float) as u8);
+            .for_each(|(d0, d1)| *d0 = (d1 * 2u32.pow(8) as Float) as u8);
 
         Self::from(data)
     }

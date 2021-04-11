@@ -64,7 +64,7 @@ impl Sensor {
                     width.min(min.x + block_size.x),
                     height.min(min.y + block_size.y),
                 );
-                let bounds = UBounds2::new(min, max);
+                let bounds = UBounds2::new(min + bounds.min, max + bounds.min);
                 let tile = SensorTile::new(bounds);
 
                 sensor_tiles.push(Mutex::new(tile));

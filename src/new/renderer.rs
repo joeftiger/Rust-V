@@ -157,19 +157,20 @@ impl Renderer {
             handles.push(handle);
         }
 
-        RenderJob::new(should_stop, handles)
+        RenderJob::new(self.clone(), should_stop, handles)
     }
 
     //noinspection DuplicatedCode
     pub fn get_image_u8(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-        let res = self.sensor.bounds.to_range();
+        let bounds = self.sensor.bounds;
+        let res = bounds.to_range();
         let mut buffer = ImageBuffer::new(res.x, res.y);
 
         for lock in &self.sensor.tiles {
             let tile = lock.lock().expect("SensorTile is poisoned");
 
             for px in &tile.pixels {
-                let (x, y) = (px.position.x, px.position.y);
+                let (x, y) = (px.position.x - bounds.min.x, px.position.y - bounds.min.y);
 
                 buffer.put_pixel(x, y, Rgb::from(px.average));
             }
@@ -180,14 +181,15 @@ impl Renderer {
 
     //noinspection DuplicatedCode
     pub fn get_image_u16(&self) -> ImageBuffer<Rgb<u16>, Vec<u16>> {
-        let res = self.sensor.bounds.to_range();
+        let bounds = self.sensor.bounds;
+        let res = bounds.to_range();
         let mut buffer = ImageBuffer::new(res.x, res.y);
 
         for lock in &self.sensor.tiles {
             let tile = lock.lock().expect("SensorTile is poisoned");
 
             for px in &tile.pixels {
-                let (x, y) = (px.position.x, px.position.y);
+                let (x, y) = (px.position.x - bounds.min.x, px.position.y - bounds.min.y);
 
                 buffer.put_pixel(x, y, Rgb::from(px.average));
             }
