@@ -36,8 +36,7 @@ impl PixelSampler for PixelSamplerType {
             }
             PixelSamplerType::NonConcentric => {
                 sample_unit_disk(rand_vec()) + Vector2::broadcast(0.5)
-            }
-            // PixelSamplerType::UniformSuperSampling(s) => s.sample(pixel),
+            } // PixelSamplerType::UniformSuperSampling(s) => s.sample(pixel),
         }
     }
 }

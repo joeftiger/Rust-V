@@ -242,9 +242,11 @@ impl MainConfig {
                 println!("Closed window");
             }
         }
-
-        let job = renderer.render();
-        job.join().expect("Could not join render threads");
+        #[cfg(not(feature = "show-image"))]
+        {
+            let job = renderer.render();
+            job.join().expect("Could not join render threads");
+        }
 
         self.save_image(&renderer)
     }
