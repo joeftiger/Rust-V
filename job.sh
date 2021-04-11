@@ -9,10 +9,10 @@
 #SBATCH --exclusive
 ##SBATCH --test-only
 
-ARGS="-iSpectralPath -d32 -p100 --bounds $2,$3,$4,$5 ./scenes/prism.ron --output ./prism_$1.png"
+ARGS="-iSpectralPath -d128 -p20000 --bounds $2,$3,$4,$5 ./scenes/prism.ron --output ./prism_$1.png"
 #echo "$ARGS"
 
 export RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+avx,+avx2,+fma"
-cargo build --package rust-v --bin main
+cargo build --package rust-v --bin main --release
 
 eval "./target/release/main ${ARGS}"
