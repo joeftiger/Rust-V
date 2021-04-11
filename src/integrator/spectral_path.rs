@@ -3,10 +3,10 @@
 
 use crate::bxdf::Type;
 use crate::integrator::{direct_illumination_light_wave, Integrator};
-use crate::new::sensor::pixel::Pixel;
 use crate::objects::SceneObject;
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
+use crate::sensor::pixel::Pixel;
 use crate::Spectrum;
 use definitions::Float;
 use geometry::{offset_ray_towards, Ray};

@@ -3,9 +3,9 @@
 #![allow(unused_variables)]
 
 use crate::integrator::Integrator;
-use crate::new::sensor::pixel::Pixel;
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
+use crate::sensor::pixel::Pixel;
 use crate::Spectrum;
 use color::{Color, Srgb};
 use definitions::Vector3;

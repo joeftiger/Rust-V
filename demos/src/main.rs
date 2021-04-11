@@ -18,5 +18,5 @@ mod demo_scenes;
 // }
 
 fn main() {
-    println!("{:?}", Spectrum::white() * 0.1);
+    println!("{:?}", Spectrum::white() * 8.0);
 }

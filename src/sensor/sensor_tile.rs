@@ -1,5 +1,5 @@
-use crate::new::sensor::bounds::UBounds2;
-use crate::new::sensor::pixel::Pixel;
+use crate::sensor::bounds::UBounds2;
+use crate::sensor::pixel::Pixel;
 use ultraviolet::UVec2;
 
 pub struct SensorTile {

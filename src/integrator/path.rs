@@ -1,9 +1,9 @@
 use crate::bxdf::Type;
 use crate::integrator::{direct_illumination, Integrator};
-use crate::new::sensor::pixel::Pixel;
 use crate::objects::SceneObject;
 use crate::sampler::Sampler;
 use crate::scene::Scene;
+use crate::sensor::pixel::Pixel;
 use crate::Spectrum;
 use color::Color;
 use geometry::{offset_ray_towards, Ray};

@@ -1,4 +1,4 @@
-use crate::new::sensor::bounds::UBounds2;
+use crate::sensor::bounds::UBounds2;
 use ultraviolet::UVec2;
 
 #[derive(Clone)]

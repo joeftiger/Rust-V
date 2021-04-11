@@ -1,4 +1,4 @@
-use crate::new::renderer::Renderer;
+use crate::renderer::Renderer;
 use bitflags::_core::time::Duration;
 use show_image::{make_window_full, KeyCode, Window, WindowOptions};
 
@@ -28,12 +28,12 @@ impl<'a> RenderWindow<'a> {
         let wait_key = Duration::from_millis(500);
         let render_job = self.renderer.render();
 
-        let mut passes = 0;
+        let mut early_stop = false;
         while let Ok(event) = self.window.wait_key(wait_key) {
             if let Some(e) = event {
                 if e.key == KeyCode::Escape {
-                    render_job.stop().expect("Could not stop render threads");
-                    return;
+                    early_stop = true;
+                    break;
                 }
             }
 
@@ -42,18 +42,16 @@ impl<'a> RenderWindow<'a> {
             }
 
             let image = self.renderer.get_image_u8();
-            {
-                let mutex = self.renderer.progress_bar.lock().unwrap();
-                mutex.println(format!("{}", passes));
-                passes += 1;
-            }
-
             if let Some(err) = self.window.set_image(image, "Rendering").err() {
                 eprintln!("{}\nSkipping this image!", err);
             }
         }
 
-        render_job.join().expect("Could not join render threads");
+        if early_stop {
+            render_job.stop().expect("Could not stop render threads");
+        } else {
+            render_job.join().expect("Could not join render threads");
+        }
 
         let image = self.renderer.get_image_u8();
         self.window

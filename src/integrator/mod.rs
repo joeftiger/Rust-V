@@ -27,9 +27,9 @@ pub use spectral_path::SpectralPath;
 pub use whitted::Whitted;
 
 use crate::bxdf::{Type, BSDF};
-use crate::new::sensor::pixel::Pixel;
 use crate::sampler::Sampler;
 use crate::scene::{Scene, SceneIntersection};
+use crate::sensor::pixel::Pixel;
 use crate::Spectrum;
 use color::Color;
 use definitions::Float;

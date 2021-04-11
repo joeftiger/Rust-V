@@ -4,12 +4,12 @@ extern crate clap;
 use clap::App;
 
 use ron::from_str;
+use rust_v::config::Config;
 use rust_v::integrator::{DebugNormals, Integrator, Path, SpectralPath, Whitted};
-use rust_v::new::config::Config;
-use rust_v::new::renderer::Renderer;
-use rust_v::new::sensor::bounds::UBounds2;
+use rust_v::renderer::Renderer;
 use rust_v::sampler::{NoOpSampler, RandomSampler, Sampler};
 use rust_v::scene::Scene;
+use rust_v::sensor::bounds::UBounds2;
 #[cfg(feature = "show-image")]
 use rust_v::RenderWindow;
 use std::convert::TryInto;

@@ -1,23 +1,20 @@
-use crate::configuration::RenderConfig;
-use crate::grid::{Grid, GridBlock};
+use crate::config::Config;
 use crate::integrator::Integrator;
 use crate::sampler::Sampler;
 use crate::scene::Scene;
-use crate::{Spectrum, RAY_PACKETS};
-use color::Color;
+use crate::sensor::sensor_tile::SensorTile;
+use crate::sensor::Sensor;
 use image::{ImageBuffer, Rgb};
-use indicatif::ProgressBar;
-use indicatif::ProgressStyle;
-use std::array::IntoIter;
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use std::sync::{Arc, Mutex, RwLock};
+use indicatif::{ProgressBar, ProgressStyle};
+use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::thread::JoinHandle;
-use ultraviolet::UVec2;
 
 /// A render job consists of thread handles.
 /// It can be stopped or joined at the end of execution.
 pub struct RenderJob<T> {
+    renderer: Renderer,
     should_stop: Arc<AtomicBool>,
     handles: Vec<JoinHandle<T>>,
 }
@@ -32,8 +29,13 @@ impl<T> RenderJob<T> {
     ///
     /// # Returns
     /// * Self
-    pub fn new(should_stop: Arc<AtomicBool>, handles: Vec<JoinHandle<T>>) -> Self {
+    pub fn new(
+        renderer: Renderer,
+        should_stop: Arc<AtomicBool>,
+        handles: Vec<JoinHandle<T>>,
+    ) -> Self {
         Self {
+            renderer,
             should_stop,
             handles,
         }
@@ -57,159 +59,74 @@ impl<T> RenderJob<T> {
             handle.join()?;
         }
 
+        self.renderer
+            .progress_bar
+            .lock()
+            .expect("Progress bar poisoned")
+            .finish();
+
         Ok(())
     }
 }
 
-/// This struct is responsible to keep track of a pixel's color.
-struct RenderPixel {
-    pixel: UVec2,
-    pub average: Spectrum,
-    samples: usize,
-}
-
-impl RenderPixel {
-    /// Adds the given spectrum and increases the sample size by 1.
-    ///
-    /// # Arguments
-    /// * `spectrum` - The spectrum to add
-    pub fn add(&mut self, spectrum: Spectrum) {
-        let mut avg = self.average * self.samples as f32;
-        avg += spectrum;
-        self.samples += 1;
-        avg /= self.samples as f32;
-
-        self.average = avg;
-    }
-}
-
-impl From<UVec2> for RenderPixel {
-    /// Creates a new render pixel.
-    ///
-    /// # Arguments
-    /// * `pixel` - The pixel coordinate
-    ///
-    /// # Returns
-    /// * Self, with initial spectrum of `0.0` and initial samples of `0`.
-    fn from(pixel: UVec2) -> Self {
-        Self {
-            pixel,
-            average: Spectrum::broadcast(0.0),
-            samples: 0,
-        }
-    }
-}
-
-/// A render block contains pixels. It is used to split a rendering into multiple blocks for a
-/// thread to do computations upon.
-struct RenderBlock {
-    pixels: Vec<RenderPixel>,
-}
-
-impl From<&GridBlock> for RenderBlock {
-    /// #Summary
-    /// Creates a new render block from the given grid block.
-    ///
-    /// # Arguments
-    /// * `block` - The grid block to convert
-    ///
-    /// # Returns
-    /// * Self
-    fn from(block: &GridBlock) -> Self {
-        let pixels = block.prod().iter().map(|v| RenderPixel::from(*v)).collect();
-
-        Self { pixels }
-    }
-}
-
-/// WIP
 #[derive(Clone)]
 pub struct Renderer {
     scene: Arc<Scene>,
     sampler: Arc<dyn Sampler>,
     integrator: Arc<dyn Integrator>,
-    config: RenderConfig,
-    #[allow(clippy::rc_buffer)]
-    render_blocks: Arc<Vec<RwLock<RenderBlock>>>,
-    progress: Arc<AtomicU32>,
+    sensor: Arc<Sensor>,
+    config: Config,
+    progress: Arc<AtomicUsize>,
     pub progress_bar: Arc<Mutex<ProgressBar>>,
 }
 
 impl Renderer {
-    /// Creates and initializes a new renderer with the given arguments.
-    ///
-    /// # Arguments
-    /// * `scene` - The objects scene
-    /// * `camera` - The camera to use
-    /// * `sampler` - The random sampler
-    /// * `integrator` - The scene integrator
-    /// * `config` - The original config
-    ///
-    /// # Returns
-    /// * An initialized renderer
     pub fn new(
-        scene: Scene,
+        scene: Arc<Scene>,
         sampler: Arc<dyn Sampler>,
         integrator: Arc<dyn Integrator>,
-        config: RenderConfig,
+        config: Config,
     ) -> Self {
-        let render_blocks = {
-            let resolution = scene.camera.resolution();
-            // {
-            //     let lock = scene.camera.lock().expect("camera lock poisoned");
-            //     lock.resolution()
-            // };
+        let clone = config.clone();
+        let sensor = Sensor::new(
+            clone.resolution,
+            clone.filename,
+            clone.bounds,
+            clone.block_size,
+        );
 
-            let grid = Grid::new(&resolution, config.block_size);
-            let blocks = grid
-                .blocks
-                .iter()
-                .map(|b| RwLock::new(RenderBlock::from(b)))
-                .collect();
-
-            Arc::new(blocks)
-        };
-
-        let progress = Arc::new(AtomicU32::default());
+        let progress = Arc::new(AtomicUsize::new(0));
 
         let progress_bar = {
             let bar = ProgressBar::new(0);
             bar.set_style(ProgressStyle::default_bar().template(
-                "[{elapsed} elapsed] {wide_bar:.cyan/white} {percent}% [{eta} remaining]",
+                "{msg}\n[{elapsed_precise} elapsed] {wide_bar:.cyan/white} {percent}% [{eta_precise} remaining]\nrender-blocks: {per_sec}",
             ));
             Arc::new(Mutex::new(bar))
         };
 
         Self {
-            scene: Arc::new(scene),
+            scene,
             sampler,
             integrator,
             config,
-            render_blocks,
+            sensor: Arc::new(sensor),
             progress,
             progress_bar,
         }
     }
 
-    /// Returns the number of render blocks.
-    ///
-    /// # Returns
-    /// * Number of render blocks
-    pub fn get_num_blocks(&self) -> u32 {
-        self.render_blocks.len() as u32
-    }
-
     /// Returns the current progress. It will/should be in the range `[0, z]` for
-    /// `z = render_blocks * depth`.
+    /// `z = render_blocks * passes`.
     ///
     /// # Returns
     /// * The current progress
-    pub fn get_progress(&self) -> u32 {
+    pub fn get_progress(&self) -> usize {
         self.progress.load(Ordering::Relaxed)
     }
 
     /// Returns whether the current progress is at/over the limit of `[0, z]` for
-    /// `z = render_blocks * depth`.
+    /// `z = render_blocks * passes`.
     ///
     /// # Returns
     /// * Whether the render is done
@@ -218,77 +135,46 @@ impl Renderer {
     }
 
     /// Returns whether the given progress is at/over the limit of `[0, z]` for
-    /// `z = render_blocks * depth`.
+    /// `z = render_blocks * passes`.
     ///
     /// # Returns
     /// * Whether the progress is at/over the limit
-    fn progress_out_of_range(&self, progress: u32) -> bool {
-        progress >= self.get_num_blocks() * self.config.passes
+    fn progress_out_of_range(&self, progress: usize) -> bool {
+        progress >= self.sensor.num_tiles() * self.config.passes as usize
     }
 
-    /// Renders the given pixel with this renderer's `sampler` and `integrator`.
-    ///
-    /// # Constraints
-    /// * `pixel` - Should be within the camera's resolution.
-    ///
-    /// # Returns
-    /// * The computed pixel spectrum
-    fn render_pixel(&mut self, pixel: UVec2) -> [Spectrum; RAY_PACKETS] {
-        debug_assert!(pixel == pixel.min_by_component(self.scene.camera.resolution()));
-
-        let ray = self.scene.camera.primary_ray(pixel);
-
-        let mut spectra = [Spectrum::broadcast(0.0); RAY_PACKETS];
-        for s in &mut spectra {
-            *s = self.integrator.integrate(&self.scene, &ray, &*self.sampler)
-        }
-
-        spectra
-    }
-
-    /// Fetch-adds-1 the current progress and returns the associated render block.
-    /// If the current progress was already at/over the limit of `[0, z]` for
-    ///`z = render_blocks * depth`, `None` will be returned.
-    ///
-    /// # Returns
-    /// * Next block if available
-    fn try_get_next_block(&mut self) -> Option<&RwLock<RenderBlock>> {
+    fn get_progress_and_next_tile(&mut self) -> Option<(usize, &Mutex<SensorTile>)> {
         let index = self.progress.fetch_add(1, Ordering::Relaxed);
 
-        if self.progress_out_of_range(index) {
-            None
+        if index < self.config.passes as usize * self.sensor.num_tiles() {
+            Some((
+                index,
+                &self.sensor.tiles[index as usize % self.sensor.num_tiles()],
+            ))
         } else {
-            Some(&self.render_blocks[(index % self.get_num_blocks()) as usize])
+            None
         }
     }
 
-    /// Starts the rendering progress.
-    ///
-    /// `config.threads` threads will be allocated for this.
-    /// This function returns a render job that can be stopped or
-    /// waited for to end.
-    ///
-    /// # Returns
-    /// * The render job
     pub fn render(&mut self) -> RenderJob<()> {
-        assert!(!self.is_done());
-
         // reset progress bar
         {
             let bar = self.progress_bar.lock().expect("Progress bar poisoned");
-            bar.set_length((self.get_num_blocks() * self.config.passes) as u64);
+            bar.set_length((self.sensor.num_tiles() * self.config.passes as usize) as u64);
             bar.reset();
         }
 
-        let num_threads = self.config.threads;
-        let mut handles = Vec::with_capacity(num_threads as usize);
-
+        let mut handles = Vec::with_capacity(self.config.threads as usize);
         let should_stop = Arc::new(AtomicBool::new(false));
-        for i in 0..num_threads {
-            let mut this = self.clone();
-            let this_should_stop = should_stop.clone();
+        let frames = Arc::new(AtomicIsize::new(0));
 
-            // each thread loops and gets the next block unless it should stop or has finished.
+        let tiles = self.sensor.num_tiles();
+
+        for i in 0..self.config.threads {
+            let this = self.clone();
+            let this_should_stop = should_stop.clone();
+            let this_frames = frames.clone();
+
             let handle = thread::Builder::new()
                 .name(format!("Render thread {}", i))
                 .stack_size(16 * 1024 * 1024)
@@ -297,65 +183,75 @@ impl Renderer {
                         break;
                     }
 
-                    if let Some(block) = this.clone().try_get_next_block() {
-                        let mut lock = block.write().expect("Block is poisoned");
+                    if let Some((progress, lock)) = this.clone().get_progress_and_next_tile() {
+                        if progress % tiles == 0 {
+                            let frame = this_frames.fetch_add(1, Ordering::Relaxed);
+                            let bar = this.progress_bar.lock().expect("Progress bar poisoned");
+                            bar.set_message(format!("Frames rendered: {}", frame).as_str());
+                        }
 
-                        for px in &mut lock.pixels {
-                            for s in IntoIter::new(this.render_pixel(px.pixel)) {
-                                px.add(s)
-                            }
+                        let mut tile = lock.lock().expect("SensorTile is poisoned");
+
+                        for px in &mut tile.pixels {
+                            let primary_ray = this.scene.camera.primary_ray(px.position);
+                            this.integrator.integrate(
+                                px,
+                                &this.scene,
+                                &primary_ray,
+                                &*this.sampler,
+                            );
                         }
 
                         this.progress_bar
                             .lock()
                             .expect("Progress bar is poisoned")
-                            .inc(RAY_PACKETS as u64);
+                            .inc(1);
                     } else {
-                        let bar = this.progress_bar.lock().expect("Progress bar poisoned");
-                        bar.println(format!(
-                            "Render thread {} has no more blocks to do. Stopping...",
-                            i
-                        ));
-
                         break;
                     }
                 })
-                .expect(&*format!("Could not spawn thread {}", i));
+                .unwrap_or_else(|_| panic!("Could not spawn render thread {}", i));
 
             handles.push(handle);
         }
 
-        RenderJob::new(should_stop, handles)
+        RenderJob::new(self.clone(), should_stop, handles)
     }
 
     //noinspection DuplicatedCode
     pub fn get_image_u8(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-        let res = self.scene.camera.resolution();
+        let bounds = self.sensor.bounds;
+        let res = bounds.to_range();
         let mut buffer = ImageBuffer::new(res.x, res.y);
 
-        self.render_blocks.iter().for_each(|block| {
-            let lock = block.read().expect("Block is poisoned");
+        for lock in &self.sensor.tiles {
+            let tile = lock.lock().expect("SensorTile is poisoned");
 
-            lock.pixels
-                .iter()
-                .for_each(|px| buffer.put_pixel(px.pixel.x, px.pixel.y, px.average.into()));
-        });
+            for px in &tile.pixels {
+                let (x, y) = (px.position.x - bounds.min.x, px.position.y - bounds.min.y);
+
+                buffer.put_pixel(x, y, Rgb::from(px.average));
+            }
+        }
 
         buffer
     }
 
     //noinspection DuplicatedCode
     pub fn get_image_u16(&self) -> ImageBuffer<Rgb<u16>, Vec<u16>> {
-        let res = self.scene.camera.resolution();
+        let bounds = self.sensor.bounds;
+        let res = bounds.to_range();
         let mut buffer = ImageBuffer::new(res.x, res.y);
 
-        self.render_blocks.iter().for_each(|block| {
-            let lock = block.read().expect("Block is poisoned");
+        for lock in &self.sensor.tiles {
+            let tile = lock.lock().expect("SensorTile is poisoned");
 
-            lock.pixels
-                .iter()
-                .for_each(|px| buffer.put_pixel(px.pixel.x, px.pixel.y, px.average.into()));
-        });
+            for px in &tile.pixels {
+                let (x, y) = (px.position.x - bounds.min.x, px.position.y - bounds.min.y);
+
+                buffer.put_pixel(x, y, Rgb::from(px.average));
+            }
+        }
 
         buffer
     }

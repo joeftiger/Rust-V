@@ -15,8 +15,8 @@ pub fn index_to_vec2(index: usize, height: usize) -> UVec2 {
     UVec2::new(x as u32, y as u32)
 }
 
-use crate::new::sensor::bounds::UBounds2;
-use crate::new::sensor::sensor_tile::SensorTile;
+use crate::sensor::bounds::UBounds2;
+use crate::sensor::sensor_tile::SensorTile;
 use definitions::Float;
 use std::sync::Mutex;
 
