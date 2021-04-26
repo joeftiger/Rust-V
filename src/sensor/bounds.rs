@@ -1,9 +1,10 @@
+use serde::{Deserialize, Serialize};
 use ultraviolet::{UVec2, Vec2};
 
 pub type UBounds2 = Bound<UVec2>;
 pub type Bounds2 = Bound<Vec2>;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct Bound<T> {
     pub min: T,
     pub max: T,
@@ -31,6 +32,15 @@ impl Bound<Vec2> {
     }
 }
 
+impl Default for Bounds2 {
+    fn default() -> Self {
+        Self {
+            min: Default::default(),
+            max: Default::default(),
+        }
+    }
+}
+
 impl Bound<UVec2> {
     pub fn to_range(&self) -> UVec2 {
         self.max - self.min
@@ -43,5 +53,14 @@ impl Bound<UVec2> {
     pub fn area(&self) -> usize {
         let diff = self.to_range();
         (diff.x * diff.y) as usize
+    }
+}
+
+impl Default for UBounds2 {
+    fn default() -> Self {
+        Self {
+            min: Default::default(),
+            max: Default::default(),
+        }
     }
 }

@@ -4,23 +4,27 @@
 use crate::bxdf::Type;
 use crate::integrator::{direct_illumination_light_wave, Integrator};
 use crate::objects::SceneObject;
-use crate::sampler::Sampler;
+use crate::samplers::spectral_samplers::SpectralSampler;
+use crate::samplers::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::sensor::pixel::Pixel;
-use crate::Spectrum;
 use definitions::Float;
 use geometry::{offset_ray_towards, Ray};
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)]
 pub struct SpectralPath {
     max_depth: u32,
     light_wave_samples: u32,
+    spectral_sampler: SpectralSampler,
 }
 
 impl SpectralPath {
-    pub fn new(max_depth: u32, light_wave_samples: u32) -> Self {
+    pub fn new(max_depth: u32, light_wave_samples: u32, spectral_sampler: SpectralSampler) -> Self {
         Self {
             max_depth,
             light_wave_samples,
+            spectral_sampler,
         }
     }
 
@@ -28,7 +32,7 @@ impl SpectralPath {
         &self,
         scene: &Scene,
         original_intersection: &SceneIntersection,
-        sampler: &dyn Sampler,
+        sampler: Sampler,
         light_wave_index: usize,
     ) -> Float {
         let mut illumination = 0.0;
@@ -88,22 +92,16 @@ impl SpectralPath {
     }
 }
 
+#[typetag::serde]
 impl Integrator for SpectralPath {
-    fn integrate(
-        &self,
-        pixel: &mut Pixel,
-        scene: &Scene,
-        primary_ray: &Ray,
-        sampler: &dyn Sampler,
-    ) {
+    fn integrate(&self, pixel: &mut Pixel, scene: &Scene, primary_ray: &Ray, sampler: Sampler) {
         if let Some(original_intersecton) = scene.intersect(primary_ray) {
-            for _ in 0..self.light_wave_samples {
-                let light_wave_index = (sampler.get_1d() * Spectrum::size() as Float) as usize;
+            let mut buf = vec![0; self.light_wave_samples as usize];
+            self.spectral_sampler.fill_samples(&mut buf);
 
-                let lambda =
-                    self.illumination(scene, &original_intersecton, sampler, light_wave_index);
-
-                pixel.add_light_wave(lambda, light_wave_index);
+            for index in buf {
+                let lambda = self.illumination(scene, &original_intersecton, sampler, index);
+                pixel.add_light_wave(lambda, index);
             }
         } else {
             pixel.add_black();

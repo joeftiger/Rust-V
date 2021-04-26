@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use crate::demo_scenes::{DemoScene, FOVY};
+use crate::demo_scenes::{Demo, FOVY};
 use color::{Color, Colors};
 use definitions::{Float, Vector3};
 use geometry::{Aabb, Point, Sphere};
@@ -11,8 +11,9 @@ use rust_v::bxdf::{
 use rust_v::camera::{Camera, PerspectiveCamera};
 use rust_v::objects::{Emitter, Receiver, SceneObject};
 use rust_v::refractive_index::RefractiveType;
-use rust_v::sampler::pixel_samplers::PixelSamplerType;
+use rust_v::samplers::camera::CameraSampler;
 use rust_v::scene::Scene;
+use rust_v::serialization::Serialization;
 use rust_v::Spectrum;
 use std::sync::Arc;
 use ultraviolet::UVec2;
@@ -26,13 +27,20 @@ const NUM_SPHERES_IN_DIMENSION: u32 = 5;
 
 pub struct SphereScene;
 
-impl DemoScene for SphereScene {
-    fn create(resolution: UVec2) -> Scene {
-        fastrand::seed(0);
-        let mut scene = create_scene();
-        scene.camera = create_camera(resolution);
+impl Demo for SphereScene {
+    fn create() -> Serialization {
+        let (resolution, config, integrator, sampler, _) = Self::empty();
 
-        scene
+        let scene = create_scene();
+        let camera = create_camera(resolution);
+
+        Serialization {
+            config,
+            camera,
+            integrator,
+            sampler,
+            scene,
+        }
     }
 }
 
@@ -175,12 +183,12 @@ fn create_scene() -> Scene {
 }
 
 //noinspection DuplicatedCode
-fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
+fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
     let position = Vector3::new(0.0, 5.0, 10.0);
     let target = Vector3::new(0.0, 1.0, 0.0);
 
     let camera = PerspectiveCamera::new(
-        PixelSamplerType::Random,
+        CameraSampler::Random,
         position,
         target,
         Vector3::unit_y(),
@@ -189,5 +197,5 @@ fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
     );
     // let camera = crate::camera::perspective_simone::PerspectiveCamera::new(position, target, Vector3::unit_y(), FOVY, resolution);
 
-    Box::new(camera)
+    Arc::new(camera)
 }

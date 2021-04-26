@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
+use crate::demo_scenes::{Demo, FOVY, SIGMA};
 use color::{Color, Colors};
 use definitions::{Float, Rotation3, Vector3};
 use geometry::{Aabb, Boundable, Cylinder, Mesh, Point, ShadingMode, Sphere};
@@ -7,8 +7,9 @@ use rust_v::bxdf::{FresnelSpecular, LambertianReflection, OrenNayar, BSDF};
 use rust_v::camera::{Camera, PerspectiveCamera};
 use rust_v::objects::{Emitter, Receiver, SceneObject};
 use rust_v::refractive_index::RefractiveType;
-use rust_v::sampler::pixel_samplers::PixelSamplerType;
+use rust_v::samplers::camera::CameraSampler;
 use rust_v::scene::Scene;
+use rust_v::serialization::Serialization;
 use rust_v::Spectrum;
 use std::f64::consts::FRAC_PI_2;
 use std::sync::Arc;
@@ -16,9 +17,9 @@ use ultraviolet::UVec2;
 
 pub struct PrismScene;
 
-impl DemoScene for PrismScene {
-    fn create(resolution: UVec2) -> Scene {
-        let mut scene = Scene::default();
+impl Demo for PrismScene {
+    fn create() -> Serialization {
+        let (resolution, config, integrator, sampler, mut scene) = Self::empty();
 
         scene.add(ground()).add(prism());
 
@@ -26,9 +27,15 @@ impl DemoScene for PrismScene {
         scene.add(light_bulb()); //.add(light_bulb_rectifier());
                                  // scene.add(global_light());
 
-        scene.camera = create_camera(resolution);
+        let camera = create_camera(resolution);
 
-        scene
+        Serialization {
+            config,
+            camera,
+            integrator,
+            sampler,
+            scene,
+        }
     }
 }
 
@@ -123,12 +130,12 @@ fn global_light() -> SceneObject {
 }
 
 //noinspection DuplicatedCode
-fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
+fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
     let position = Vector3::new(0.0, 3.0, 10.0);
     let target = Vector3::new(0.0, 0.0, 0.0);
 
     let camera = PerspectiveCamera::new(
-        PixelSamplerType::Random,
+        CameraSampler::Random,
         position,
         target,
         Vector3::unit_y(),
@@ -136,5 +143,5 @@ fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
         resolution,
     );
 
-    Box::new(camera)
+    Arc::new(camera)
 }

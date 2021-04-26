@@ -1,6 +1,6 @@
 use crate::bxdf::{same_hemisphere, world_to_bxdf, BxDF, BxDFSample, Type};
 use crate::debug_utils::is_normalized;
-use crate::sampler::Sample;
+use crate::samplers::Sample;
 use crate::Spectrum;
 use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};

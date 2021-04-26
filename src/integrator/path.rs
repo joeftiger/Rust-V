@@ -1,13 +1,15 @@
 use crate::bxdf::Type;
 use crate::integrator::{direct_illumination, Integrator};
 use crate::objects::SceneObject;
-use crate::sampler::Sampler;
+use crate::samplers::Sampler;
 use crate::scene::Scene;
 use crate::sensor::pixel::Pixel;
 use crate::Spectrum;
 use color::Color;
 use geometry::{offset_ray_towards, Ray};
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)]
 pub struct Path {
     max_depth: u32,
 }
@@ -18,14 +20,9 @@ impl Path {
     }
 }
 
+#[typetag::serde]
 impl Integrator for Path {
-    fn integrate(
-        &self,
-        pixel: &mut Pixel,
-        scene: &Scene,
-        primary_ray: &Ray,
-        sampler: &dyn Sampler,
-    ) {
+    fn integrate(&self, pixel: &mut Pixel, scene: &Scene, primary_ray: &Ray, sampler: Sampler) {
         if let Some(intersection) = scene.intersect(primary_ray) {
             let mut illumination = Spectrum::broadcast(0.0);
             let mut throughput = Spectrum::broadcast(1.0);

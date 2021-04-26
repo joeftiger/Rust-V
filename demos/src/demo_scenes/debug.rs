@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use crate::demo_scenes::{DemoScene, FOVY};
+use crate::demo_scenes::{Demo, FOVY};
 use color::Color;
 use definitions::{Float, Vector3};
 use geometry::{Aabb, Cylinder, Point, Sphere};
@@ -11,8 +11,9 @@ use rust_v::bxdf::{
 use rust_v::camera::{Camera, PerspectiveCamera};
 use rust_v::objects::{Emitter, Receiver, SceneObject};
 use rust_v::refractive_index::RefractiveType;
-use rust_v::sampler::pixel_samplers::PixelSamplerType;
+use rust_v::samplers::camera::CameraSampler;
 use rust_v::scene::Scene;
+use rust_v::serialization::Serialization;
 use rust_v::Spectrum;
 use std::sync::Arc;
 use ultraviolet::UVec2;
@@ -22,9 +23,9 @@ const RADIUS: Float = 0.5;
 
 pub struct DebugScene;
 
-impl DemoScene for DebugScene {
-    fn create(resolution: UVec2) -> Scene {
-        let mut scene = Scene::default();
+impl Demo for DebugScene {
+    fn create() -> Serialization {
+        let (resolution, config, integrator, sampler, mut scene) = Self::empty();
 
         // scene.add(ground()).add(sphere()).add(sphere_emitter());
         scene.add(ground());
@@ -33,9 +34,15 @@ impl DemoScene for DebugScene {
         scene.add(sphere_emitter());
         scene.add(create_emitter());
 
-        scene.camera = create_camera(resolution);
+        let camera = create_camera(resolution);
 
-        scene
+        Serialization {
+            config,
+            camera,
+            integrator,
+            sampler,
+            scene,
+        }
     }
 }
 
@@ -116,12 +123,12 @@ fn create_emitter() -> SceneObject {
 }
 
 //noinspection DuplicatedCode
-fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
+fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
     let position = Vector3::new(0.0, 2.0, 5.0);
     let target = Vector3::new(0.0, RADIUS, 0.0);
 
     let camera = PerspectiveCamera::new(
-        PixelSamplerType::Random,
+        CameraSampler::Random,
         position,
         target,
         Vector3::unit_y(),
@@ -129,5 +136,5 @@ fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
         resolution,
     );
 
-    Box::new(camera)
+    Arc::new(camera)
 }

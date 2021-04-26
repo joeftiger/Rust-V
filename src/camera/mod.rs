@@ -4,7 +4,6 @@ pub mod perspective_simone;
 pub use perspective::PerspectiveCamera;
 
 use geometry::Ray;
-use serde::{Deserialize, Serialize};
 use ultraviolet::UVec2;
 
 #[typetag::serde]
@@ -22,18 +21,4 @@ pub trait Camera: Send + Sync {
     /// # Returns
     /// * A ray
     fn primary_ray(&self, pixel: UVec2) -> Ray;
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct NoOpCamera;
-
-#[typetag::serde]
-impl Camera for NoOpCamera {
-    fn resolution(&self) -> UVec2 {
-        unimplemented!()
-    }
-
-    fn primary_ray(&self, _: UVec2) -> Ray {
-        unimplemented!()
-    }
 }

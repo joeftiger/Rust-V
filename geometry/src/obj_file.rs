@@ -1,3 +1,4 @@
+use crate::debug_util::is_normalized;
 use crate::Face;
 use definitions::Vector3;
 use serde::{Deserialize, Serialize};
@@ -79,22 +80,38 @@ where
         let mut vertex_normals = Vec::new();
         let mut faces = Vec::new();
 
-        for (num, line) in content.lines().enumerate() {
-            if line.starts_with('#') || line.is_empty() {
+        for (line_number, line_content) in content.lines().enumerate() {
+            if line_content.starts_with('#') || line_content.is_empty() {
                 continue;
             }
 
-            let mut iter = line.split_whitespace();
+            let mut iter = line_content.split_whitespace();
 
             let id = iter
                 .next()
-                .unwrap_or_else(|| panic!("Invalid length at line {}", num));
+                .unwrap_or_else(|| panic!("Invalid length at line {}", line_number));
 
             match id {
-                "v" => vertices.push(parse_vector3(&mut iter)),
-                "vn" => vertex_normals.push(parse_vector3(&mut iter).normalized()),
-                "f" => faces.push(parse_face(&mut iter)),
-                &_ => eprintln!("Unsupported: {}", id),
+                "v" => {
+                    let vertex = parse_vector3(&mut iter);
+                    vertices.push(vertex);
+                }
+                "vn" => {
+                    let mut normal = parse_vector3(&mut iter);
+                    if !is_normalized(&normal) {
+                        eprintln!(
+                            "Vertex normal at line {} is not normalized: {:?}",
+                            line_number, normal
+                        );
+                        normal.normalize();
+                    }
+                    vertex_normals.push(normal);
+                }
+                "f" => {
+                    let face = parse_face(&mut iter);
+                    faces.push(face);
+                }
+                _ => eprintln!("Unsupported (skipping): {}", id),
             }
         }
 
@@ -113,10 +130,14 @@ fn parse_vector3(iter: &mut SplitWhitespace) -> Vector3 {
 fn parse_face(iter: &mut SplitWhitespace) -> Face {
     let p = |s: &str| -> (u32, Option<u32>) {
         if s.contains("//") {
-            let mut i = s.splitn(2, "//");
+            let i = s.splitn(2, "//").collect::<Vec<_>>();
             (
-                i.next().unwrap().parse().unwrap(),
-                Some(i.next().unwrap().parse().unwrap()),
+                i[0].parse()
+                    .expect(&*format!("Unable to parse {:?} as a face", i)),
+                Some(
+                    i[1].parse()
+                        .expect(&*format!("Unable to parse {:?} as a face", i)),
+                ),
             )
         } else {
             (s.splitn(2, '/').next().unwrap().parse().unwrap(), None)

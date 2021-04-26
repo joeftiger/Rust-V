@@ -27,7 +27,10 @@ impl Aabb {
     /// # Returns
     /// * Self
     pub fn new(min: Vector3, max: Vector3) -> Self {
-        debug_assert_eq!(min, min.min_by_component(max));
+        debug_assert!(min.x <= max.x);
+        debug_assert!(min.y <= max.y);
+        debug_assert!(min.z <= max.z);
+        // debug_assert_eq!(min, min.min_by_component(max));
 
         Self { min, max }
     }
@@ -78,6 +81,12 @@ impl Aabb {
     pub fn join(&self, other: &Self) -> Self {
         let min = self.min.min_by_component(other.min);
         let max = self.max.max_by_component(other.max);
+        Self::new(min, max)
+    }
+
+    pub fn join_vec(&self, other: Vector3) -> Self {
+        let min = self.min.min_by_component(other);
+        let max = self.max.max_by_component(other);
         Self::new(min, max)
     }
 }

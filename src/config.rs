@@ -1,12 +1,12 @@
 use crate::sensor::bounds::UBounds2;
+use serde::{Deserialize, Serialize};
 use ultraviolet::UVec2;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
-    pub resolution: UVec2,
     pub filename: Option<String>,
-    pub bounds: UBounds2,
+    pub bounds: Option<UBounds2>,
     pub block_size: UVec2,
     pub passes: u32,
-    pub threads: u32,
+    pub threads: Option<u32>,
 }

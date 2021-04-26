@@ -1,9 +1,12 @@
+use crate::camera::Camera;
 use crate::config::Config;
 use crate::integrator::Integrator;
-use crate::sampler::Sampler;
+use crate::samplers::Sampler;
 use crate::scene::Scene;
+use crate::sensor::bounds::UBounds2;
 use crate::sensor::sensor_tile::SensorTile;
 use crate::sensor::Sensor;
+use crate::serialization::Serialization;
 use image::{ImageBuffer, Rgb};
 use indicatif::{ProgressBar, ProgressStyle};
 use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicUsize, Ordering};
@@ -72,7 +75,8 @@ impl<T> RenderJob<T> {
 #[derive(Clone)]
 pub struct Renderer {
     scene: Arc<Scene>,
-    sampler: Arc<dyn Sampler>,
+    camera: Arc<dyn Camera>,
+    sampler: Sampler,
     integrator: Arc<dyn Integrator>,
     sensor: Arc<Sensor>,
     config: Config,
@@ -81,22 +85,8 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn new(
-        scene: Arc<Scene>,
-        sampler: Arc<dyn Sampler>,
-        integrator: Arc<dyn Integrator>,
-        config: Config,
-    ) -> Self {
-        let clone = config.clone();
-        let sensor = Sensor::new(
-            clone.resolution,
-            clone.filename,
-            clone.bounds,
-            clone.block_size,
-        );
-
+    pub fn new(serialization: Serialization) -> Self {
         let progress = Arc::new(AtomicUsize::new(0));
-
         let progress_bar = {
             let bar = ProgressBar::new(0);
             bar.set_style(ProgressStyle::default_bar().template(
@@ -105,15 +95,38 @@ impl Renderer {
             Arc::new(Mutex::new(bar))
         };
 
+        let mut scene = serialization.scene;
+        scene.init();
+
+        let camera = serialization.camera;
+
+        let sampler = serialization.sampler;
+        let integrator = serialization.integrator;
+
+        let config = serialization.config.clone();
+        let sensor = Sensor::new(
+            camera.resolution(),
+            config.filename,
+            config
+                .bounds
+                .unwrap_or_else(|| UBounds2::from(camera.resolution())),
+            config.block_size,
+        );
+
         Self {
-            scene,
+            scene: Arc::new(scene),
+            camera,
             sampler,
             integrator,
-            config,
+            config: serialization.config,
             sensor: Arc::new(sensor),
             progress,
             progress_bar,
         }
+    }
+
+    pub fn filename(&self) -> &Option<String> {
+        &self.sensor.filename
     }
 
     /// Returns the current progress. It will/should be in the range `[0, z]` for
@@ -164,13 +177,15 @@ impl Renderer {
             bar.reset();
         }
 
-        let mut handles = Vec::with_capacity(self.config.threads as usize);
+        let threads = self.config.threads.unwrap_or(num_cpus::get() as u32);
+
+        let mut handles = Vec::with_capacity(threads as usize);
         let should_stop = Arc::new(AtomicBool::new(false));
         let frames = Arc::new(AtomicIsize::new(0));
 
         let tiles = self.sensor.num_tiles();
 
-        for i in 0..self.config.threads {
+        for i in 0..threads {
             let this = self.clone();
             let this_should_stop = should_stop.clone();
             let this_frames = frames.clone();
@@ -193,13 +208,9 @@ impl Renderer {
                         let mut tile = lock.lock().expect("SensorTile is poisoned");
 
                         for px in &mut tile.pixels {
-                            let primary_ray = this.scene.camera.primary_ray(px.position);
-                            this.integrator.integrate(
-                                px,
-                                &this.scene,
-                                &primary_ray,
-                                &*this.sampler,
-                            );
+                            let primary_ray = this.camera.primary_ray(px.position);
+                            this.integrator
+                                .integrate(px, &this.scene, &primary_ray, this.sampler);
                         }
 
                         this.progress_bar

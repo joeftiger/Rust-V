@@ -1,15 +1,16 @@
 use crate::bxdf::Type;
 use crate::integrator::{direct_illumination, Integrator};
 use crate::objects::SceneObject;
-use crate::sampler::Sampler;
+use crate::samplers::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::sensor::pixel::Pixel;
 use crate::Spectrum;
 use color::{Color, Colors};
 use geometry::{offset_ray_towards, Ray};
+use serde::{Deserialize, Serialize};
 
 /// The Whitted integrator is a common integrator following specular reflection/transmission recursively.
-#[derive(Clone)]
+#[derive(Serialize, Deserialize)]
 pub struct Whitted {
     max_depth: u32,
 }
@@ -30,7 +31,7 @@ impl Whitted {
         &self,
         scene: &Scene,
         intersection: &SceneIntersection,
-        sampler: &dyn Sampler,
+        sampler: Sampler,
         depth: u32,
     ) -> Spectrum {
         let object = &intersection.object;
@@ -74,7 +75,7 @@ impl Whitted {
         &self,
         scene: &Scene,
         intersection: &SceneIntersection,
-        sampler: &dyn Sampler,
+        sampler: Sampler,
         depth: u32,
         typ: Type,
     ) -> Spectrum {
@@ -119,14 +120,9 @@ impl Whitted {
     }
 }
 
+#[typetag::serde]
 impl Integrator for Whitted {
-    fn integrate(
-        &self,
-        pixel: &mut Pixel,
-        scene: &Scene,
-        primary_ray: &Ray,
-        sampler: &dyn Sampler,
-    ) {
+    fn integrate(&self, pixel: &mut Pixel, scene: &Scene, primary_ray: &Ray, sampler: Sampler) {
         if let Some(i) = scene.intersect(primary_ray) {
             let illumination = self.illumination(scene, &i, sampler, 0);
 

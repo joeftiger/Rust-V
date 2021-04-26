@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::demo_scenes::{DemoScene, FOVY, SIGMA};
+use crate::demo_scenes::{Demo, FOVY, SIGMA};
 use color::{Color, Colors};
 use definitions::{Float, Rotation3, Vector3};
 use geometry::{Aabb, BiconvexLens, Boundable, Bubble, Mesh, ShadingMode, Sphere};
@@ -8,10 +8,11 @@ use rust_v::bxdf::{FresnelSpecular, OrenNayar, BSDF};
 use rust_v::camera::{Camera, PerspectiveCamera};
 use rust_v::objects::{Emitter, Receiver, SceneObject};
 use rust_v::refractive_index::RefractiveType;
-use rust_v::sampler::pixel_samplers::PixelSamplerType;
+use rust_v::samplers::camera::CameraSampler;
 use rust_v::scene::Scene;
+use rust_v::serialization::Serialization;
 use rust_v::Spectrum;
-use std::f64::consts::PI;
+use std::f64::consts::{FRAC_PI_2, PI};
 use std::sync::Arc;
 use ultraviolet::UVec2;
 
@@ -46,31 +47,37 @@ impl Wall {
     }
 }
 
-impl DemoScene for CornellScene {
-    fn create(resolution: UVec2) -> Scene {
-        let mut scene = Scene::default();
+impl Demo for CornellScene {
+    fn create() -> Serialization {
+        let (resolution, config, integrator, sampler, mut scene) = Self::empty();
 
         Wall::list().iter().for_each(|wall| {
             scene.add(create_wall(wall));
         });
 
         // scene.add(create_sphere());
-        // scene.add(create_buddha());
+        scene.add(create_dragon());
         // scene.add(create_biconvex_lens());
-        scene.add(create_bubble());
+        // scene.add(create_bubble());
         scene.add(create_emitter());
-        scene.camera = create_camera(resolution);
+        let camera = create_camera(resolution);
 
-        scene
+        Serialization {
+            config,
+            camera,
+            integrator,
+            sampler,
+            scene,
+        }
     }
 }
 
-fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
+fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
     let position = Vector3::new(X_CENTER, Y_CENTER, FRONT + DIMENSION / 2.0);
     let target = Vector3::new(X_CENTER, Y_CENTER, Z_CENTER);
 
     let camera = PerspectiveCamera::new(
-        PixelSamplerType::Random,
+        CameraSampler::Random,
         position,
         target,
         Vector3::unit_y(),
@@ -78,35 +85,37 @@ fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
         resolution,
     );
 
-    Box::new(camera)
+    Arc::new(camera)
 }
 
-fn create_buddha() -> SceneObject {
-    let mut buddha = Mesh::load("./meshes/buddha.obj".to_string(), ShadingMode::Phong);
+fn create_dragon() -> SceneObject {
+    let mut dragon = Mesh::load("./meshes/dragon_4.obj", ShadingMode::Phong);
 
-    buddha.scale(Vector3::broadcast(3.0));
+    // scaling the dragon to (DIMENSION / 1.5)
+    let scale = Vector3::broadcast(DIMENSION / 1.5) / dragon.bounds().size();
+    dragon.scale(Vector3::broadcast(scale.component_min()));
 
-    // translation + scale + rotation
-    let bounds = buddha.bounds();
+    // translate dragon to center
+    let bounds = dragon.bounds();
     let center = bounds.center();
     let center_floor = Vector3::new(center.x, bounds.min.y, center.z);
 
     let translation = Vector3::new(X_CENTER, FLOOR + 0.01, Z_CENTER) - center_floor;
-    buddha.rotate(Rotation3::from_rotation_xz(PI as Float + 1.0 / -8.0));
-    buddha.translate(translation);
-    buddha.build_bvh();
+    // dragon.rotate(Rotation3::from_rotation_xz(FRAC_PI_2 as Float));
+    dragon.translate(translation);
+    dragon.build_bvh();
 
     let specular = FresnelSpecular::new(
         Spectrum::broadcast(1.0),
         Spectrum::broadcast(1.0),
         RefractiveType::Air,
-        RefractiveType::Glass,
+        RefractiveType::Sapphire,
     );
 
     let bxdf = Box::new(specular);
 
     let bsdf = BSDF::new(vec![bxdf]);
-    let geometry = Box::new(buddha);
+    let geometry = Box::new(dragon);
 
     let receiver = Arc::new(Receiver::new(geometry, bsdf));
 

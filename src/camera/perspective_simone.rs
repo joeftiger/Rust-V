@@ -1,5 +1,5 @@
 use crate::camera::Camera;
-use crate::sampler::pixel_samplers::{PixelSampler, PixelSamplerType};
+use crate::samplers::camera::CameraSampler;
 use definitions::{Float, Matrix4, Vector2, Vector3};
 use geometry::Ray;
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,7 @@ use ultraviolet::UVec2;
 #[derive(Serialize, Deserialize)]
 pub struct PerspectiveCameraSimone {
     resolution: UVec2,
-    sampler: PixelSamplerType,
+    sampler: CameraSampler,
     look_at: Matrix4,
     bottom_left: Vector2,
     top_right: Vector2,
@@ -17,7 +17,7 @@ pub struct PerspectiveCameraSimone {
 
 impl PerspectiveCameraSimone {
     pub fn new(
-        sampler: PixelSamplerType,
+        sampler: CameraSampler,
         position: Vector3,
         target: Vector3,
         up: Vector3,
@@ -54,7 +54,7 @@ impl Camera for PerspectiveCameraSimone {
     fn primary_ray(&self, pixel: UVec2) -> Ray {
         let dir_2d = self.bottom_left
             + (self.top_right - self.bottom_left)
-                * (to_vec2(pixel) * self.sampler.sample(pixel))
+                * (to_vec2(pixel) * self.sampler.sample())
                 * self.inv_resolution;
         let dir_3d = Vector3::new(dir_2d.x, dir_2d.y, -1.0);
 

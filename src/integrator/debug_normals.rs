@@ -3,26 +3,22 @@
 #![allow(unused_variables)]
 
 use crate::integrator::Integrator;
-use crate::sampler::Sampler;
+use crate::samplers::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::sensor::pixel::Pixel;
 use crate::Spectrum;
 use color::{Color, Srgb};
 use definitions::Vector3;
 use geometry::Ray;
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 
-#[derive(Clone)]
+#[derive(Serialize, Deserialize)]
 pub struct DebugNormals;
 
+#[typetag::serde]
 impl Integrator for DebugNormals {
-    fn integrate(
-        &self,
-        pixel: &mut Pixel,
-        scene: &Scene,
-        primary_ray: &Ray,
-        sampler: &dyn Sampler,
-    ) {
+    fn integrate(&self, pixel: &mut Pixel, scene: &Scene, primary_ray: &Ray, sampler: Sampler) {
         if let Some(i) = scene.intersect(primary_ray) {
             let color = (i.normal + Vector3::one()) / 2.0;
             // Spectrum::try_from(color)

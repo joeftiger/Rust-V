@@ -27,7 +27,7 @@ pub use spectral_path::SpectralPath;
 pub use whitted::Whitted;
 
 use crate::bxdf::{Type, BSDF};
-use crate::sampler::Sampler;
+use crate::samplers::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::sensor::pixel::Pixel;
 use crate::Spectrum;
@@ -35,9 +35,8 @@ use color::Color;
 use definitions::Float;
 use geometry::Ray;
 
-pub trait IntegratorAverage {}
-
 /// An integrator to calculate the color of a pixel / ray.
+#[typetag::serde]
 pub trait Integrator: Send + Sync {
     /// Integrates the given scene with the primary ray and the sampler for a given pixel.
     ///
@@ -49,13 +48,13 @@ pub trait Integrator: Send + Sync {
     ///
     /// # Returns
     /// * The color spectrum of the given ray
-    fn integrate(&self, pixel: &mut Pixel, scene: &Scene, primary_ray: &Ray, sampler: &dyn Sampler);
+    fn integrate(&self, pixel: &mut Pixel, scene: &Scene, primary_ray: &Ray, sampler: Sampler);
 }
 
 #[inline]
 fn direct_illumination(
     scene: &Scene,
-    sampler: &dyn Sampler,
+    sampler: Sampler,
     intersection: &SceneIntersection,
     bsdf: &BSDF,
 ) -> Spectrum {
@@ -98,7 +97,7 @@ fn direct_illumination(
 #[inline]
 fn direct_illumination_light_wave(
     scene: &Scene,
-    sampler: &dyn Sampler,
+    sampler: Sampler,
     intersection: &SceneIntersection,
     bsdf: &BSDF,
     light_wave_index: usize,

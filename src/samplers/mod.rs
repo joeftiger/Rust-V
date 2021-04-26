@@ -1,14 +1,15 @@
-pub mod pixel_samplers;
-
-pub use noop_sampler::NoOpSampler;
-pub use random_sampler::RandomSampler;
-
 use crate::debug_utils::within_01;
 use definitions::{Float, Vector2, Vector3};
+use serde::{Deserialize, Serialize};
 use utility::floats::FloatExt;
 
-mod noop_sampler;
-mod random_sampler;
+pub mod camera;
+pub mod spectral_samplers;
+
+#[cfg(not(feature = "f64"))]
+use fastrand::f32 as rand;
+#[cfg(feature = "f64")]
+use fastrand::f64 as rand;
 
 /// A sample consists of 3 random values packed together into a `Float` and a `Vector2`.
 #[derive(Debug, Copy, Clone)]
@@ -26,20 +27,31 @@ impl Sample {
     }
 }
 
-/// A sampler is responsible for generating random values inside `[0, 1)` in various formats.
-pub trait Sampler: Send + Sync {
+#[derive(Copy, Clone, Serialize, Deserialize)]
+pub enum Sampler {
+    NoOp,
+    Random,
+}
+
+impl Sampler {
     /// Generates a new random value inside `[0, 1)`.
     ///
     /// # Returns
     /// * A random value
-    fn get_1d(&self) -> Float;
+    #[inline]
+    pub fn get_1d(&self) -> Float {
+        match self {
+            Sampler::NoOp => 0.5,
+            Sampler::Random => rand(),
+        }
+    }
 
     /// Generates a new random `Vector2` inside `[0, 1)`.
     ///
     /// # Returns
     /// * A random `Vector2`
     #[inline]
-    fn get_2d(&self) -> Vector2 {
+    pub fn get_2d(&self) -> Vector2 {
         Vector2::new(self.get_1d(), self.get_1d())
     }
 
@@ -48,7 +60,7 @@ pub trait Sampler: Send + Sync {
     /// # Returns
     /// * A random `Vector3`
     #[inline]
-    fn get_3d(&self) -> Vector3 {
+    pub fn get_3d(&self) -> Vector3 {
         Vector3::new(self.get_1d(), self.get_1d(), self.get_1d())
     }
 
@@ -57,7 +69,7 @@ pub trait Sampler: Send + Sync {
     /// # Returns
     /// * A random sample
     #[inline]
-    fn get_sample(&self) -> Sample {
+    pub fn get_sample(&self) -> Sample {
         Sample::new(self.get_1d(), self.get_2d())
     }
 }

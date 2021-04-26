@@ -4,17 +4,16 @@ use crate::obj_file::ObjFile;
 use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 #[allow(unused_imports)]
 use definitions::{Float, Matrix3, Rotation3, Vector3};
-use itertools::{Itertools, MinMaxResult};
 use serde::de::{Error, MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
-use std::cmp::Ordering;
 use std::fmt;
 use std::fmt::Debug;
+#[cfg(feature = "watertight-mesh")]
 use std::mem::swap;
 use std::path::Path;
 #[cfg(not(feature = "watertight-mesh"))]
-use utility::floats::{in_range, EPSILON};
+use utility::floats::FloatExt;
 
 /// The shading mode defines the shading of normals. In `Flat` mode, the surface of triangles will
 /// appear flat. In `Phong` however, they will be interpolated to create a smooth looking surface.
@@ -26,6 +25,7 @@ pub enum ShadingMode {
 
 /// Returns the index of the maximum component of a vector.
 #[inline(always)]
+#[cfg(feature = "watertight-mesh")]
 fn max_index(v: &Vector3) -> usize {
     if v.x > v.y {
         if v.x > v.z {
@@ -214,7 +214,7 @@ impl Face {
         let a = edge1.dot(h);
 
         // ray is parallel to triangle
-        if in_range(a, -EPSILON, EPSILON) {
+        if a.is_approx_zero() {
             return None;
         }
 
@@ -242,8 +242,6 @@ impl Face {
             ShadingMode::Flat => edge1.cross(edge2),
             ShadingMode::Phong => {
                 if let Some((n0, n1, n2)) = self.get_normals(&mesh.vertex_normals) {
-                    let beta = u * inv_det;
-                    let gamma = v * inv_det;
                     let alpha = 1.0 - beta - gamma;
 
                     alpha * n0 + beta * n1 + gamma * n2
@@ -358,7 +356,7 @@ impl Face {
         let a = edge1.dot(h);
 
         // ray is parallel to triangle
-        if in_range(a, -EPSILON, EPSILON) {
+        if a.is_approx_zero() {
             return false;
         }
 
@@ -425,17 +423,12 @@ impl Mesh {
     {
         let obj_file = ObjFile::from(path);
 
-        let bounds = match obj_file.vertices.iter().minmax_by(|a, b| {
-            if a.min_by_component(**b) == **a {
-                Ordering::Less
-            } else {
-                Ordering::Greater
-            }
-        }) {
-            MinMaxResult::NoElements => Aabb::empty(),
-            MinMaxResult::OneElement(v) => Aabb::new(*v, *v),
-            MinMaxResult::MinMax(min, max) => Aabb::new(*min, *max),
-        };
+        let mut bounds = Aabb::empty();
+
+        obj_file
+            .vertices
+            .iter()
+            .for_each(|v| bounds = bounds.join_vec(*v));
 
         Mesh::new(
             obj_file.vertices,

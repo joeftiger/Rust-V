@@ -1,6 +1,6 @@
 use crate::camera::Camera;
 use crate::debug_utils::{is_finite, is_normalized};
-use crate::sampler::pixel_samplers::{PixelSampler, PixelSamplerType};
+use crate::samplers::camera::CameraSampler;
 use definitions::{Float, Vector3};
 use geometry::Ray;
 use serde::de::{Error, MapAccess, Visitor};
@@ -12,7 +12,7 @@ use utility::floats::FloatExt;
 
 /// A perspective camera with a fov somewhere in space, looking at a target.
 pub struct PerspectiveCamera {
-    sampler: PixelSamplerType,
+    sampler: CameraSampler,
     position: Vector3,
     target: Vector3,
     up: Vector3,
@@ -43,7 +43,7 @@ impl PerspectiveCamera {
     /// # Returns
     /// * Self
     pub fn new(
-        sampler: PixelSamplerType,
+        sampler: CameraSampler,
         position: Vector3,
         target: Vector3,
         up: Vector3,
@@ -93,10 +93,11 @@ impl Camera for PerspectiveCamera {
         self.resolution
     }
 
+    #[inline]
     fn primary_ray(&self, pixel: UVec2) -> Ray {
         debug_assert!(pixel == pixel.min_by_component(self.resolution));
 
-        let sample = self.sampler.sample(pixel);
+        let sample = self.sampler.sample();
 
         let direction = self.lower_left
             + (pixel.x as Float + sample.x) * self.x_dir

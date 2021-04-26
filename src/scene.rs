@@ -1,4 +1,3 @@
-use crate::camera::{Camera, NoOpCamera};
 use crate::objects::{Emitter, SceneObject};
 use definitions::{Float, Vector3};
 use geometry::bvh::Tree;
@@ -46,7 +45,6 @@ pub struct Scene {
     objects: Vec<SceneObject>,
     #[serde(skip)]
     bvh: Tree<SceneObject>,
-    pub camera: Box<dyn Camera>,
 }
 
 impl Scene {
@@ -142,7 +140,6 @@ impl Default for Scene {
             emitters: Vec::default(),
             objects: Vec::default(),
             bvh: Tree::default(),
-            camera: Box::new(NoOpCamera),
         }
     }
 }

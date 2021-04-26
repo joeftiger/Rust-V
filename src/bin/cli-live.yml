@@ -11,50 +11,13 @@ args:
       short: v
       long: verbose
       help: Print verbose messages.
-  - OUTPUT:
-      short: o
-      long: output
-      help: "The output path to save the rendered PNG. If empty, the rendering will not be saved. (Default = system time since UNIX epoch)"
-      takes_value: true
-      value_name: String
   - LIVE_WINDOW:
       short: l
       long: live
       help: "Use a live window to progressively show rendering. The window allows saving with [Ctrl + S]."
-  - PASSES:
-      short: p
-      long: passes
-      help: "The number of render passes per pixel. (Default = 1)"
-      takes_value: true
-      value_name: u32
-  - DEPTH:
-      short: d
-      long: depth
-      help: "The depth of recursive ray tracing. (Default = 6)"
-      takes_value: true
-      value_name: u32
   - FORMAT:
       short: f
       long: format
       help: "The output pixel format. (Default = u8)"
       possible_values: [ u8, u16 ]
-      takes_value: true
-  - INTEGRATOR_BACKEND:
-      short: i
-      long: integrator
-      help: "The integrator backend to use. Debug renders surface normals. (Default = Whitted)"
-      possible_values: [ Debug, Whitted, Path, PathEnhanced, SpectralPath ]
-      takes_value: true
-  - THREADS:
-      short: t
-      long: threads
-      help: "Number of threads to use. (Default: machine max)"
-      takes_value: true
-  - BLOCK_SIZE:
-      long: block-size
-      help: "The block size for to render in chunks. E.g. 64,64 for 64x64 blocks. (Default: 8,8)"
-      takes_value: true
-  - BOUNDS:
-      long: bounds
-      help: "The bounds of the resolution for the sensor. E.g. 0,0,128,128 for (0,0) to (128, 128) to render. (Default: whole camera resolution)"
       takes_value: true
