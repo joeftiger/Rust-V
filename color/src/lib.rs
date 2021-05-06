@@ -437,10 +437,6 @@ pub trait Color<T = Float>:
     fn component_max(&self) -> T;
 }
 
-pub trait IndexSpectral<T> {
-    fn index_spectral(&self, index: usize) -> T;
-}
-
 /// A trait allowing colors to return known colors:
 ///  * black
 ///  * grey

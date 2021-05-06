@@ -8,7 +8,7 @@ use crate::bxdf::{
 use crate::debug_utils::{is_normalized, within_01};
 use crate::refractive_index::RefractiveType;
 use crate::Spectrum;
-use color::{Color, IndexSpectral};
+use color::Color;
 use definitions::{Float, Vector2, Vector3};
 use serde::{Deserialize, Serialize};
 
@@ -281,15 +281,15 @@ impl BxDF for FresnelSpecular {
             if let Some(incident) = refract(outgoing, normal, eta_i / eta_t) {
                 let cos_i = cos_theta(incident);
 
-                let intensity = self.t.index_spectral(light_wave_index)
-                    * (1.0 - self.fresnel.evaluate_lambda(lambda, cos_i));
+                let intensity =
+                    self.t[light_wave_index] * (1.0 - self.fresnel.evaluate_lambda(lambda, cos_i));
                 let typ = Type::SPECULAR | Type::TRANSMISSION;
 
                 return Some(BxDFSample::new(intensity, incident, 1.0 - f, typ));
             }
         }
 
-        let intensity = self.r.index_spectral(light_wave_index) * f;
+        let intensity = self.r[light_wave_index] * f;
         let incident = bxdf_incident_to(outgoing);
         let typ = Type::REFLECTION | Type::SPECULAR;
 

@@ -35,12 +35,6 @@ impl Spectrum {
     }
 }
 
-impl IndexSpectral<Float> for Spectrum {
-    fn index_spectral(&self, index: usize) -> Float {
-        self.data[index]
-    }
-}
-
 impl Colors for Spectrum {
     fn black() -> Self {
         Self::broadcast(0.0)

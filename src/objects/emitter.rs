@@ -3,7 +3,7 @@ use crate::bxdf::BSDF;
 use crate::debug_utils::{is_finite, is_normalized, within_01};
 use crate::scene::{Scene, SceneIntersection};
 use crate::Spectrum;
-use color::{Color, IndexSpectral};
+use color::Color;
 use definitions::{Float, Vector2, Vector3};
 use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 use serde::{Deserialize, Serialize};
@@ -39,7 +39,7 @@ impl Emitter {
     pub fn emission_light_wave(&self, light_wave_index: usize) -> Float {
         debug_assert!(light_wave_index < Spectrum::size());
 
-        self.emission.index_spectral(light_wave_index)
+        self.emission[light_wave_index]
     }
 
     /// Returns the radiance of this emitter, comparing the incident and normal vector.

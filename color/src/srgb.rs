@@ -5,17 +5,6 @@ color!(
     Srgb => Float, 3
 );
 
-impl IndexSpectral<Float> for Srgb {
-    fn index_spectral(&self, index: usize) -> Float {
-        match index {
-            0 => 0.645,
-            1 => 0.526,
-            2 => 0.444,
-            _ => panic!(),
-        }
-    }
-}
-
 impl Colors for Srgb {
     fn black() -> Self {
         Self::broadcast(0.0)
