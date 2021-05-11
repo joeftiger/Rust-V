@@ -1,12 +1,12 @@
-use crate::spectral_data::LAMBDA_NUM;
+use crate::color_data::LAMBDA_NUM;
 use crate::*;
+use core::ops::{Index, IndexMut};
+use core::slice::SliceIndex;
 use serde::{Deserialize, Serialize};
-use std::ops::{Index, IndexMut};
-use std::slice::SliceIndex;
 
 #[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct IntSpectrum {
-    #[serde(with = "ColorArray")]
+    #[serde(with = "SerdeBigArray")]
     pub(crate) data: [u32; LAMBDA_NUM],
 }
 

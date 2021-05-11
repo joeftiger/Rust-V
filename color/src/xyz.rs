@@ -2,44 +2,21 @@ use crate::*;
 use image::Rgb;
 
 color!(
-    Xyz => Float, 3
+    Xyz => 3, color_data::xyz
 );
 
-impl Colors for Xyz {
-    fn black() -> Self {
-        Self::from(Srgb::black())
-    }
+impl TryFrom<SerdeColors> for Xyz {
+    type Error = ();
 
-    fn grey() -> Self {
-        Self::from(Srgb::grey())
-    }
+    fn try_from(value: SerdeColors) -> Result<Self, Self::Error> {
+        let xyz = match value {
+            SerdeColors::Srgb(data) => Srgb::new(data).into(),
+            SerdeColors::Xyz(data) => Self::new(data),
+            SerdeColors::Spectrum(data) => Spectrum::new(data).into(),
+            SerdeColors::Color(c) => Self::from(c),
+        };
 
-    fn white() -> Self {
-        Self::from(Srgb::white())
-    }
-
-    fn red() -> Self {
-        Self::from(Srgb::red())
-    }
-
-    fn yellow() -> Self {
-        Self::from(Srgb::yellow())
-    }
-
-    fn green() -> Self {
-        Self::from(Srgb::grey())
-    }
-
-    fn cyan() -> Self {
-        Self::from(Srgb::cyan())
-    }
-
-    fn blue() -> Self {
-        Self::from(Srgb::black())
-    }
-
-    fn pink() -> Self {
-        Self::from(Srgb::pink())
+        Ok(xyz)
     }
 }
 
@@ -62,19 +39,29 @@ impl From<Xyz> for Rgb<Float> {
 }
 
 impl From<Xyz> for Srgb {
+    #[rustfmt::skip]
+    #[allow(clippy::excessive_precision)]
+    #[allow(clippy::many_single_char_names)]
     fn from(xyz: Xyz) -> Self {
-        Srgb::from(linears_to_srgb(xyz_to_srgb_mat() * Vector3::from(xyz)))
+        let x = xyz[0];
+        let y = xyz[1];
+        let z = xyz[2];
+
+        let r =  3.2404542 * x - 1.5371385 * y - 0.4985314 * z;
+        let g = -0.9692660 * x + 1.8760108 * y + 0.0415560 * z;
+        let b =  0.0556434 * x - 0.2040259 * y + 1.0572252 * z;
+
+        Self::new([compand(r), compand(g), compand(b)])
     }
 }
 
-impl From<Xyz> for Vector3 {
-    fn from(xyz: Xyz) -> Self {
-        Self::from(xyz.data)
-    }
-}
-
-impl From<Vector3> for Xyz {
-    fn from(vec: Vector3) -> Self {
-        Self::new([vec.x, vec.y, vec.z])
+#[allow(clippy::excessive_precision)]
+#[inline]
+fn compand(val: Float) -> Float {
+    // https://entropymine.com/imageworsener/srgbformula/
+    if val <= 0.00313066844250063 {
+        val * 12.92
+    } else {
+        1.055 * val.powf(1.0 / 2.4) - 0.055
     }
 }

@@ -10,11 +10,13 @@ edition = "2018"
 color = { path = "../color" }
 geometry = { path = "../geometry" }
 #utility = { path = "../utility" }
-rust-v = { path = "../" }
+rust-v = { path = ".." }
 ultraviolet = { path = "../ultraviolet" }
 fastrand = ""
 ron = ""
 definitions = { path = "../definitions" }
+
+show-image = "0.8.2"
 
 [features]
 f64 = ["color/f64", "geometry/f64", "rust-v/f64", "ultraviolet/f64", "definitions/f64"]

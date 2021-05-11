@@ -1,75 +1,21 @@
 use crate::cie::xyz_of;
-use crate::spectral_data::*;
+use crate::color_data::*;
 use crate::*;
 use image::Rgb;
 
 color!(
-    Spectrum => Float, LAMBDA_NUM
+    Spectrum => LAMBDA_NUM, color_data::spectral
 );
 
-impl Spectrum {
-    pub fn as_xyz(self) -> Xyz {
-        self.into()
-    }
+impl TryFrom<SerdeColors> for Spectrum {
+    type Error = ();
 
-    pub fn as_srgb(self) -> Srgb {
-        self.into()
-    }
-}
-
-impl Spectrum {
-    pub fn blue_sky() -> Self {
-        Self::new(blue_sky::SPECTRUM)
-    }
-
-    pub fn dark_skin() -> Self {
-        Self::new(dark_skin::SPECTRUM)
-    }
-
-    pub fn foliage() -> Self {
-        Self::new(foliage::SPECTRUM)
-    }
-
-    pub fn light_skin() -> Self {
-        Self::new(light_skin::SPECTRUM)
-    }
-}
-
-impl Colors for Spectrum {
-    fn black() -> Self {
-        Self::broadcast(0.0)
-    }
-
-    fn grey() -> Self {
-        Self::white() * 0.5
-    }
-
-    fn white() -> Self {
-        Self::new(white::SPECTRUM)
-    }
-
-    fn red() -> Self {
-        Self::new(red::SPECTRUM)
-    }
-
-    fn yellow() -> Self {
-        Self::new(yellow::SPECTRUM)
-    }
-
-    fn green() -> Self {
-        Self::new(green::SPECTRUM)
-    }
-
-    fn cyan() -> Self {
-        (Self::green() + Self::blue()) * 0.5
-    }
-
-    fn blue() -> Self {
-        Self::new(blue::SPECTRUM)
-    }
-
-    fn pink() -> Self {
-        (Self::red() + Self::blue()) * 0.5
+    fn try_from(value: SerdeColors) -> Result<Self, Self::Error> {
+        match value {
+            SerdeColors::Spectrum(data) => Ok(Spectrum::new(data)),
+            SerdeColors::Color(c) => Ok(Self::from(c)),
+            _ => Err(()),
+        }
     }
 }
 

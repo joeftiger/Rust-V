@@ -5,7 +5,7 @@ use crate::samplers::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::sensor::pixel::Pixel;
 use crate::Spectrum;
-use color::{Color, Colors};
+use color::Color;
 use geometry::{offset_ray_towards, Ray};
 use serde::{Deserialize, Serialize};
 
@@ -37,7 +37,7 @@ impl Whitted {
         let object = &intersection.object;
         let bsdf = object.bsdf();
 
-        let mut illumination = Spectrum::black();
+        let mut illumination = Spectrum::broadcast(0.0);
 
         if let SceneObject::Emitter(e) = object {
             illumination += e.emission; //e.radiance(&outgoing, &normal);

@@ -2,7 +2,7 @@
 #![allow(unused_variables)]
 
 use crate::demo_scenes::{Demo, FOVY};
-use color::{Color, Colors};
+use color::{AsColor, Color, Colors};
 use definitions::{Float, Vector3};
 use geometry::{Aabb, Point, Sphere};
 use rust_v::bxdf::{
@@ -49,7 +49,7 @@ fn ground() -> SceneObject {
     let max = Vector3::new(1000000.0, FLOOR, 1000000.0);
     let cube = Aabb::new(min, max);
 
-    let lambertian = LambertianReflection::new(Spectrum::white());
+    let lambertian = LambertianReflection::new(Spectrum::from(Colors::White));
     let bxdf = Box::new(lambertian);
 
     let bsdf = BSDF::new(vec![bxdf]);
@@ -63,7 +63,7 @@ fn sky() -> SceneObject {
     let center = Vector3::zero();
     let sphere = Sphere::new(center, SKY_RADIUS);
 
-    let lambertian = LambertianReflection::new(Spectrum::blue() + Spectrum::white() * 0.2);
+    let lambertian = LambertianReflection::new(Spectrum::from(Colors::BlueSky));
     let bxdf = Box::new(lambertian);
 
     let bsdf = BSDF::new(vec![bxdf]);
@@ -97,13 +97,13 @@ fn random_color() -> Spectrum {
     let rand = fastrand::f32() * 1.5;
 
     if rand < 0.25 {
-        Spectrum::red()
+        Spectrum::from(Colors::Red)
     } else if rand < 0.5 {
-        Spectrum::green()
+        Spectrum::from(Colors::Green)
     } else if rand < 0.75 {
-        Spectrum::blue()
+        Spectrum::from(Colors::Blue)
     } else {
-        Spectrum::white()
+        Spectrum::from(Colors::White)
     }
 }
 
@@ -111,7 +111,7 @@ fn random_bsdf(color: Spectrum) -> (bool, BSDF) {
     let rand = fastrand::f32();
 
     let mut out = false;
-    let bsdf = if color == Spectrum::white() {
+    let bsdf = if color == Spectrum::from(Colors::White) {
         if rand < 0.6 {
             out = true;
             BSDF::empty()
@@ -145,8 +145,7 @@ fn create_emitter() -> SceneObject {
     let point = Point(position);
 
     let bsdf = BSDF::empty();
-    let mut emission = Spectrum::white() + Spectrum::green() + Spectrum::red();
-    emission /= 2.0;
+    let emission = Spectrum::from(Colors::OrangeYellow);
 
     let emitter = Arc::new(Emitter::new(Box::new(point), bsdf, emission));
     SceneObject::Emitter(emitter)

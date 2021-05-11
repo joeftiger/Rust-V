@@ -1440,35 +1440,39 @@ pub const CIE_Z_2: [Float; CIE_SAMPLES] = {
 
 /// A piecewise-Gaussian function.
 #[inline]
-pub fn gaussian(lambda: Float, alpha: Float, mu: Float, sigma1: Float, sigma2: Float) -> Float {
+pub fn gaussian(lambda: f64, alpha: f64, mu: f64, sigma1: f64, sigma2: f64) -> f64 {
     let t = (lambda - mu) / if lambda < mu { sigma1 } else { sigma2 };
-    alpha * Float::exp(-(t * t) / 2.0)
+    alpha * f64::exp(-(t * t) / 2.0)
 }
 
 #[inline]
-pub fn x_bar(lambda: Float) -> Float {
+pub fn x_bar(lambda: f64) -> f64 {
     gaussian(lambda, 1.056, 5998.0, 379.0, 310.0)
         + gaussian(lambda, 0.362, 4420.0, 160.0, 267.0)
         + gaussian(lambda, -0.065, 5011.0, 204.0, 262.0)
 }
 
 #[inline]
-pub fn y_bar(lambda: Float) -> Float {
+pub fn y_bar(lambda: f64) -> f64 {
     gaussian(lambda, 0.821, 5688.0, 469.0, 405.0) + gaussian(lambda, 0.286, 5309.0, 163.0, 311.0)
 }
 
 #[inline]
-pub fn z_bar(lambda: Float) -> Float {
+pub fn z_bar(lambda: f64) -> f64 {
     gaussian(lambda, 1.217, 4370.0, 118.0, 360.0) + gaussian(lambda, 0.681, 4590.0, 260.0, 138.0)
 }
 
 #[inline]
-fn mu_m_to_angstrom(lambda: Float) -> Float {
+fn mu_m_to_angstrom(lambda: f64) -> f64 {
     10_000.0 * lambda
 }
 
 #[inline]
-pub fn xyz_of(mut lambda: Float) -> Xyz {
-    lambda = mu_m_to_angstrom(lambda);
-    Xyz::new([x_bar(lambda), y_bar(lambda), z_bar(lambda)])
+pub fn xyz_of(lambda: Float) -> Xyz {
+    let lambda = mu_m_to_angstrom(lambda as f64);
+    Xyz::new([
+        x_bar(lambda) as Float,
+        y_bar(lambda) as Float,
+        z_bar(lambda) as Float,
+    ])
 }

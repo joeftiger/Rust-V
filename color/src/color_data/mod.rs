@@ -1,14 +1,8 @@
 use definitions::Float;
 
-pub mod blue;
-pub mod blue_sky;
-pub mod dark_skin;
-pub mod foliage;
-pub mod green;
-pub mod light_skin;
-pub mod red;
-pub mod white;
-pub mod yellow;
+pub mod spectral;
+pub mod srgb;
+pub mod xyz;
 
 pub const LAMBDA_START: Float = 0.38;
 pub const LAMBDA_END: Float = 0.73;

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 use crate::demo_scenes::{Demo, FOVY, SIGMA};
-use color::{Color, Colors};
+use color::{AsColor, Color, Colors};
 use definitions::{Float, Rotation3, Vector3};
 use geometry::{Aabb, Boundable, Cylinder, Mesh, Point, ShadingMode, Sphere};
 use rust_v::bxdf::{FresnelSpecular, LambertianReflection, OrenNayar, BSDF};
@@ -45,7 +45,7 @@ fn ground() -> SceneObject {
     let max = Vector3::new(100.0, 0.0, 100.0);
     let cube = Aabb::new(min, max);
 
-    let oren_nayar = OrenNayar::new(Spectrum::white(), SIGMA);
+    let oren_nayar = OrenNayar::new(Spectrum::from(Colors::White), SIGMA);
     let bxdf = Box::new(oren_nayar);
 
     let bsdf = BSDF::new(vec![bxdf]);
@@ -97,7 +97,7 @@ fn light_bulb() -> SceneObject {
     let emitter = Arc::new(Emitter::new(
         Box::new(light_bulb),
         bsdf,
-        Spectrum::white() * 2.0,
+        Spectrum::from(Colors::White) * 2.0,
     ));
     SceneObject::Emitter(emitter)
 }
@@ -108,7 +108,7 @@ fn light_bulb_rectifier() -> SceneObject {
     let right_end = position + Vector3::new(2.0, -0.5, 0.0);
 
     let rectifier = Cylinder::new((left_end, right_end), 0.51);
-    let lambertian = LambertianReflection::new(Spectrum::grey());
+    let lambertian = LambertianReflection::new(Spectrum::from(Colors::Grey2));
     let bxdf = Box::new(lambertian);
 
     let bsdf = BSDF::new(vec![bxdf]);
@@ -124,7 +124,7 @@ fn global_light() -> SceneObject {
     let emitter = Arc::new(Emitter::new(
         Box::new(point),
         bsdf,
-        Spectrum::white() * 0.01,
+        Spectrum::from(Colors::White) * 0.01,
     ));
     SceneObject::Emitter(emitter)
 }

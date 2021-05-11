@@ -2,53 +2,28 @@ use crate::*;
 use image::Rgb;
 
 color!(
-    Srgb => Float, 3
+    Srgb => 3, color_data::srgb
 );
 
-impl Colors for Srgb {
-    fn black() -> Self {
-        Self::broadcast(0.0)
-    }
+impl TryFrom<SerdeColors> for Srgb {
+    type Error = ();
 
-    fn grey() -> Self {
-        Self::broadcast(0.5)
-    }
+    fn try_from(value: SerdeColors) -> Result<Self, Self::Error> {
+        let srgb = match value {
+            SerdeColors::Srgb(data) => Self::new(data),
+            SerdeColors::Xyz(data) => Xyz::new(data).into(),
+            SerdeColors::Spectrum(data) => Spectrum::new(data).into(),
+            SerdeColors::Color(c) => Self::from(c),
+        };
 
-    fn white() -> Self {
-        Self::broadcast(1.0)
-    }
-
-    fn red() -> Self {
-        Self::new([1.0, 0.0, 0.0])
-    }
-
-    fn yellow() -> Self {
-        Self::new([1.0, 1.0, 0.0])
-    }
-
-    fn green() -> Self {
-        Self::new([0.0, 1.0, 0.0])
-    }
-
-    fn cyan() -> Self {
-        Self::new([0.0, 1.0, 1.0])
-    }
-
-    fn blue() -> Self {
-        Self::new([0.0, 0.0, 1.0])
-    }
-
-    fn pink() -> Self {
-        Self::new([1.0, 0.0, 1.0])
+        Ok(srgb)
     }
 }
 
 impl From<Srgb> for Rgb<u8> {
     fn from(srgb: Srgb) -> Self {
-        let mut data = [0; 3];
-        data.iter_mut()
-            .zip(srgb.data.iter())
-            .for_each(|(d0, d1)| *d0 = (d1 * 2u32.pow(8) as Float) as u8);
+        let conv = srgb * Srgb::broadcast(2u32.pow(16) as Float);
+        let data = [conv[0] as u8, conv[1] as u8, conv[2] as u8];
 
         Self::from(data)
     }
@@ -56,10 +31,8 @@ impl From<Srgb> for Rgb<u8> {
 
 impl From<Srgb> for Rgb<u16> {
     fn from(srgb: Srgb) -> Self {
-        let mut data = [0; 3];
-        data.iter_mut()
-            .zip(srgb.data.iter())
-            .for_each(|(d0, d1)| *d0 = (d1 * 2u32.pow(16) as Float) as u16);
+        let conv = srgb * Srgb::broadcast(2u32.pow(16) as Float);
+        let data = [conv[0] as u16, conv[1] as u16, conv[2] as u16];
 
         Self::from(data)
     }
@@ -72,19 +45,28 @@ impl From<Srgb> for Rgb<Float> {
 }
 
 impl From<Srgb> for Xyz {
+    #[allow(clippy::excessive_precision)]
+    #[allow(clippy::many_single_char_names)]
     fn from(srgb: Srgb) -> Self {
-        Xyz::from(srgb_to_xyz_mat() * srgbs_to_linear(Vector3::from(srgb)))
+        let r = uncompand(srgb[0]);
+        let g = uncompand(srgb[1]);
+        let b = uncompand(srgb[2]);
+
+        let x = 0.4124564 * r + 0.3575761 * g + 0.1804375 * b;
+        let y = 0.2126729 * r + 0.7151522 * g + 0.0721750 * b;
+        let z = 0.0193339 * r + 0.1191920 * g + 0.9503041 * b;
+
+        Self::new([x, y, z])
     }
 }
 
-impl From<Srgb> for Vector3 {
-    fn from(srgb: Srgb) -> Self {
-        Self::from(srgb.data)
-    }
-}
-
-impl From<Vector3> for Srgb {
-    fn from(vec: Vector3) -> Self {
-        Self::new([vec.x, vec.y, vec.z])
+#[allow(clippy::excessive_precision)]
+#[inline]
+fn uncompand(val: Float) -> Float {
+    // https://entropymine.com/imageworsener/srgbformula/
+    if val <= 0.0404482362771082 {
+        val / 12.92
+    } else {
+        ((val + 0.055) / 1.055).powf(2.4)
     }
 }

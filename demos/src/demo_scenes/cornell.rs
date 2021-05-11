@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::demo_scenes::{Demo, FOVY, SIGMA};
-use color::{Color, Colors};
+use color::{AsColor, Color, Colors};
 use definitions::{Float, Rotation3, Vector3};
 use geometry::{Aabb, BiconvexLens, Boundable, Bubble, Mesh, ShadingMode, Sphere};
 use rust_v::bxdf::{FresnelSpecular, OrenNayar, BSDF};
@@ -208,9 +208,9 @@ fn create_wall(wall: &Wall) -> SceneObject {
     let cube = Aabb::new(min, max);
 
     let spectrum = match wall {
-        Wall::Top | Wall::Back | Wall::Bottom => Spectrum::white() * 0.75,
-        Wall::Left => Spectrum::red() * 0.75,
-        Wall::Right => Spectrum::green() * 0.75,
+        Wall::Top | Wall::Back | Wall::Bottom => Spectrum::from(Colors::White),
+        Wall::Left => Spectrum::from(Colors::Red),
+        Wall::Right => Spectrum::from(Colors::Green),
     };
 
     let oren_nayar = OrenNayar::new(spectrum, SIGMA);
@@ -228,7 +228,7 @@ fn create_emitter() -> SceneObject {
     let sphere = Sphere::new(center, RADIUS);
 
     let bsdf = BSDF::empty();
-    let emission = Spectrum::white() * 2.0;
+    let emission = Spectrum::from(Colors::White) * 2.0;
     let geometry = Box::new(sphere);
 
     let emitter = Arc::new(Emitter::new(geometry, bsdf, emission));
