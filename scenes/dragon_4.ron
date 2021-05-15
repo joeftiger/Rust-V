@@ -1,12 +1,12 @@
 (
     config: (
-        filename: None,
+        filename: Some("./dragon.png"),
         bounds: None,
         block_size: (
-            x: 8,
-            y: 8,
+            x: 16,
+            y: 16,
         ),
-        passes: 100,
+        passes: 10000,
         threads: None,
     ),
     camera: {
@@ -29,14 +29,16 @@
             ),
             FovY: 70,
             Resolution: (
-                x: 512,
-                y: 512,
+                x: 1024,
+                y: 1024,
             ),
         ),
     },
     integrator: {
-        "Path": (
+        "SpectralPath": (
             max_depth: 8,
+            light_wave_samples: 3,
+            spectral_sampler: Hero,
         ),
     },
     sampler: Random,
@@ -49,7 +51,7 @@
             ),
             max: (
                 x: 2.08,
-                y: 2.5,
+                y: 2.25,
                 z: 2,
             ),
         ),
@@ -70649,8 +70651,8 @@
                     bxdfs: [
                         {
                             "FresnelSpecular": (
-                                r: Spectrum((1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)),
-                                t: Spectrum((1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)),
+                                r: Constant(1),
+                                t: Constant(1),
                                 eta_i: Air,
                                 eta_t: Sapphire,
                                 fresnel: (
@@ -70667,10 +70669,10 @@
                     "Sphere": (
                         center: (
                             x: 0,
-                            y: 1.5,
+                            y: 2,
                             z: 0,
                         ),
-                        radius: 0.007,
+                        radius: 0.1,
                     ),
                 },
                 bsdf: (

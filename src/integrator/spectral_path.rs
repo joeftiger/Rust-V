@@ -49,9 +49,14 @@ impl SpectralPath {
 
             let mut bounce_illum = 0.0;
 
-            if bounce == 0 || specular {
+            if bounce == 0 {
                 if let SceneObject::Emitter(e) = &hit.object {
-                    bounce_illum += e.emission_light_wave(light_wave_index);
+                    illumination = e.emission_light_wave(light_wave_index); //e.radiance(&outgoing, &normal);
+                    break;
+                }
+            } else if specular {
+                if let SceneObject::Emitter(e) = &hit.object {
+                    bounce_illum += e.emission_light_wave(light_wave_index); //e.radiance(&outgoing, &normal);
                 }
             }
 

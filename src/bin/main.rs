@@ -9,14 +9,24 @@ use rust_v::serialization::Serialization;
 #[cfg(feature = "show-image")]
 use rust_v::RenderWindow;
 use std::convert::TryInto;
+use std::error::Error;
 
 const LIVE: &str = "LIVE_WINDOW";
 const VERBOSE: &str = "VERBOSE";
 const INPUT: &str = "INPUT";
 const FORMAT: &str = "FORMAT";
 
-fn main() -> Result<(), String> {
+#[cfg(not(feature = "show-image"))]
+fn main() -> Result<(), Box<dyn Error>> {
     create_config().run()
+}
+
+#[show_image::main]
+#[cfg(feature = "show-image")]
+fn main() -> Result<(), Box<dyn Error>> {
+    create_config().run()?;
+
+    show_image::exit(0);
 }
 
 fn create_config() -> CmdInput {
@@ -65,7 +75,7 @@ impl CmdInput {
         Renderer::new(serialization)
     }
 
-    fn save_image(&self, renderer: &Renderer) -> Result<(), String> {
+    fn save_image(&self, renderer: &Renderer) -> Result<(), Box<dyn Error>> {
         println!("Output file: {:?}", renderer.filename());
 
         if let Some(path) = renderer.filename() {
@@ -74,14 +84,8 @@ impl CmdInput {
             }
 
             match self.pixel_type {
-                PixelType::U8 => renderer
-                    .get_image_u8()
-                    .save(path)
-                    .map_err(|e| format!("Unable to save image: {}", e))?,
-                PixelType::U16 => renderer
-                    .get_image_u16()
-                    .save(path)
-                    .map_err(|e| format!("Unable to save image: {}", e))?,
+                PixelType::U8 => renderer.get_image_u8().save(path)?,
+                PixelType::U16 => renderer.get_image_u16().save(path)?,
             };
 
             if self.verbose {
@@ -92,7 +96,7 @@ impl CmdInput {
         Ok(())
     }
 
-    pub fn run(&self) -> Result<(), String> {
+    pub fn run(&self) -> Result<(), Box<dyn Error>> {
         if self.verbose {
             println!("{:#?}", self);
         }
@@ -102,7 +106,7 @@ impl CmdInput {
         #[cfg(feature = "show-image")]
         if self.live {
             let mut window = RenderWindow::new("Rust-V".to_string(), &mut renderer)?;
-            window.render();
+            window.render()?;
 
             if self.verbose {
                 println!("Closed window");

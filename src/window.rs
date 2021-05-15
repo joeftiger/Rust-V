@@ -1,50 +1,81 @@
 use crate::renderer::Renderer;
 use bitflags::_core::time::Duration;
-use show_image::{make_window_full, KeyCode, Window, WindowOptions};
+use show_image::error::{CreateWindowError, InvalidWindowId};
+use show_image::event::VirtualKeyCode;
+use show_image::{create_window, event, WindowOptions, WindowProxy};
+use std::thread;
 
 pub struct RenderWindow<'a> {
-    window: Window,
+    window: WindowProxy,
     renderer: &'a mut Renderer,
+    auto_reload: bool,
 }
 
 impl<'a> RenderWindow<'a> {
-    pub fn new(name: String, renderer: &'a mut Renderer) -> Result<Self, String> {
+    pub fn new<T>(name: T, renderer: &'a mut Renderer) -> Result<Self, CreateWindowError>
+    where
+        T: Into<String>,
+    {
         let width = 900;
         let height = 900;
 
         let options = WindowOptions::default()
-            .set_name(name)
-            .set_width(width)
-            .set_height(height)
+            .set_size([width, height])
             .set_resizable(true)
             .set_preserve_aspect_ratio(true);
 
-        let window = make_window_full(options)?;
+        let window = create_window(name, options)?;
 
-        Ok(Self { window, renderer })
+        Ok(Self {
+            window,
+            renderer,
+            auto_reload: false,
+        })
     }
 
-    pub fn render(&mut self) {
-        let wait_key = Duration::from_millis(500);
+    pub fn render(&mut self) -> Result<(), InvalidWindowId> {
         let render_job = self.renderer.render();
 
         let mut early_stop = false;
-        while let Ok(event) = self.window.wait_key(wait_key) {
-            if let Some(e) = event {
-                if e.key == KeyCode::Escape {
-                    early_stop = true;
-                    break;
+
+        'main: while !self.renderer.is_done() {
+            if self.auto_reload {
+                let image = self.renderer.get_image_u8();
+                if let Err(err) = self.window.set_image("Rendering", image) {
+                    eprintln!("{}\nSkipping this image!", err);
                 }
             }
 
-            if self.renderer.is_done() {
-                break;
+            for e in self.window.event_channel()? {
+                if let event::WindowEvent::KeyboardInput(event) = e {
+                    if event.input.state.is_pressed() {
+                        if let Some(key) = event.input.key_code {
+                            match key {
+                                VirtualKeyCode::R => {
+                                    self.auto_reload = !self.auto_reload;
+
+                                    println!("Auto reload: {}", self.auto_reload);
+                                    break;
+                                }
+                                VirtualKeyCode::Escape => {
+                                    early_stop = true;
+                                    break 'main;
+                                }
+                                VirtualKeyCode::Space => {
+                                    let image = self.renderer.get_image_u8();
+                                    if let Err(err) = self.window.set_image("Rendering", image) {
+                                        eprintln!("{}\nSkipping this image!", err);
+                                    }
+                                    break;
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                }
             }
 
-            let image = self.renderer.get_image_u8();
-            if let Some(err) = self.window.set_image(image, "Rendering").err() {
-                eprintln!("{}\nSkipping this image!", err);
-            }
+            thread::sleep(Duration::from_micros(500));
         }
 
         if early_stop {
@@ -55,19 +86,21 @@ impl<'a> RenderWindow<'a> {
 
         let image = self.renderer.get_image_u8();
         self.window
-            .set_image(image, "Rendering")
+            .set_image("Final_Rendering", image)
             .expect("Could not set last image");
 
         // wait for user save or stop
-        while let Ok(event) = self.window.wait_key(wait_key) {
-            if let Some(e) = event {
-                if e.key == KeyCode::Escape {
+        for event in self.window.event_channel()? {
+            if let event::WindowEvent::KeyboardInput(event) = event {
+                println!("{:#?}", event);
+                if event.input.state.is_pressed()
+                    && event.input.key_code == Some(event::VirtualKeyCode::Escape)
+                {
                     break;
                 }
             }
         }
 
-        // Make sure all background tasks are stopped cleanly.
-        show_image::stop().unwrap();
+        Ok(())
     }
 }

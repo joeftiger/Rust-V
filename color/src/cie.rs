@@ -5,6 +5,7 @@ use crate::Xyz;
 use definitions::Float;
 
 pub const CIE_SAMPLES: usize = 471;
+pub const CIE_Y_INTEGRAL: Float = 0.106856895;
 
 //noinspection RsApproxConstant
 pub const CIE_X_2: [Float; CIE_SAMPLES] = {

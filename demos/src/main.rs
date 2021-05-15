@@ -35,13 +35,16 @@ fn main() {
 //         let srgb = Srgb::from(c);
 //         let xyz_conv = Xyz::from(spectrum);
 //         let srgb_conv = Srgb::from(spectrum);
+//         let srgb_xyz = Srgb::from(xyz);
 //
 //         println!("{:?}", c);
 //         println!("-- {:?}", spectrum);
 //         println!("-- {:?}", xyz);
 //         println!("-- {:?} (converted)", xyz_conv);
 //         println!("-- {:?}", srgb);
+//         println!("-- {:?} (converted from xyz)\n", srgb_xyz);
 //         println!("-- {:?} (converted)\n", srgb_conv);
+//         println!("{:?}", srgb_conv / srgb);
 //
 //         // convert float to u8
 //         let scale = Srgb::broadcast(2u32.pow(8) as Float);

@@ -1,14 +1,13 @@
 use crate::Spectrum;
 use color::{Color, IntSpectrum};
 use definitions::Float;
-use serde::{Deserialize, Serialize};
 use ultraviolet::UVec2;
 
-#[derive(Default, Clone, Serialize, Deserialize)]
+#[derive(Default, Clone)]
 pub struct Pixel {
     pub position: UVec2,
     pub average: Spectrum,
-    samples: IntSpectrum,
+    samples: IntSpectrum<{ Spectrum::size() }>,
 }
 
 impl Pixel {

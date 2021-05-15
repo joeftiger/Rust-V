@@ -37,6 +37,7 @@ pub enum SerdeColors {
     #[serde(with = "SerdeBigArray")]
     Spectrum([Float; 36]),
     Color(Colors),
+    Constant(Float),
 }
 
 #[macro_export]
@@ -54,6 +55,12 @@ macro_rules! color {
                     if self.eq(&Self::from(*c)) {
                         return SerdeColors::Color(*c).serialize(serializer);
                     }
+                }
+
+                let first = self.data[0];
+                #[allow(clippy::float_cmp)]
+                if self.data.iter().skip(1).all(|v| *v == first) {
+                    return SerdeColors::Constant(first).serialize(serializer);
                 }
 
                 SerdeColors::$name(self.data).serialize(serializer)

@@ -37,7 +37,12 @@ impl Integrator for Path {
 
                 let mut bounce_illum = Spectrum::broadcast(0.0);
 
-                if bounce == 0 || specular {
+                if bounce == 0 {
+                    if let SceneObject::Emitter(e) = &hit.object {
+                        illumination = e.emission; //e.radiance(&outgoing, &normal);
+                        break;
+                    }
+                } else if specular {
                     if let SceneObject::Emitter(e) = &hit.object {
                         bounce_illum += e.emission; //e.radiance(&outgoing, &normal);
                     }

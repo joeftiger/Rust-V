@@ -2,25 +2,23 @@ use crate::color_data::LAMBDA_NUM;
 use crate::*;
 use core::ops::{Index, IndexMut};
 use core::slice::SliceIndex;
-use serde::{Deserialize, Serialize};
 
-#[derive(Copy, Clone, Serialize, Deserialize)]
-pub struct IntSpectrum {
-    #[serde(with = "SerdeBigArray")]
-    pub(crate) data: [u32; LAMBDA_NUM],
+#[derive(Copy, Clone)]
+pub struct IntSpectrum<const N: usize> {
+    pub(crate) data: [u32; N],
 }
 
-impl IntSpectrum {
-    pub fn new(data: [u32; LAMBDA_NUM]) -> Self {
+impl<const N: usize> IntSpectrum<N> {
+    pub fn new(data: [u32; N]) -> Self {
         Self { data }
     }
 
-    pub fn size() -> usize {
-        LAMBDA_NUM
+    pub const fn size() -> usize {
+        N
     }
 
     pub fn broadcast(val: u32) -> Self {
-        Self::new([val; LAMBDA_NUM])
+        Self::new([val; N])
     }
 
     pub fn increment(&mut self) {
@@ -28,15 +26,13 @@ impl IntSpectrum {
     }
 }
 
-impl Default for IntSpectrum {
+impl<const N: usize> Default for IntSpectrum<N> {
     fn default() -> Self {
-        Self {
-            data: [0; LAMBDA_NUM],
-        }
+        Self::broadcast(0)
     }
 }
 
-impl<I> Index<I> for IntSpectrum
+impl<I, const N: usize> Index<I> for IntSpectrum<N>
 where
     I: SliceIndex<[u32]>,
 {
@@ -47,7 +43,7 @@ where
     }
 }
 
-impl<I> IndexMut<I> for IntSpectrum
+impl<I, const N: usize> IndexMut<I> for IntSpectrum<N>
 where
     I: SliceIndex<[u32]>,
 {
@@ -56,36 +52,48 @@ where
     }
 }
 
-impl Mul<IntSpectrum> for Spectrum {
-    type Output = Self;
+macro_rules! impl_int_spectrum {
+    ($name:ident, $size:expr) => {
+        impl Mul<IntSpectrum<$size>> for $name {
+            type Output = Self;
 
-    fn mul(mut self, rhs: IntSpectrum) -> Self::Output {
-        self *= rhs;
-        self
-    }
-}
-
-impl MulAssign<IntSpectrum> for Spectrum {
-    fn mul_assign(&mut self, rhs: IntSpectrum) {
-        for i in 0..LAMBDA_NUM {
-            self[i] *= rhs[i] as Float
+            #[inline]
+            fn mul(mut self, rhs: IntSpectrum<$size>) -> Self::Output {
+                self *= rhs;
+                self
+            }
         }
-    }
-}
 
-impl Div<IntSpectrum> for Spectrum {
-    type Output = Self;
-
-    fn div(mut self, rhs: IntSpectrum) -> Self::Output {
-        self /= rhs;
-        self
-    }
-}
-
-impl DivAssign<IntSpectrum> for Spectrum {
-    fn div_assign(&mut self, rhs: IntSpectrum) {
-        for i in 0..LAMBDA_NUM {
-            self[i] /= rhs[i] as Float
+        impl MulAssign<IntSpectrum<$size>> for $name {
+            #[inline]
+            fn mul_assign(&mut self, rhs: IntSpectrum<$size>) {
+                for i in 0..Self::size() {
+                    self[i] *= rhs[i] as Float;
+                }
+            }
         }
-    }
+
+        impl Div<IntSpectrum<$size>> for $name {
+            type Output = Self;
+
+            #[inline]
+            fn div(mut self, rhs: IntSpectrum<$size>) -> Self::Output {
+                self /= rhs;
+                self
+            }
+        }
+
+        impl DivAssign<IntSpectrum<$size>> for $name {
+            #[inline]
+            fn div_assign(&mut self, rhs: IntSpectrum<$size>) {
+                for i in 0..Self::size() {
+                    self[i] /= rhs[i] as Float
+                }
+            }
+        }
+    };
 }
+
+impl_int_spectrum!(Srgb, 3);
+impl_int_spectrum!(Xyz, 3);
+impl_int_spectrum!(Spectrum, LAMBDA_NUM);

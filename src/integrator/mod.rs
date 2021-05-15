@@ -17,6 +17,7 @@
 //! * **Goral** radiosity: `ED*L`
 
 mod debug_normals;
+mod hero;
 mod path;
 mod spectral_path;
 mod whitted;

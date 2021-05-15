@@ -25,7 +25,7 @@ const FLOOR: Float = -DIMENSION / 2.0;
 const CEILING: Float = DIMENSION / 2.0;
 const FRONT: Float = DIMENSION / 2.0;
 const THICKNESS: Float = DIMENSION / 50.0;
-const RADIUS: Float = DIMENSION / 8.0;
+const RADIUS: Float = DIMENSION / 16.0;
 
 const X_CENTER: Float = (RIGHT_WALL + LEFT_WALL) / 2.0;
 const Y_CENTER: Float = (CEILING + FLOOR) / 2.0;
@@ -228,7 +228,7 @@ fn create_emitter() -> SceneObject {
     let sphere = Sphere::new(center, RADIUS);
 
     let bsdf = BSDF::empty();
-    let emission = Spectrum::from(Colors::White) * 2.0;
+    let emission = Spectrum::from(Colors::White);
     let geometry = Box::new(sphere);
 
     let emitter = Arc::new(Emitter::new(geometry, bsdf, emission));

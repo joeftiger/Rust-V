@@ -14,6 +14,7 @@ impl TryFrom<SerdeColors> for Xyz {
             SerdeColors::Xyz(data) => Self::new(data),
             SerdeColors::Spectrum(data) => Spectrum::new(data).into(),
             SerdeColors::Color(c) => Self::from(c),
+            SerdeColors::Constant(c) => Self::broadcast(c),
         };
 
         Ok(xyz)

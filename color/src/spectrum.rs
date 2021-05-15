@@ -1,4 +1,4 @@
-use crate::cie::xyz_of;
+use crate::cie::{xyz_of, CIE_Y_INTEGRAL};
 use crate::color_data::*;
 use crate::*;
 use image::Rgb;
@@ -14,6 +14,7 @@ impl TryFrom<SerdeColors> for Spectrum {
         match value {
             SerdeColors::Spectrum(data) => Ok(Spectrum::new(data)),
             SerdeColors::Color(c) => Ok(Self::from(c)),
+            SerdeColors::Constant(c) => Ok(Self::broadcast(c)),
             _ => Err(()),
         }
     }
@@ -27,12 +28,16 @@ impl From<Spectrum> for Srgb {
 
 impl From<Spectrum> for Xyz {
     fn from(spectrum: Spectrum) -> Self {
-        spectrum
+        let xyz = spectrum
             .as_light_waves()
             .iter()
             .fold(Xyz::broadcast(0.0), |acc, next| {
                 acc + xyz_of(next.lambda) * next.intensity
-            })
+            });
+
+        let scale = LAMBDA_RANGE / (CIE_Y_INTEGRAL * Spectrum::size() as Float);
+
+        xyz * scale
     }
 }
 

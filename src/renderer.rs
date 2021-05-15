@@ -202,7 +202,7 @@ impl Renderer {
                         if progress % tiles == 0 {
                             let frame = this_frames.fetch_add(1, Ordering::Relaxed);
                             let bar = this.progress_bar.lock().expect("Progress bar poisoned");
-                            bar.set_message(format!("Frames rendered: {}", frame).as_str());
+                            bar.set_message(format!("Frames rendered: {}", frame));
                         }
 
                         let mut tile = lock.lock().expect("SensorTile is poisoned");

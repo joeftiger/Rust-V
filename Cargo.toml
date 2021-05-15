@@ -12,27 +12,27 @@ edition = "2018"
 
 [dependencies]
 # bitmask flag generator
-bitflags = ""
+bitflags = "1.2.1"
 # Program argument parser
-clap = { version = "", features = ["yaml"] }
+clap = { version = "2.33.3", features = ["yaml"] }
 # fast random types
-fastrand = ""
+fastrand = "1.4.1"
 # image loading / saving
-image = ""
+image = "0.23.14"
 # progress bars etc.
-indicatif = ""
+indicatif = "0.16.0"
 # num of logical / physical cpus
-num_cpus = ""
+num_cpus = "1.13.0"
 # live image of rendering
-show-image = { version = "0.6.5", features = ["image", "save"], optional = true }
+show-image = { version = "0.8.4", features = ["image", "save"], optional = true }
 # linear algebra
 #ultraviolet = { version = "", features= ["int", "serde"] }
 ultraviolet = { path = "./ultraviolet", features= ["int", "serde"] }
 
 # De-/Serialization
-serde = { version = "", features = ["derive", "rc"] }
-typetag = ""
-ron = ""
+serde = { version = "1.0.126", features = ["derive", "rc"] }
+typetag = "0.1.7"
+ron = "0.6.4"
 
 color = { path = "./color" }
 definitions = { path = "./definitions" }
