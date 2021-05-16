@@ -58,6 +58,8 @@ impl PerspectiveCamera {
 
         // compute orientation and distance of eye to scene center
         let view = (target - position).normalized();
+        let axis_right = view.cross(up).normalized();
+        let axis_up = axis_right.cross(view); // normalized by definition
         let distance = (target - position).mag();
 
         let w = resolution.x as Float;
@@ -68,8 +70,8 @@ impl PerspectiveCamera {
         // compute width & height of the image plane
         // based on the opening angle of the camera (fovy) and the distance
         // of the eye to the near plane (distance)
-        let x_dir = view.cross(up).normalized() * image_width / w;
-        let y_dir = -up * image_height / h;
+        let x_dir = axis_right * image_width / w;
+        let y_dir = -axis_up * image_height / h;
 
         let lower_left = target - 0.5 * w * x_dir - 0.5 * h * y_dir;
 
@@ -77,7 +79,7 @@ impl PerspectiveCamera {
             sampler,
             position,
             target,
-            up,
+            up: axis_up,
             fovy,
             resolution,
             x_dir,
