@@ -7,10 +7,10 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-image = ""
-serde = { version = "", features = ["derive"] }
-serde_derive = ""
-serde-big-array = ""
+image = "0.23.14"
+serde = { version = "1.0.126", features = ["derive"] }
+#serde_derive = "1.0.126"
+serde-big-array = "0.3.2"
 
 utility = { path = "../utility" }
 definitions = { path = "../definitions" }

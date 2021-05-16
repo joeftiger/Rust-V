@@ -27,7 +27,7 @@ num_cpus = "1.13.0"
 show-image = { version = "0.8.4", features = ["image", "save"], optional = true }
 # linear algebra
 #ultraviolet = { version = "", features= ["int", "serde"] }
-ultraviolet = { path = "./ultraviolet", features= ["int", "serde"] }
+ultraviolet = { git = "https://github.com/termhn/ultraviolet", branch = "main", features= ["int", "serde"] }
 
 # De-/Serialization
 serde = { version = "1.0.126", features = ["derive", "rc"] }

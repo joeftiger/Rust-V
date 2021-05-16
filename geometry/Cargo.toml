@@ -7,11 +7,10 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-#ultraviolet = { version = "", features = ["serde"] }
-ultraviolet = { path = "../ultraviolet", features= ["serde"] }
+ultraviolet = { git = "https://github.com/termhn/ultraviolet", branch = "main", features= ["serde"] }
 # de-/serialization
-serde = { version = "", features = ["derive"] }
-typetag = ""
+serde = { version = "1.0.126", features = ["derive"] }
+typetag = "0.1.7"
 
 definitions = { path = "../definitions" }
 
