@@ -23,7 +23,7 @@ impl TryFrom<SerdeColors> for Srgb {
 
 impl From<Srgb> for Rgb<u8> {
     fn from(srgb: Srgb) -> Self {
-        let conv = srgb * Srgb::broadcast(2u32.pow(16) as Float);
+        let conv = srgb * Srgb::broadcast(2u32.pow(8) as Float);
         let data = [conv[0] as u8, conv[1] as u8, conv[2] as u8];
 
         Self::from(data)
