@@ -17,6 +17,7 @@ pub enum SceneObject {
 }
 
 impl SceneObject {
+    #[inline]
     pub fn bsdf(&self) -> &BSDF {
         match self {
             SceneObject::Emitter(e) => &e.bsdf,
@@ -26,6 +27,7 @@ impl SceneObject {
 }
 
 impl Boundable for SceneObject {
+    #[inline]
     fn bounds(&self) -> Aabb {
         match self {
             SceneObject::Emitter(e) => e.bounds(),
@@ -35,6 +37,7 @@ impl Boundable for SceneObject {
 }
 
 impl Intersectable for SceneObject {
+    #[inline]
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         match self {
             SceneObject::Emitter(e) => e.intersect(ray),
@@ -42,6 +45,7 @@ impl Intersectable for SceneObject {
         }
     }
 
+    #[inline]
     fn intersects(&self, ray: &Ray) -> bool {
         match self {
             SceneObject::Emitter(e) => e.intersects(ray),

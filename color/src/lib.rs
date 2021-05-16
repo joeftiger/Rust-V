@@ -81,16 +81,32 @@ macro_rules! color {
                 Self { data }
             }
 
+            #[inline(always)]
             pub const fn size() -> usize {
                 $size
+            }
+
+            #[inline(always)]
+            pub fn lambda_of_index(index: usize) -> Float {
+                LAMBDA_START.lerp(LAMBDA_END, index as Float / $size as Float)
+            }
+
+            #[inline]
+            pub fn as_light_wave(&self, light_wave_index: usize) -> LightWave {
+                let lambda = Self::lambda_of_index(light_wave_index);
+                let intensity = self[light_wave_index];
+
+                LightWave {
+                    lambda,
+                    intensity,
+                }
             }
 
             pub fn as_light_waves(&self) -> [LightWave; $size] {
                 let mut light_waves = [LightWave::default(); $size];
 
                 for i in 0..$size {
-                    light_waves[i].lambda =
-                        LAMBDA_START.lerp(LAMBDA_END, i as Float / $size as Float) as Float;
+                    light_waves[i].lambda = Self::lambda_of_index(i);
                     light_waves[i].intensity = self[i]
                 }
 

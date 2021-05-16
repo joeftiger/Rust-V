@@ -2,7 +2,10 @@ use crate::bxdf::{BxDF, Type};
 use crate::Spectrum;
 use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
+#[cfg(not(feature = "f64"))]
 use std::f32::consts::FRAC_1_PI;
+#[cfg(feature = "f64")]
+use std::f64::consts::FRAC_1_PI;
 
 /// The lambertian reflection reflects equally into all directions of the hemisphere.
 #[derive(Serialize, Deserialize)]
@@ -31,11 +34,12 @@ impl BxDF for LambertianReflection {
     }
 
     fn evaluate(&self, _: Vector3, _: Vector3) -> Spectrum {
-        self.r * FRAC_1_PI as Float
+        self.r * FRAC_1_PI
     }
 
+    #[inline]
     fn evaluate_light_wave(&self, _: Vector3, _: Vector3, light_wave_index: usize) -> Float {
-        self.r[light_wave_index] * FRAC_1_PI as Float
+        self.r[light_wave_index] * FRAC_1_PI
     }
 }
 
@@ -65,10 +69,11 @@ impl BxDF for LambertianTransmission {
     }
 
     fn evaluate(&self, _: Vector3, _: Vector3) -> Spectrum {
-        self.t * FRAC_1_PI as Float
+        self.t * FRAC_1_PI
     }
 
+    #[inline]
     fn evaluate_light_wave(&self, _: Vector3, _: Vector3, light_wave_index: usize) -> Float {
-        self.t[light_wave_index] * FRAC_1_PI as Float
+        self.t[light_wave_index] * FRAC_1_PI
     }
 }

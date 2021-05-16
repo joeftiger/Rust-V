@@ -1,7 +1,11 @@
 use crate::bxdf::{cos_phi, cos_theta, sin_phi, sin_theta, BxDF, Type};
+use crate::debug_utils::is_normalized;
 use crate::Spectrum;
 use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
+#[cfg(not(feature = "f64"))]
+use std::f32::consts::FRAC_1_PI;
+#[cfg(feature = "f64")]
 use std::f64::consts::FRAC_1_PI;
 use utility::floats::FloatExt;
 
@@ -35,6 +39,51 @@ impl OrenNayar {
 
         Self { r, a, b }
     }
+
+    /// Calculates the Oren Nayar scaling parameter.
+    ///
+    /// # Constraints
+    /// * `incident` - All values should be finite (neither infinite nor `NaN`).
+    ///                Should be normalized.
+    /// * `outgoing` - All values should be finite.
+    ///                Should be normalized.
+    ///
+    /// # Arguments
+    /// * `incident` - The incident direction onto the intersection we evaluate
+    /// * `outgoing` - The outgoing light direction
+    ///
+    /// # Returns
+    /// `(A + B * max_cos * sin_alpha * tan_beta / PI)`
+    fn calc_param(&self, incident: Vector3, outgoing: Vector3) -> Float {
+        debug_assert!(is_normalized(incident));
+        debug_assert!(is_normalized(outgoing));
+
+        let sin_theta_i = sin_theta(incident);
+        let sin_theta_o = sin_theta(outgoing);
+
+        let max_cos = if sin_theta_i > Float::epsilon() && sin_theta_o > Float::epsilon() {
+            let sin_phi_i = sin_phi(incident);
+            let sin_phi_o = sin_phi(outgoing);
+            let cos_phi_i = cos_phi(incident);
+            let cos_phi_o = cos_phi(outgoing);
+
+            let d_cos = cos_phi_i * cos_phi_o + sin_phi_i * sin_phi_o;
+            d_cos.max(0.0)
+        } else {
+            0.0
+        };
+
+        let cos_theta_i_abs = cos_theta(incident).abs();
+        let cos_theta_o_abs = cos_theta(outgoing).abs();
+
+        let (sin_alpha, tan_beta) = if cos_theta_i_abs > cos_theta_o_abs {
+            (sin_theta_o, sin_theta_i / cos_theta_i_abs)
+        } else {
+            (sin_theta_i, sin_theta_o / cos_theta_o_abs)
+        };
+
+        FRAC_1_PI * (self.a + self.b * max_cos * sin_alpha * tan_beta)
+    }
 }
 
 #[typetag::serde]
@@ -44,31 +93,9 @@ impl BxDF for OrenNayar {
     }
 
     fn evaluate(&self, incident: Vector3, outgoing: Vector3) -> Spectrum {
-        let sin_theta_i = sin_theta(incident);
-        let sin_theta_o = sin_theta(outgoing);
+        let oren_nayar = self.calc_param(incident, outgoing);
 
-        let max_cos = if sin_theta_i > Float::epsilon() && sin_theta_o > Float::epsilon() {
-            let sin_phi_i = sin_phi(incident);
-            let sin_phi_o = sin_phi(outgoing);
-            let cos_phi_i = cos_phi(incident);
-            let cos_phi_o = cos_phi(outgoing);
-
-            let d_cos = cos_phi_i * cos_phi_o + sin_phi_i * sin_phi_o;
-            d_cos.max(0.0)
-        } else {
-            0.0
-        };
-
-        let cos_theta_i_abs = cos_theta(incident).abs();
-        let cos_theta_o_abs = cos_theta(outgoing).abs();
-
-        let (sin_alpha, tan_beta) = if cos_theta_i_abs > cos_theta_o_abs {
-            (sin_theta_o, sin_theta_i / cos_theta_i_abs)
-        } else {
-            (sin_theta_i, sin_theta_o / cos_theta_o_abs)
-        };
-
-        self.r * (FRAC_1_PI as Float * (self.a + self.b * max_cos * sin_alpha * tan_beta))
+        self.r * oren_nayar
     }
 
     fn evaluate_light_wave(
@@ -77,31 +104,26 @@ impl BxDF for OrenNayar {
         outgoing: Vector3,
         light_wave_index: usize,
     ) -> Float {
-        let sin_theta_i = sin_theta(incident);
-        let sin_theta_o = sin_theta(outgoing);
+        let oren_nayar = self.calc_param(incident, outgoing);
 
-        let max_cos = if sin_theta_i > Float::epsilon() && sin_theta_o > Float::epsilon() {
-            let sin_phi_i = sin_phi(incident);
-            let sin_phi_o = sin_phi(outgoing);
-            let cos_phi_i = cos_phi(incident);
-            let cos_phi_o = cos_phi(outgoing);
+        self.r[light_wave_index] * oren_nayar
+    }
 
-            let d_cos = cos_phi_i * cos_phi_o + sin_phi_i * sin_phi_o;
-            d_cos.max(0.0)
-        } else {
-            0.0
-        };
+    fn evaluate_light_waves(
+        &self,
+        incident: Vector3,
+        outgoing: Vector3,
+        light_wave_indices: &[usize],
+        samples_buf: &mut [Float],
+    ) {
+        debug_assert!(is_normalized(incident));
+        debug_assert!(is_normalized(outgoing));
+        debug_assert_eq!(light_wave_indices.len(), samples_buf.len());
 
-        let cos_theta_i_abs = cos_theta(incident).abs();
-        let cos_theta_o_abs = cos_theta(outgoing).abs();
+        let oren_nayar = self.calc_param(incident, outgoing);
 
-        let (sin_alpha, tan_beta) = if cos_theta_i_abs > cos_theta_o_abs {
-            (sin_theta_o, sin_theta_i / cos_theta_i_abs)
-        } else {
-            (sin_theta_i, sin_theta_o / cos_theta_o_abs)
-        };
-
-        self.r[light_wave_index]
-            * (FRAC_1_PI as Float * (self.a + self.b * max_cos * sin_alpha * tan_beta))
+        for (&index, sample) in light_wave_indices.iter().zip(samples_buf.iter_mut()) {
+            *sample = self.r[index] * oren_nayar
+        }
     }
 }

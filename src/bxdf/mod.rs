@@ -209,6 +209,7 @@ pub fn world_to_bxdf(v: Vector3) -> Rotation3 {
     }
 }
 
+#[inline]
 pub fn bxdf_to_world(v: Vector3) -> Rotation3 {
     debug_assert!(is_finite(v));
 
@@ -391,6 +392,25 @@ pub trait BxDF: Send + Sync {
         light_wave_index: usize,
     ) -> Float;
 
+    fn evaluate_light_waves(
+        &self,
+        incident: Vector3,
+        outgoing: Vector3,
+        light_wave_indices: &[usize],
+        samples_buf: &mut [Float],
+    ) {
+        debug_assert!(is_normalized(incident));
+        debug_assert!(is_normalized(outgoing));
+        debug_assert_eq!(light_wave_indices.len(), samples_buf.len());
+
+        light_wave_indices
+            .iter()
+            .enumerate()
+            .for_each(|(i, &index)| {
+                samples_buf[i] = self.evaluate_light_wave(incident, outgoing, index)
+            });
+    }
+
     /// Samples an incident light direction for an outgoing light direction from the given sample
     /// space.
     ///
@@ -409,9 +429,7 @@ pub trait BxDF: Send + Sync {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
 
-        let incident = sample_unit_hemisphere(sample);
-        let incident = flip_if_neg(incident);
-
+        let incident = flip_if_neg(sample_unit_hemisphere(sample));
         let spectrum = self.evaluate(incident, outgoing);
         let pdf = self.pdf(incident, outgoing);
 
@@ -428,13 +446,35 @@ pub trait BxDF: Send + Sync {
         debug_assert!(within_01(sample));
         debug_assert!(light_wave_index < Spectrum::size());
 
-        let incident = sample_unit_hemisphere(sample);
-        let incident = flip_if_neg(incident);
-
-        let light_wave = self.evaluate_light_wave(incident, outgoing, light_wave_index);
+        let incident = flip_if_neg(sample_unit_hemisphere(sample));
+        let lambda = self.evaluate_light_wave(incident, outgoing, light_wave_index);
         let pdf = self.pdf(incident, outgoing);
 
-        Some(BxDFSample::new(light_wave, incident, pdf, self.get_type()))
+        Some(BxDFSample::new(lambda, incident, pdf, self.get_type()))
+    }
+
+    fn sample_light_waves(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        light_wave_indices: &[usize],
+        samples_buf: &mut [Option<BxDFSample<Float>>],
+    ) {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+        debug_assert_eq!(light_wave_indices.len(), samples_buf.len());
+
+        let incident = flip_if_neg(sample_unit_hemisphere(sample));
+
+        let mut lambdas = Vec::with_capacity(light_wave_indices.len());
+        self.evaluate_light_waves(incident, outgoing, light_wave_indices, &mut lambdas);
+
+        let pdf = self.pdf(incident, outgoing);
+        let typ = self.get_type();
+
+        for (i, sample) in samples_buf.iter_mut().enumerate() {
+            *sample = Some(BxDFSample::new(lambdas[i], incident, pdf, typ))
+        }
     }
 
     /// Computes the probability density function (`pdf`) for the pair of directions.

@@ -4,6 +4,7 @@ use geometry::{spherical_to_cartesian_frame_trig, spherical_to_cartesian_trig, C
 use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, TAU};
 use utility::floats::FloatExt;
 
+#[inline]
 pub fn sample_vector_from_angle(
     direction: Vector3,
     sin_theta_max: Float,
@@ -88,6 +89,7 @@ pub fn sample_unit_disk_concentric(sample: Vector2) -> Vector2 {
 ///
 /// # Results
 /// * A point on the unit hemisphere around the `(0, 1, 0)` axis
+#[inline]
 pub fn sample_unit_hemisphere(sample: Vector2) -> Vector3 {
     debug_assert!(within_01(sample));
 
@@ -111,6 +113,7 @@ pub fn sample_unit_hemisphere(sample: Vector2) -> Vector3 {
 ///
 /// # Results
 /// * A point on the unit sphere around `(0, 0, 0)`
+#[inline]
 pub fn sample_unit_sphere(sample: Vector2) -> Vector3 {
     debug_assert!(within_01(sample));
 
@@ -136,6 +139,7 @@ pub fn sample_unit_sphere(sample: Vector2) -> Vector3 {
 ///
 /// # Results
 /// * `Vector3` - A direction in the cone around `(0, 1, 0)`
+#[inline]
 pub fn sample_cone(sample: Vector2, cos_theta_max: Float) -> Vector3 {
     debug_assert!(within_01(sample));
 
@@ -158,6 +162,7 @@ pub fn sample_cone(sample: Vector2, cos_theta_max: Float) -> Vector3 {
 ///
 /// # Results
 // * `Vector3` - A direction in the cone around `frame.e2`
+#[inline]
 pub fn uniform_sample_cone_frame(
     sample: Vector2,
     cos_theta_max: Float,
@@ -179,6 +184,7 @@ pub fn uniform_sample_cone_frame(
 ///
 /// # Results
 /// * `Float` - The pdf
+#[inline]
 pub fn uniform_cone_pdf(cos_theta: Float) -> Float {
     1.0 / (TAU as Float * (1.0 - cos_theta))
 }

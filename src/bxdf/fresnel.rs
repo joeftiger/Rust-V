@@ -18,6 +18,7 @@ pub enum FresnelType {
 }
 
 impl Fresnel for FresnelType {
+    #[inline]
     fn evaluate(&self, cos_i: Float) -> Spectrum {
         match self {
             FresnelType::Dielectric(t) => t.evaluate(cos_i),
@@ -25,9 +26,10 @@ impl Fresnel for FresnelType {
         }
     }
 
+    #[inline]
     fn evaluate_lambda(&self, lambda: Float, cos_i: Float) -> Float {
         match self {
-            FresnelType::Dielectric(t) => t.evaluate_lambda(lambda, cos_i),
+            FresnelType::Dielectric(f) => f.evaluate_lambda(lambda, cos_i),
             FresnelType::NoOp => 1.0,
         }
     }
@@ -43,7 +45,7 @@ impl Fresnel for FresnelType {
 ///
 /// # Returns
 /// * The amount of light reflected
-#[inline(always)]
+#[inline]
 pub fn dielectric_parallel(cos_i: Float, cos_t: Float, eta_i: Float, eta_t: Float) -> Float {
     let it = eta_i * cos_t;
     let ti = eta_t * cos_i;
@@ -61,7 +63,7 @@ pub fn dielectric_parallel(cos_i: Float, cos_t: Float, eta_i: Float, eta_t: Floa
 ///
 /// # Returns
 /// * The amount of light reflected
-#[inline(always)]
+#[inline]
 pub fn dielectric_perpendicular(cos_i: Float, cos_t: Float, eta_i: Float, eta_t: Float) -> Float {
     let tt = eta_t * cos_t;
     let ii = eta_i * cos_i;
@@ -145,6 +147,7 @@ impl Fresnel for FresnelDielectric {
         Spectrum::broadcast(fresnel)
     }
 
+    #[inline]
     fn evaluate_lambda(&self, lambda: Float, cos_i: Float) -> Float {
         fresnel_dielectric(cos_i, self.eta_i.n(lambda), self.eta_t.n(lambda))
     }

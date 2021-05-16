@@ -31,7 +31,7 @@ impl BSDF {
         self.bxdfs.iter().filter(|bxdf| bxdf.is_type(t)).count()
     }
 
-    fn random_matching_bxdf(&self, t: Type, rand: Float) -> Option<&dyn BxDF> {
+    pub fn random_matching_bxdf(&self, t: Type, rand: Float) -> Option<&dyn BxDF> {
         let count = self.num_types(t);
         if count == 0 {
             return None;
@@ -135,6 +135,7 @@ impl BSDF {
         }
     }
 
+    #[inline]
     pub fn sample_light_wave(
         &self,
         normal: Vector3,
@@ -153,7 +154,6 @@ impl BSDF {
 
         if let Some(mut sample) = bxdf.sample_light_wave(outgoing, sample.two_d, light_wave_index) {
             sample.incident = rotation.reversed() * sample.incident;
-
             Some(sample)
         } else {
             None
