@@ -1,5 +1,6 @@
 #![allow(clippy::excessive_precision)]
 
+use color::color_data::{LAMBDA_END, LAMBDA_START};
 use definitions::Float;
 use serde::{Deserialize, Serialize};
 use utility::floats::FloatExt;
@@ -25,6 +26,7 @@ pub enum RefractiveType {
     Water,
     Glass,
     Sapphire,
+    Extreme,
 }
 
 impl RefractiveType {
@@ -40,6 +42,7 @@ impl RefractiveType {
             RefractiveType::Water => 1.3325,
             RefractiveType::Glass => 1.5168,
             RefractiveType::Sapphire => 1.7490,
+            RefractiveType::Extreme => 1.7490 * 10.0,
         }
     }
 
@@ -51,11 +54,10 @@ impl RefractiveType {
     #[inline(always)]
     pub fn k_uniform(&self) -> Option<Float> {
         match self {
-            RefractiveType::Air => None,
-            RefractiveType::Vacuum => None,
             RefractiveType::Water => Some(7.2792e-9),
             RefractiveType::Glass => Some(9.7525e-9),
             RefractiveType::Sapphire => Some(0.020900),
+            _ => None,
         }
     }
 
@@ -66,6 +68,7 @@ impl RefractiveType {
     ///
     /// # Returns
     /// * The corresponding refractive index
+    #[inline]
     pub fn n(&self, lambda: Float) -> Float {
         match self {
             // RefractiveType::AIR => search_and_get(&air::INDEX, &air::N, lambda),
@@ -74,6 +77,7 @@ impl RefractiveType {
             RefractiveType::Water => search_and_lerp(&water::INDEX, &water::N, lambda),
             RefractiveType::Glass => glass::sellmeier_n(lambda),
             RefractiveType::Sapphire => sapphire::sellmeier_n(lambda),
+            RefractiveType::Extreme => Float::lerp_map(LAMBDA_START, LAMBDA_END, 0.1, 10.0, lambda),
         }
     }
 
@@ -87,13 +91,12 @@ impl RefractiveType {
     /// * `None`
     pub fn k(&self, lambda: Float) -> Option<Float> {
         match self {
-            RefractiveType::Air => None,
-            RefractiveType::Vacuum => None,
             RefractiveType::Water => Some(search_and_lerp(&water::INDEX, &water::K, lambda)),
             RefractiveType::Glass => Some(search_and_lerp(&glass::INDEX_K, &glass::K, lambda)),
             RefractiveType::Sapphire => {
                 Some(search_and_lerp(&sapphire::INDEX_K, &sapphire::K, lambda))
             }
+            _ => None,
         }
     }
 }

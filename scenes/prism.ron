@@ -1,218 +1,230 @@
 (
-    bounding_box: (
-        min: (
-            x: -100,
-            y: -5,
-            z: -100,
+    config: (
+        filename: Some("./prism.png"),
+        bounds: None,
+        block_size: (
+            x: 16,
+            y: 16,
         ),
-        max: (
-            x: 100,
-            y: 2,
-            z: 100,
-        ),
+        passes: 10000,
+        threads: None,
     ),
-    objects: [
-        Receiver((
-            geometry: {
-                "Aabb": (
-                    min: (
-                        x: -100,
-                        y: -5,
-                        z: -100,
-                    ),
-                    max: (
-                        x: 100,
-                        y: 0,
-                        z: 100,
-                    ),
-                ),
-            },
-            bsdf: (
-                bxdfs: [
-                    {
-                        "OrenNayar": (
-                            r: (
-                                data: (0.189, 0.255, 0.423, 0.66, 0.811, 0.862, 0.877, 0.884, 0.891, 0.896, 0.899, 0.904, 0.907, 0.909, 0.911, 0.91, 0.911, 0.914, 0.913, 0.916, 0.915, 0.916, 0.914, 0.915, 0.918, 0.919, 0.921, 0.923, 0.924, 0.922, 0.922, 0.925, 0.927, 0.93, 0.93, 0.933),
-                            ),
-                            a: 0.86516786,
-                            b: 0.25882423,
-                        ),
-                    },
-                ],
-            ),
-        )),
-        Receiver((
-            geometry: {
-                "Mesh": (
-                    Vertices: [
-                        // 0: LEFT BACK
-                        (
-                            x: -1,
-                            y: 0.001,
-                            z: -1,
-                        ),
-                        // 1: RIGHT BACK
-                        (
-                            x: 1,
-                            y: 0.001,
-                            z: -1,
-                        ),
-                        // 2: TOP BACK
-                        (
-                            x: 0,
-                            y: 1.7320508075689,
-                            z: -1,
-                        ),
-                        // 3: LEFT FRONT
-                        (
-                            x: -1,
-                            y: 0.001,
-                            z: 1,
-                        ),
-                        // 4: RIGHT FRONT
-                        (
-                            x: 1,
-                            y: 0.001,
-                            z: 1,
-                        ),
-                        // 5: TOP FRONT
-                        (
-                            x: 0,
-                            y: 1.7320508075689,
-                            z: 1,
-                        ),
-                    ],
-                    VertexNormals: [], // Optional, may be omitted
-                    Faces: [
-                        // BACK
-                        (
-                            v: (0, 2, 1),
-                            vn: None,
-                        ),
-                        // FRONT
-                        (
-                            v: (3, 4, 5),
-                            vn: None,
-                        ),
-                        // LEFT BOT
-                        (
-                            v: (0, 3, 2),
-                            vn: None,
-                        ),
-                        // LEFT TOP
-                        (
-                            v: (3, 5, 2),
-                            vn: None,
-                        ),
-                        // RIGHT BOT
-                        (
-                            v: (1, 2, 4),
-                            vn: None,
-                        ),
-                        // RIGHT TOP
-                        (
-                            v: (2, 5, 4),
-                            vn: None,
-                        ),
-                        // BOT LEFT
-                        (
-                            v: (0, 1, 3),
-                            vn: None,
-                        ),
-                        // BOT RIGHT
-                        (
-                            v: (1, 4, 3),
-                            vn: None,
-                        ),
-                    ],
-                    Bounds: (
-                        min: (
-                            x: -1,
-                            y: 0.001,
-                            z: -1,
-                        ),
-                        max: (
-                            x: 1,
-                            y: 1.7320508075689,
-                            z: 1,
-                        ),
-                    ),
-                    ShadingMode: Flat,
-                ),
-            },
-            bsdf: (
-                bxdfs: [
-                    {
-                        "FresnelSpecular": (
-                            r: (
-                                data: (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-                            ),
-                            t: (
-                                data: (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-                            ),
-                            eta_i: Air,
-                            eta_t: Sapphire,
-                            fresnel: (
-                                eta_i: Air,
-                                eta_t: Sapphire,
-                            ),
-                        ),
-                    },
-                ],
-            ),
-        )),
-        Emitter((
-            geometry: {
-                "Sphere": (
-                    center: (
-                        x: -2,
-                        y: 1,
-                        z: 0,
-                    ),
-                    radius: 0.05,
-                ),
-            },
-            bsdf: (
-                bxdfs: [],
-            ),
-            emission: (
-                data: (1.512, 2.04, 3.384, 5.28, 6.488, 6.896, 7.016, 7.072, 7.128, 7.168, 7.192, 7.232, 7.256, 7.272, 7.288, 7.28, 7.288, 7.312, 7.304, 7.328, 7.32, 7.328, 7.312, 7.32, 7.344, 7.352, 7.368, 7.384, 7.392, 7.376, 7.376, 7.4, 7.416, 7.44, 7.44, 7.464),
-            ),
-        )),
-    ],
     camera: {
         "PerspectiveCamera": (
             Sampler: Random,
-            // Position: (
-            //     x: 5,
-            //     y: 5,
-            //     z: 3,
-            // ),
             Position: (
                 x: 0,
-                y: 3,
-                z: 7,
+                y: 8,
+                z: 1,
             ),
+            // Position: (
+            //     x: 0,
+            //     y: 3,
+            //     z: 7,
+            // ),
             Target: (
                 x: 0,
                 y: 0,
                 z: 0,
             ),
-            Up: (
-                x: 0,
-                y: 1,
-                z: 0,
-            ),
             // Up: (
-            //     x: -1,
-            //     y: 0,
+            //     x: 0,
+            //     y: 1,
             //     z: 0,
             // ),
+            Up: (
+                x: 0,
+                y: 0,
+                z: -1,
+            ),
             FovY: 35,
             Resolution: (
-                x: 256,
-                y: 256,
+                x: 512,
+                y: 512,
             ),
         ),
     },
+    integrator: {
+        "SpectralPath": (
+            max_depth: 128,
+            light_wave_samples: 6,
+            spectral_sampler: Hero,
+        ),
+    },
+    sampler: Random,
+    scene: (
+        bounding_box: (
+            min: (
+                x: -100,
+                y: -5,
+                z: -100,
+            ),
+            max: (
+                x: 100,
+                y: 2,
+                z: 100,
+            ),
+        ),
+        objects: [
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -100,
+                            y: -5,
+                            z: -100,
+                        ),
+                        max: (
+                            x: 100,
+                            y: 0,
+                            z: 100,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "OrenNayar": (
+                                r: Color(Grey1),
+                                a: 0.86516786,
+                                b: 0.25882423,
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Receiver((
+                geometry: {
+                    "Mesh": (
+                        Vertices: [
+                            // 0: LEFT BACK
+                            (
+                                x: -1,
+                                y: 0.00001,
+                                z: -1,
+                            ),
+                            // 1: RIGHT BACK
+                            (
+                                x: 1,
+                                y: 0.00001,
+                                z: -1,
+                            ),
+                            // 2: TOP BACK
+                            (
+                                x: 0,
+                                y: 1.7320508075689,
+                                z: -1,
+                            ),
+                            // 3: LEFT FRONT
+                            (
+                                x: -1,
+                                y: 0.00001,
+                                z: 1,
+                            ),
+                            // 4: RIGHT FRONT
+                            (
+                                x: 1,
+                                y: 0.00001,
+                                z: 1,
+                            ),
+                            // 5: TOP FRONT
+                            (
+                                x: 0,
+                                y: 1.7320508075689,
+                                z: 1,
+                            ),
+                        ],
+                        VertexNormals: [], // Optional, may be omitted
+                        Faces: [
+                            // BACK
+                            (
+                                v: (0, 2, 1),
+                                vn: None,
+                            ),
+                            // FRONT
+                            (
+                                v: (3, 4, 5),
+                                vn: None,
+                            ),
+                            // LEFT BOT
+                            (
+                                v: (0, 3, 2),
+                                vn: None,
+                            ),
+                            // LEFT TOP
+                            (
+                                v: (3, 5, 2),
+                                vn: None,
+                            ),
+                            // RIGHT BOT
+                            (
+                                v: (1, 2, 4),
+                                vn: None,
+                            ),
+                            // RIGHT TOP
+                            (
+                                v: (2, 5, 4),
+                                vn: None,
+                            ),
+                            // BOT LEFT
+                            (
+                                v: (0, 1, 3),
+                                vn: None,
+                            ),
+                            // BOT RIGHT
+                            (
+                                v: (1, 4, 3),
+                                vn: None,
+                            ),
+                        ],
+                        Bounds: (
+                            min: (
+                                x: -1,
+                                y: 0.00001,
+                                z: -1,
+                            ),
+                            max: (
+                                x: 1,
+                                y: 1.7320508075689,
+                                z: 1,
+                            ),
+                        ),
+                        ShadingMode: Flat,
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "FresnelSpecular": (
+                                r: Constant(1),
+                                t: Constant(1),
+                                eta_i: Air,
+                                eta_t: Extreme,
+                                fresnel: (
+                                    eta_i: Air,
+                                    eta_t: Extreme,
+                                ),
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Emitter((
+                geometry: {
+                    "Sphere": (
+                        center: (
+                            x: -2,
+                            y: 1,
+                            z: 0,
+                        ),
+                        radius: 0.01,
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [],
+                ),
+                emission: Color(White),
+            )),
+        ],
+    ),
 )

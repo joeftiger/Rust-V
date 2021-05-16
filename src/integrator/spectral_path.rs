@@ -100,12 +100,12 @@ impl SpectralPath {
 #[typetag::serde]
 impl Integrator for SpectralPath {
     fn integrate(&self, pixel: &mut Pixel, scene: &Scene, primary_ray: &Ray, sampler: Sampler) {
-        if let Some(original_intersecton) = scene.intersect(primary_ray) {
+        if let Some(original_intersection) = scene.intersect(primary_ray) {
             let mut buf = vec![0; self.light_wave_samples as usize];
             self.spectral_sampler.fill_samples(&mut buf);
 
             for index in buf {
-                let lambda = self.illumination(scene, &original_intersecton, sampler, index);
+                let lambda = self.illumination(scene, &original_intersection, sampler, index);
                 pixel.add_light_wave(lambda, index);
             }
         } else {
