@@ -44,7 +44,8 @@ impl Integrator for Path {
                     }
                 } else if specular {
                     if let SceneObject::Emitter(e) = &hit.object {
-                        bounce_illum += e.emission; //e.radiance(&outgoing, &normal);
+                        illumination += throughput * e.emission; //e.radiance(&outgoing, &normal);
+                        break;
                     }
                 }
 

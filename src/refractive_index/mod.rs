@@ -42,7 +42,7 @@ impl RefractiveType {
             RefractiveType::Water => 1.3325,
             RefractiveType::Glass => 1.5168,
             RefractiveType::Sapphire => 1.7490,
-            RefractiveType::Extreme => 1.7490 * 10.0,
+            RefractiveType::Extreme => 5.05,
         }
     }
 

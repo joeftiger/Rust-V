@@ -56,7 +56,8 @@ impl SpectralPath {
                 }
             } else if specular {
                 if let SceneObject::Emitter(e) = &hit.object {
-                    bounce_illum += e.emission_light_wave(light_wave_index); //e.radiance(&outgoing, &normal);
+                    illumination += throughput * e.emission_light_wave(light_wave_index); //e.radiance(&outgoing, &normal);
+                    break;
                 }
             }
 

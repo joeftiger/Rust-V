@@ -6,7 +6,7 @@
             x: 16,
             y: 16,
         ),
-        passes: 10000,
+        passes: 100,
         threads: None,
     ),
     camera: {
@@ -29,16 +29,17 @@
             ),
             FovY: 70,
             Resolution: (
-                x: 256,
-                y: 256,
+                x: 2048,
+                y: 2048,
             ),
         ),
     },
     integrator: {
-        "SpectralPath": (
-            max_depth: 32,
-            light_wave_samples: 5,
-            spectral_sampler: Hero,
+        // "SpectralPath": (
+        "Whitted": (
+            max_depth: 64,
+            // light_wave_samples: 5,
+            // spectral_sampler: Hero,
         ),
     },
     sampler: Random,
