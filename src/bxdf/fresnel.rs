@@ -122,8 +122,8 @@ pub trait Fresnel: Send + Sync {
 /// An implementation of `Fresnel` for dielectric materials.
 #[derive(Serialize, Deserialize)]
 pub struct FresnelDielectric {
-    eta_i: RefractiveType,
-    eta_t: RefractiveType,
+    pub eta_i: RefractiveType,
+    pub eta_t: RefractiveType,
 }
 
 impl FresnelDielectric {

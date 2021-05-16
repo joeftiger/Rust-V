@@ -188,7 +188,7 @@ impl BxDF for SpecularTransmission {
     }
 
     fn sample(&self, outgoing: Vector3, _: Vector2) -> Option<BxDFSample<Spectrum>> {
-        let (eta_i, eta_t, normal) = etas(self.eta_i, self.eta_t, outgoing);
+        let (eta_i, eta_t, normal) = etas(self.fresnel.eta_i, self.fresnel.eta_t, outgoing);
 
         refract(outgoing, normal, eta_i.n_uniform() / eta_t.n_uniform()).map(|mut incident| {
             incident.normalize();
@@ -206,7 +206,7 @@ impl BxDF for SpecularTransmission {
         _: Vector2,
         light_wave_index: usize,
     ) -> Option<BxDFSample<Float>> {
-        let (eta_i, eta_t, normal) = etas(self.eta_i, self.eta_t, outgoing);
+        let (eta_i, eta_t, normal) = etas(self.fresnel.eta_i, self.fresnel.eta_t, outgoing);
 
         let light_wave = self.t.as_light_wave(light_wave_index);
 
@@ -228,7 +228,7 @@ impl BxDF for SpecularTransmission {
         light_wave_indices: &[usize],
         samples_buf: &mut [Option<BxDFSample<Float>>],
     ) {
-        let (eta_i, eta_t, normal) = etas(self.eta_i, self.eta_t, outgoing);
+        let (eta_i, eta_t, normal) = etas(self.fresnel.eta_i, self.fresnel.eta_t, outgoing);
 
         let typ = self.get_type();
 
@@ -268,8 +268,6 @@ impl BxDF for SpecularTransmission {
 pub struct FresnelSpecular {
     r: Spectrum,
     t: Spectrum,
-    eta_i: RefractiveType,
-    eta_t: RefractiveType,
     fresnel: FresnelDielectric,
 }
 
@@ -287,13 +285,7 @@ impl FresnelSpecular {
     /// * Self
     pub fn new(r: Spectrum, t: Spectrum, eta_i: RefractiveType, eta_t: RefractiveType) -> Self {
         let fresnel = FresnelDielectric::new(eta_i, eta_t);
-        Self {
-            r,
-            t,
-            eta_i,
-            eta_t,
-            fresnel,
-        }
+        Self { r, t, fresnel }
     }
 }
 
@@ -323,8 +315,8 @@ impl BxDF for FresnelSpecular {
         debug_assert!(within_01(sample));
 
         let cos_outgoing = cos_theta(outgoing);
-        let eta_i_orig = self.eta_i.n_uniform();
-        let eta_t_orig = self.eta_t.n_uniform();
+        let eta_i_orig = self.fresnel.eta_i.n_uniform();
+        let eta_t_orig = self.fresnel.eta_t.n_uniform();
         let f = fresnel_dielectric(cos_outgoing, eta_i_orig, eta_t_orig);
 
         // if entering
@@ -365,8 +357,8 @@ impl BxDF for FresnelSpecular {
 
         let lambda = Spectrum::lambda_of_index(light_wave_index);
 
-        let eta_i_orig = self.eta_i.n(lambda);
-        let eta_t_orig = self.eta_t.n(lambda);
+        let eta_i_orig = self.fresnel.eta_i.n(lambda);
+        let eta_t_orig = self.fresnel.eta_t.n(lambda);
         let f = fresnel_dielectric(cos_outgoing, eta_i_orig, eta_t_orig);
 
         // if entering
@@ -411,8 +403,8 @@ impl BxDF for FresnelSpecular {
         for (&index, buf_sample) in light_wave_indices.iter().zip(samples_buf.iter_mut()) {
             let lambda = Spectrum::lambda_of_index(index);
 
-            let eta_i_orig = self.eta_i.n(lambda);
-            let eta_t_orig = self.eta_t.n(lambda);
+            let eta_i_orig = self.fresnel.eta_i.n(lambda);
+            let eta_t_orig = self.fresnel.eta_t.n(lambda);
             let f = fresnel_dielectric(cos_outgoing, eta_i_orig, eta_t_orig);
 
             // if entering

@@ -26,7 +26,8 @@ pub enum RefractiveType {
     Water,
     Glass,
     Sapphire,
-    Extreme,
+    Extreme5,
+    Extreme10,
 }
 
 impl RefractiveType {
@@ -34,7 +35,7 @@ impl RefractiveType {
     ///
     /// # Returns
     /// * The refractive index
-    #[inline(always)]
+    #[inline]
     pub fn n_uniform(&self) -> Float {
         match self {
             RefractiveType::Air => 1.00029,
@@ -42,7 +43,8 @@ impl RefractiveType {
             RefractiveType::Water => 1.3325,
             RefractiveType::Glass => 1.5168,
             RefractiveType::Sapphire => 1.7490,
-            RefractiveType::Extreme => 5.05,
+            RefractiveType::Extreme5 => 2.55,
+            RefractiveType::Extreme10 => 5.05,
         }
     }
 
@@ -51,7 +53,7 @@ impl RefractiveType {
     /// # Returns
     /// * `Some` extinction coefficient, or
     /// * `None`
-    #[inline(always)]
+    #[inline]
     pub fn k_uniform(&self) -> Option<Float> {
         match self {
             RefractiveType::Water => Some(7.2792e-9),
@@ -77,7 +79,10 @@ impl RefractiveType {
             RefractiveType::Water => search_and_lerp(&water::INDEX, &water::N, lambda),
             RefractiveType::Glass => glass::sellmeier_n(lambda),
             RefractiveType::Sapphire => sapphire::sellmeier_n(lambda),
-            RefractiveType::Extreme => Float::lerp_map(LAMBDA_START, LAMBDA_END, 0.1, 10.0, lambda),
+            RefractiveType::Extreme5 => Float::lerp_map(LAMBDA_START, LAMBDA_END, 0.1, 5.0, lambda),
+            RefractiveType::Extreme10 => {
+                Float::lerp_map(LAMBDA_START, LAMBDA_END, 0.1, 10.0, lambda)
+            }
         }
     }
 
