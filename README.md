@@ -3,19 +3,26 @@ A Rust-written ray tracer for my B.Sc. thesis. \
 The _V_ stands for a ray reflection, and therefore figuratively for ray tracing.
 
 ## *NOTICE*
-As of 2021-03-19 rust **nightly** is required, this is
-
 This project is WIP and actively being worked on.
-
 Some demo scenes are available, but nothing "fancy" as of now.
 
 ## TODO
- - **Spectral types / paths **
- - Scene file parsing
- - More tests
+- Hero integrator
+- Enhanced Hero integrator (continue using paths instead of discarding)
 
 ## Building
+### Submodules
+As we make use of [ultraviolet upstream](https://github.com/termhn/ultraviolet) due to some commits not yet released,
+please run
+```
+git submodule update --init --recursive --remote --merge
+```
+To initialize the needed dependency.
+
 ### Features
+#### `f64`
+Uses `f64` types for higher precision. It might be noticeable for some visuals, but increases the runtime duration.
+
 #### `live-window`
 By passing `--live` as runtime argument, the rendering will open in a window , showing you the progress.
 
