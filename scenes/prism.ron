@@ -14,8 +14,8 @@
             Sampler: Random,
             Position: (
                 x: 0,
-                y: 8,
-                z: 1,
+                y: 4,
+                z: 4,
             ),
             // Position: (
             //     x: 0,
@@ -27,16 +27,16 @@
                 y: 0,
                 z: 0,
             ),
-            // Up: (
-            //     x: 0,
-            //     y: 1,
-            //     z: 0,
-            // ),
             Up: (
                 x: 0,
-                y: 0,
-                z: -1,
+                y: 1,
+                z: 0,
             ),
+            // Up: (
+            //     x: 0,
+            //     y: 0,
+            //     z: -1,
+            // ),
             FovY: 35,
             Resolution: (
                 x: 512,
@@ -198,11 +198,9 @@
                             "FresnelSpecular": (
                                 r: Constant(1),
                                 t: Constant(1),
-                                eta_i: Air,
-                                eta_t: Extreme,
                                 fresnel: (
                                     eta_i: Air,
-                                    eta_t: Extreme,
+                                    eta_t: Extreme5,
                                 ),
                             ),
                         },
@@ -217,7 +215,7 @@
                             y: 1,
                             z: 0,
                         ),
-                        radius: 0.01,
+                        radius: 0.5,
                     ),
                 },
                 bsdf: (

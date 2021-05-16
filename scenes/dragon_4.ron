@@ -35,11 +35,10 @@
         ),
     },
     integrator: {
-        // "SpectralPath": (
-        "Whitted": (
+        "SpectralPath": (
             max_depth: 64,
-            // light_wave_samples: 5,
-            // spectral_sampler: Hero,
+            light_wave_samples: 5,
+            spectral_sampler: Hero,
         ),
     },
     sampler: Random,
@@ -70654,11 +70653,9 @@
                             "FresnelSpecular": (
                                 r: Constant(1),
                                 t: Constant(1),
-                                eta_i: Air,
-                                eta_t: Extreme,
                                 fresnel: (
                                     eta_i: Air,
-                                    eta_t: Extreme,
+                                    eta_t: Extreme5,
                                 ),
                             ),
                         },
