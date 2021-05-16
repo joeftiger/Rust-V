@@ -70655,7 +70655,7 @@
                                 t: Constant(1),
                                 fresnel: (
                                     eta_i: Air,
-                                    eta_t: Extreme5,
+                                    eta_t: Linear5,
                                 ),
                             ),
                         },

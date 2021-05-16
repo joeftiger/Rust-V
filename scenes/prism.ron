@@ -7,21 +7,16 @@
             y: 16,
         ),
         passes: 10000,
-        threads: None,
+        threads: Some(4),
     ),
     camera: {
         "PerspectiveCamera": (
             Sampler: Random,
             Position: (
                 x: 0,
-                y: 4,
-                z: 4,
+                y: 5,
+                z: 5,
             ),
-            // Position: (
-            //     x: 0,
-            //     y: 3,
-            //     z: 7,
-            // ),
             Target: (
                 x: 0,
                 y: 0,
@@ -32,11 +27,6 @@
                 y: 1,
                 z: 0,
             ),
-            // Up: (
-            //     x: 0,
-            //     y: 0,
-            //     z: -1,
-            // ),
             FovY: 35,
             Resolution: (
                 x: 512,
@@ -200,7 +190,7 @@
                                 t: Constant(1),
                                 fresnel: (
                                     eta_i: Air,
-                                    eta_t: Extreme5,
+                                    eta_t: Linear10,
                                 ),
                             ),
                         },
