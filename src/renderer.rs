@@ -192,7 +192,7 @@ impl Renderer {
 
             let handle = thread::Builder::new()
                 .name(format!("Render thread {}", i))
-                .stack_size(16 * 1024 * 1024)
+                .stack_size(32 * 1024 * 1024)
                 .spawn(move || loop {
                     if this_should_stop.load(Ordering::Relaxed) {
                         break;
