@@ -3,23 +3,23 @@
         filename: Some("./prism.png"),
         bounds: None,
         block_size: (
-            x: 16,
-            y: 16,
+            x: 8,
+            y: 8,
         ),
-        passes: 10000,
-        threads: Some(4),
+        passes: 1000000,
+        threads: None,
     ),
     camera: {
         "PerspectiveCamera": (
             Sampler: Random,
             Position: (
                 x: 0,
-                y: 5,
-                z: 5,
+                y: 4,
+                z: 4,
             ),
             Target: (
                 x: 0,
-                y: 0,
+                y: 0.5,
                 z: 0,
             ),
             Up: (
@@ -27,16 +27,17 @@
                 y: 1,
                 z: 0,
             ),
-            FovY: 35,
+            FovY: 25,
+            // FovY: 5,
             Resolution: (
                 x: 512,
-                y: 512,
+                y: 128,
             ),
         ),
     },
     integrator: {
         "SpectralPath": (
-            max_depth: 128,
+            max_depth: 16,
             light_wave_samples: 6,
             spectral_sampler: Hero,
         ),
@@ -56,6 +57,7 @@
             ),
         ),
         objects: [
+            // Floor
             Receiver((
                 geometry: {
                     "Aabb": (
@@ -74,15 +76,40 @@
                 bsdf: (
                     bxdfs: [
                         {
-                            "OrenNayar": (
-                                r: Color(Grey1),
-                                a: 0.86516786,
-                                b: 0.25882423,
+                            "LambertianReflection": (
+                                r: Constant(1),
                             ),
                         },
                     ],
                 ),
             )),
+            // Reflection Wall
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: 3,
+                            y: 0,
+                            z: -1,
+                        ),
+                        max: (
+                            x: 3.1,
+                            y: 2,
+                            z: 1,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "LambertianReflection": (
+                                r: Constant(1),
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            // Prism
             Receiver((
                 geometry: {
                     "Mesh": (
@@ -95,7 +122,7 @@
                             ),
                             // 1: RIGHT BACK
                             (
-                                x: 1,
+                                x: 0.1,
                                 y: 0.00001,
                                 z: -1,
                             ),
@@ -124,7 +151,7 @@
                                 z: 1,
                             ),
                         ],
-                        VertexNormals: [], // Optional, may be omitted
+                        //VertexNormals: [], // Optional, may be omitted
                         Faces: [
                             // BACK
                             (
@@ -185,14 +212,21 @@
                 bsdf: (
                     bxdfs: [
                         {
-                            "FresnelSpecular": (
-                                r: Constant(1),
+                            // "FresnelSpecular": (
+                            //     r: Constant(1),
+                            //     t: Constant(1),
+                            //     fresnel: (
+                            //         eta_i: Air,
+                            //         eta_t: Sapphire,
+                            //     ),
+                            // ),
+                            "SpecularTransmission": (
                                 t: Constant(1),
                                 fresnel: (
                                     eta_i: Air,
-                                    eta_t: Linear10,
+                                    eta_t: Glass,
                                 ),
-                            ),
+                            )
                         },
                     ],
                 ),
@@ -201,17 +235,98 @@
                 geometry: {
                     "Sphere": (
                         center: (
-                            x: -2,
+                            x: -1.5,
                             y: 1,
                             z: 0,
                         ),
-                        radius: 0.5,
+                        radius: 0.05,
                     ),
                 },
                 bsdf: (
                     bxdfs: [],
                 ),
-                emission: Color(White),
+                // emission: Color(White),
+                emission: Constant(10000),
+            )),
+            // Light Block Bottom
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -1.01,
+                            y: 0,
+                            z: -100,
+                        ),
+                        max: (
+                            x: -1,
+                            y: 0.995,
+                            z: 100,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [],
+                ),
+            )),
+            // Light Block Top
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -1.01,
+                            y: 1.005,
+                            z: -100,
+                        ),
+                        max: (
+                            x: -1,
+                            y: 2,
+                            z: 100,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [],
+                ),
+            )),
+            // Light Block Left
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -1.01,
+                            y: 0.995,
+                            z: -100,
+                        ),
+                        max: (
+                            x: -1,
+                            y: 1.005,
+                            z: -0.025,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [],
+                ),
+            )),
+            // Light Block Right
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -1.01,
+                            y: 0.995,
+                            z: 0.025,
+                        ),
+                        max: (
+                            x: -1,
+                            y: 1.005,
+                            z: 100,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [],
+                ),
             )),
         ],
     ),
