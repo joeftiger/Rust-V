@@ -139,8 +139,6 @@ impl BxDF for SpecularReflection {
 #[derive(Serialize, Deserialize)]
 pub struct SpecularTransmission {
     t: Spectrum,
-    eta_i: RefractiveType,
-    eta_t: RefractiveType,
     fresnel: FresnelDielectric,
 }
 
@@ -157,12 +155,7 @@ impl SpecularTransmission {
     /// * Self
     pub fn new(t: Spectrum, eta_i: RefractiveType, eta_t: RefractiveType) -> Self {
         let fresnel = FresnelDielectric::new(eta_i, eta_t);
-        Self {
-            t,
-            eta_i,
-            eta_t,
-            fresnel,
-        }
+        Self { t, fresnel }
     }
 }
 
