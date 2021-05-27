@@ -11,7 +11,7 @@ color = { path = "../color" }
 geometry = { path = "../geometry" }
 #utility = { path = "../utility" }
 rust-v = { path = ".." }
-ultraviolet = { git = "https://github.com/termhn/ultraviolet", branch = "main" }
+ultraviolet = { version = "0.8.1", branch = "main" }
 fastrand = "1.4.1"
 ron = "0.6.4"
 definitions = { path = "../definitions" }
