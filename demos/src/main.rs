@@ -1,10 +1,8 @@
 #[allow(unused_imports)]
 use crate::demo_scenes::{CornellScene, Demo, PrismScene};
-use color::{AsColor, Color, Colors, Spectrum, Srgb, Xyz};
-use ron::ser::{to_string_pretty, PrettyConfig};
-use show_image::event::VirtualKeyCode;
+use color::{Color, Colors, Spectrum, Srgb, Xyz};
+
 use show_image::{create_window, event, ImageInfo, ImageView, WindowOptions};
-use ultraviolet::UVec2;
 
 #[cfg(not(feature = "f64"))]
 type Float = f32;

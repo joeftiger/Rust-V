@@ -2,7 +2,7 @@
 #![allow(unused_variables)]
 
 use crate::demo_scenes::{Demo, Float, Vector3, FOVY};
-use color::{AsColor, Color, Colors};
+use color::{Color, Colors};
 use geometry::{Aabb, Point, Sphere};
 use rust_v::bxdf::{
     FresnelType, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,

@@ -8,12 +8,12 @@ use ultraviolet::UVec2;
 pub use cornell::CornellScene;
 pub use debug::DebugScene;
 pub use prism::PrismScene;
-use rust_v::camera::PerspectiveCamera;
+
 use rust_v::config::Config;
 use rust_v::integrator::{Integrator, Whitted};
 use rust_v::samplers::Sampler;
 use rust_v::scene::Scene;
-use rust_v::sensor::bounds::UBounds2;
+
 use rust_v::serialization::Serialization;
 pub use spheres::SphereScene;
 use std::sync::Arc;

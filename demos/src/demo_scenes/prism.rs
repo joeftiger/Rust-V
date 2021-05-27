@@ -1,14 +1,14 @@
 #![allow(dead_code)]
 use crate::demo_scenes::{Demo, Vector3, FOVY, SIGMA};
 use crate::*;
-use color::{AsColor, Color, Colors};
+use color::{Color, Colors};
 use geometry::{Aabb, Boundable, Cylinder, Mesh, Point, ShadingMode, Sphere};
 use rust_v::bxdf::{FresnelSpecular, LambertianReflection, OrenNayar, BSDF};
 use rust_v::camera::{Camera, PerspectiveCamera};
 use rust_v::objects::{Emitter, Receiver, SceneObject};
 use rust_v::refractive_index::RefractiveType;
 use rust_v::samplers::camera::CameraSampler;
-use rust_v::scene::Scene;
+
 use rust_v::serialization::Serialization;
 use rust_v::Spectrum;
 #[cfg(not(feature = "f64"))]

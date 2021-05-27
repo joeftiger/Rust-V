@@ -11,7 +11,7 @@ use rust_v::camera::{Camera, PerspectiveCamera};
 use rust_v::objects::{Emitter, Receiver, SceneObject};
 use rust_v::refractive_index::RefractiveType;
 use rust_v::samplers::camera::CameraSampler;
-use rust_v::scene::Scene;
+
 use rust_v::serialization::Serialization;
 use rust_v::Spectrum;
 use std::sync::Arc;
