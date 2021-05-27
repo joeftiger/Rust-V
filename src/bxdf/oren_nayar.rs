@@ -1,7 +1,6 @@
 use crate::bxdf::{cos_phi, cos_theta, sin_phi, sin_theta, BxDF, Type};
 use crate::debug_utils::is_normalized;
-use crate::Spectrum;
-use definitions::{Float, Vector3};
+use crate::*;
 use serde::{Deserialize, Serialize};
 #[cfg(not(feature = "f64"))]
 use std::f32::consts::FRAC_1_PI;

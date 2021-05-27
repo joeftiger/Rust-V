@@ -1,5 +1,5 @@
 use crate::floats::FloatExt;
-use definitions::Float;
+use crate::*;
 use std::f64::consts::PI;
 
 /// Solves a quadratic equation, handling generics.

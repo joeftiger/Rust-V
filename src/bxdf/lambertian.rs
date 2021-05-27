@@ -1,6 +1,5 @@
 use crate::bxdf::{BxDF, Type};
-use crate::Spectrum;
-use definitions::{Float, Vector3};
+use crate::*;
 use serde::{Deserialize, Serialize};
 #[cfg(not(feature = "f64"))]
 use std::f32::consts::FRAC_1_PI;

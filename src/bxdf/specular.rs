@@ -7,9 +7,9 @@ use crate::bxdf::{
 };
 use crate::debug_utils::{is_normalized, within_01};
 use crate::refractive_index::RefractiveType;
-use crate::Spectrum;
+use crate::*;
 use color::Color;
-use definitions::{Float, Vector2, Vector3};
+
 use serde::{Deserialize, Serialize};
 
 #[inline]

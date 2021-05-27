@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 
-use crate::demo_scenes::{Demo, FOVY, SIGMA};
+use crate::demo_scenes::{Demo, Float, Vector3, FOVY, SIGMA};
 use color::{AsColor, Color, Colors};
-use definitions::{Float, Rotation3, Vector3};
 use geometry::{Aabb, BiconvexLens, Boundable, Bubble, Mesh, ShadingMode, Sphere};
 use rust_v::bxdf::{FresnelSpecular, OrenNayar, BSDF};
 use rust_v::camera::{Camera, PerspectiveCamera};
@@ -12,7 +11,6 @@ use rust_v::samplers::camera::CameraSampler;
 use rust_v::scene::Scene;
 use rust_v::serialization::Serialization;
 use rust_v::Spectrum;
-use std::f64::consts::{FRAC_PI_2, PI};
 use std::sync::Arc;
 use ultraviolet::UVec2;
 

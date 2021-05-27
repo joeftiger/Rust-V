@@ -2,9 +2,9 @@ use crate::bxdf::BSDF;
 
 use crate::debug_utils::{is_finite, is_normalized, within_01};
 use crate::scene::{Scene, SceneIntersection};
-use crate::Spectrum;
+use crate::*;
 use color::Color;
-use definitions::{Float, Vector2, Vector3};
+
 use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 use serde::{Deserialize, Serialize};
 use utility::floats::FloatExt;

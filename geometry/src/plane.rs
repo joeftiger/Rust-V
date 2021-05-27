@@ -1,6 +1,6 @@
 use crate::debug_util::is_normalized;
+use crate::*;
 use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
-use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
 use utility::floats::FloatExt;
 

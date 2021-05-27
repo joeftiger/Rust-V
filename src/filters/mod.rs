@@ -3,14 +3,13 @@ mod gaussian_filter;
 mod lanczos_sinc_filter;
 mod mitchell_filter;
 mod triangle_filter;
+use crate::*;
 
 pub use box_filter::*;
 pub use gaussian_filter::*;
 pub use lanczos_sinc_filter::*;
 pub use mitchell_filter::*;
 pub use triangle_filter::*;
-
-use definitions::{Float, Vector2};
 
 #[typetag::serde]
 pub trait Filter {

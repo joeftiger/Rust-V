@@ -5,7 +5,7 @@
 //! 2021-02-21.
 //! * Sellmeier data taken from the paper [Linear refractive index and absorption measurements of nonlinear optical liquids in the visible and near-infrared spectral region](https://d-nb.info/102770462X/34) on 2021-02-21.
 
-use definitions::Float;
+use crate::Float;
 
 /// Computes the refractive index of **air** according to the Sellmeier equation.
 ///

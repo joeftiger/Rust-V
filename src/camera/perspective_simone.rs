@@ -1,6 +1,7 @@
 use crate::camera::Camera;
 use crate::samplers::camera::CameraSampler;
-use definitions::{Float, Matrix4, Vector2, Vector3};
+use crate::*;
+
 use geometry::Ray;
 use serde::{Deserialize, Serialize};
 use ultraviolet::UVec2;

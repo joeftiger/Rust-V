@@ -1,4 +1,4 @@
-use definitions::Float;
+use crate::*;
 
 #[derive(Clone, PartialEq)]
 pub enum Plane {

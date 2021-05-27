@@ -1,7 +1,7 @@
 use crate::camera::Camera;
 use crate::debug_utils::{is_finite, is_normalized};
 use crate::samplers::camera::CameraSampler;
-use definitions::{Float, Vector3};
+use crate::{Float, Vector3};
 use geometry::Ray;
 use serde::de::{Error, MapAccess, Visitor};
 use serde::ser::SerializeStruct;

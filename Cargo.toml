@@ -1,6 +1,6 @@
 [workspace]
-members = [ "color", "demos", "geometry", "utility", "definitions" ]
-default-members = [ "color", "demos", "geometry", "utility", "definitions" ]
+members = [ "color", "demos", "geometry", "utility" ]
+default-members = [ "color", "demos", "geometry", "utility" ]
 
 [package]
 name = "rust-v"
@@ -27,7 +27,7 @@ num_cpus = "1.13.0"
 show-image = { version = "0.8.4", features = ["image", "save"], optional = true }
 # linear algebra
 #ultraviolet = { version = "", features= ["int", "serde"] }
-ultraviolet = { version = "0.8.1", branch = "main", features= ["int", "serde"] }
+ultraviolet = { version = "0.8.1", features= ["int", "serde"] }
 
 # De-/Serialization
 serde = { version = "1.0.126", features = ["derive", "rc"] }
@@ -35,7 +35,6 @@ typetag = "0.1.7"
 ron = "0.6.4"
 
 color = { path = "./color" }
-definitions = { path = "./definitions" }
 geometry = { path = "./geometry" }
 utility = { path = "./utility" }
 
@@ -47,7 +46,7 @@ name = "refractive_index"
 harness = false
 
 [features]
-f64 = ["ultraviolet/f64", "color/f64", "definitions/f64", "geometry/f64", "utility/f64"]
+f64 = ["ultraviolet/f64", "color/f64", "geometry/f64", "utility/f64"]
 
 [profile.release]
 codegen-units = 1

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use definitions::{Float, Vector3};
+use crate::*;
 use utility::floats::FloatExt;
 
 #[inline]

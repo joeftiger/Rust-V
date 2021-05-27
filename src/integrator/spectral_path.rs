@@ -8,7 +8,7 @@ use crate::samplers::spectral_samplers::SpectralSampler;
 use crate::samplers::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::sensor::pixel::Pixel;
-use definitions::Float;
+use crate::Float;
 use geometry::{offset_ray_towards, Ray};
 use serde::{Deserialize, Serialize};
 

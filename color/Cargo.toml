@@ -13,7 +13,6 @@ serde = { version = "1.0.126", features = ["derive"] }
 serde-big-array = "0.3.2"
 
 utility = { path = "../utility" }
-definitions = { path = "../definitions" }
 
 [features]
-f64 = ["definitions/f64", "utility/f64"]
+f64 = ["utility/f64"]

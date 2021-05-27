@@ -6,7 +6,7 @@
 //! * Sellmeier data taken from [here](https://en.wikipedia.org/wiki/Sellmeier_equation) on
 //! 2021-02-21.
 
-use definitions::Float;
+use crate::Float;
 
 /// Computes the refractive index of **glass** according to the Sellmeier equation.
 ///

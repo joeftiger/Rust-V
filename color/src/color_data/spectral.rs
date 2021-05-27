@@ -1,5 +1,5 @@
 #![allow(clippy::excessive_precision)]
-use definitions::Float;
+use crate::Float;
 
 pub static DARK_SKIN: [Float; 36] = [
     0.0547457766666667,

@@ -2,8 +2,8 @@ use crate::debug_util::is_finite;
 use crate::ray::Ray;
 #[cfg(test)]
 use crate::UNIT_VECTORS;
+use crate::*;
 use crate::{Aabb, Boundable, Container, Geometry, Intersectable, Intersection};
-use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
 use utility::math::solve_quadratic;
 

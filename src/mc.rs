@@ -1,5 +1,6 @@
 use crate::debug_utils::within_01;
-use definitions::{Float, Vector2, Vector3};
+
+use crate::*;
 use geometry::{spherical_to_cartesian_frame_trig, spherical_to_cartesian_trig, CoordinateSystem};
 use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, TAU};
 use utility::floats::FloatExt;

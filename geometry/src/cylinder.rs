@@ -1,6 +1,6 @@
 use crate::debug_util::is_finite;
+use crate::*;
 use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
-use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
 use utility::math::solve_quadratic;
 

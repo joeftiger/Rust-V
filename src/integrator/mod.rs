@@ -31,9 +31,9 @@ use crate::bxdf::{Type, BSDF};
 use crate::samplers::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::sensor::pixel::Pixel;
+use crate::Float;
 use crate::Spectrum;
 use color::Color;
-use definitions::Float;
 use geometry::Ray;
 
 /// An integrator to calculate the color of a pixel / ray.

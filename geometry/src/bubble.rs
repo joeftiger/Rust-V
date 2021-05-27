@@ -1,6 +1,6 @@
 use crate::debug_util::is_finite;
+use crate::*;
 use crate::{Aabb, Boundable, Container, Geometry, Intersectable, Intersection, Ray, Sphere};
-use definitions::{Float, Vector3};
 use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone, Serialize, Deserialize)]

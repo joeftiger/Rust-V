@@ -11,12 +11,11 @@ color = { path = "../color" }
 geometry = { path = "../geometry" }
 #utility = { path = "../utility" }
 rust-v = { path = ".." }
-ultraviolet = { version = "0.8.1", branch = "main" }
+ultraviolet = { version = "0.8.1" }
 fastrand = "1.4.1"
 ron = "0.6.4"
-definitions = { path = "../definitions" }
 
 show-image = "0.8.4"
 
 [features]
-f64 = ["color/f64", "geometry/f64", "rust-v/f64", "ultraviolet/f64", "definitions/f64"]
+f64 = ["color/f64", "geometry/f64", "rust-v/f64", "ultraviolet/f64"]

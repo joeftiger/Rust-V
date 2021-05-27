@@ -3,7 +3,7 @@
 // use crate::samplers::spectral_samplers::SpectralSampler;
 // use crate::samplers::Sampler;
 // use crate::scene::{Scene, SceneIntersection};
-// use definitions::{Float, Vector3};
+// use crate::{Float, Vector3};
 // use geometry::offset_ray_towards;
 // use serde::{Deserialize, Serialize};
 //

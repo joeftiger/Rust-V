@@ -1,9 +1,8 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use crate::demo_scenes::{Demo, FOVY};
+use crate::demo_scenes::{Demo, Float, Vector3, FOVY};
 use color::Color;
-use definitions::{Float, Vector3};
 use geometry::{Aabb, Cylinder, Point, Sphere};
 use rust_v::bxdf::{
     FresnelType, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,

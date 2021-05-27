@@ -1,9 +1,8 @@
 #![allow(dead_code)]
 
 use crate::refractive_index::RefractiveType;
-use crate::Spectrum;
+use crate::*;
 use color::Color;
-use definitions::Float;
 use serde::{Deserialize, Serialize};
 use std::mem::swap;
 use utility::floats::FloatExt;

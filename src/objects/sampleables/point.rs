@@ -1,5 +1,6 @@
 use crate::objects::emitter::{Sampleable, SurfaceSample};
-use definitions::{Float, Vector2, Vector3};
+use crate::*;
+
 use geometry::Point;
 
 #[typetag::serde]

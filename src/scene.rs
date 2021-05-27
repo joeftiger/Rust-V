@@ -1,5 +1,5 @@
 use crate::objects::{Emitter, SceneObject};
-use definitions::{Float, Vector3};
+use crate::{Float, Vector3};
 use geometry::bvh::Tree;
 use geometry::{Aabb, Boundable, Intersectable, Intersection, Ray};
 use serde::{Deserialize, Serialize};

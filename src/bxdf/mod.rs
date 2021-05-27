@@ -16,7 +16,7 @@ pub use specular::*;
 use crate::debug_utils::{is_finite, is_normalized, within_01};
 use crate::mc::sample_unit_hemisphere;
 use crate::Spectrum;
-use definitions::{Float, Rotation3, Vector2, Vector3};
+use crate::*;
 use serde::{Deserialize, Serialize};
 use std::f64::consts::{FRAC_1_PI, PI};
 use utility::floats::FloatExt;
