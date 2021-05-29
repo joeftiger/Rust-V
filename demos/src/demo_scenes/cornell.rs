@@ -54,7 +54,7 @@ impl Demo for CornellScene {
         });
 
         // scene.add(create_sphere());
-        scene.add(create_dragon());
+        // scene.add(create_dragon());
         // scene.add(create_biconvex_lens());
         // scene.add(create_bubble());
         scene.add(create_emitter());
@@ -87,7 +87,7 @@ fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
 }
 
 fn create_dragon() -> SceneObject {
-    let mut dragon = Mesh::load("./meshes/dragon_4.obj", ShadingMode::Phong);
+    let mut dragon = Mesh::load("./meshes/dragon_4.obj", ShadingMode::Flat);
 
     // scaling the dragon to (DIMENSION / 1.5)
     let scale = Vector3::broadcast(DIMENSION / 1.5) / dragon.bounds().size();

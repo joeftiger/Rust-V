@@ -1,10 +1,10 @@
 (
     config: (
-        filename: Some("./dragon.png"),
+        filename: None,
         bounds: None,
         block_size: (
-            x: 16,
-            y: 16,
+            x: 8,
+            y: 8,
         ),
         passes: 100,
         threads: None,
@@ -29,16 +29,14 @@
             ),
             FovY: 70,
             Resolution: (
-                x: 2048,
-                y: 2048,
+                x: 512,
+                y: 512,
             ),
         ),
     },
     integrator: {
-        "SpectralPath": (
-            max_depth: 64,
-            light_wave_samples: 5,
-            spectral_sampler: Hero,
+        "Whitted": (
+            max_depth: 8,
         ),
     },
     sampler: Random,
@@ -70644,7 +70642,7 @@
                                 z: 0.5960089,
                             ),
                         ),
-                        ShadingMode: Phong,
+                        ShadingMode: Flat,
                     ),
                 },
                 bsdf: (
@@ -70655,7 +70653,7 @@
                                 t: Constant(1),
                                 fresnel: (
                                     eta_i: Air,
-                                    eta_t: Linear5,
+                                    eta_t: Sapphire,
                                 ),
                             ),
                         },
@@ -70667,10 +70665,10 @@
                     "Sphere": (
                         center: (
                             x: 0,
-                            y: 1.75,
+                            y: 2,
                             z: 0,
                         ),
-                        radius: 0.025,
+                        radius: 0.25,
                     ),
                 },
                 bsdf: (
