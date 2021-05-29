@@ -41,6 +41,7 @@ pub enum SerdeColors {
     #[serde(with = "SerdeBigArray")]
     Spectrum([Float; 36]),
     Color(Colors),
+    MulColor(Float, Colors),
     Constant(Float),
 }
 

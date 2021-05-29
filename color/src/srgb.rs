@@ -14,6 +14,7 @@ impl TryFrom<SerdeColors> for Srgb {
             SerdeColors::Xyz(data) => Xyz::new(data).into(),
             SerdeColors::Spectrum(data) => Spectrum::new(data).into(),
             SerdeColors::Color(c) => Self::from(c),
+            SerdeColors::MulColor(mul, c) => Self::from(c) * mul,
             SerdeColors::Constant(c) => Self::broadcast(c),
         };
 
