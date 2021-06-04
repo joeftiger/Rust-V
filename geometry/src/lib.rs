@@ -14,23 +14,23 @@ mod ray;
 mod sphere;
 
 #[cfg(not(feature = "f64"))]
-type Float = f32;
+pub type Float = f32;
 #[cfg(not(feature = "f64"))]
-type Vector3 = ultraviolet::Vec3;
+pub type Vector3 = ultraviolet::Vec3;
 #[cfg(not(feature = "f64"))]
-type Rotation3 = ultraviolet::Rotor3;
+pub type Rotation3 = ultraviolet::Rotor3;
 #[cfg(not(feature = "f64"))]
-type Matrix3 = ultraviolet::Mat3;
+pub type Matrix3 = ultraviolet::Mat3;
 #[cfg(not(feature = "f64"))]
 use std::f32::consts::{PI, TAU};
 #[cfg(feature = "f64")]
-type Float = f64;
+pub type Float = f64;
 #[cfg(feature = "f64")]
-type Vector3 = ultraviolet::DVec3;
+pub type Vector3 = ultraviolet::DVec3;
 #[cfg(feature = "f64")]
-type Rotation3 = ultraviolet::DRotor3;
+pub type Rotation3 = ultraviolet::DRotor3;
 #[cfg(feature = "f64")]
-type Matrix3 = ultraviolet::DMat3;
+pub type Matrix3 = ultraviolet::DMat3;
 #[cfg(feature = "f64")]
 use std::f64::consts::{PI, TAU};
 
@@ -503,8 +503,8 @@ pub trait Intersectable {
     /// The **intersection normal** always points to the **outside**.
     /// To obtain the normal from inside the object, one can use following
     /// ```rust
-    /// use geometry::{Aabb, Intersectable, Ray};
-    /// use crate::*;
+    /// use geometry::{Aabb, Intersectable, Ray, Vector3};
+    /// use ultraviolet::Vec3;
     ///
     /// let cube = Aabb::default();
     /// let mut ray = Ray::new_fast(Vector3::zero(), Vector3::unit_x());
