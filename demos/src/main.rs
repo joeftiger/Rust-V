@@ -2,10 +2,10 @@
 #![allow(dead_code)]
 
 use crate::demo_scenes::{CornellScene, Demo, PrismScene};
-use color::{Color, Colors, Spectrum, Srgb};
+use color::{Color, Colors, SerdeColors, Spectrum, Srgb};
 
-use show_image::{create_window, event, ImageInfo, ImageView, WindowOptions};
 use ron::ser::{to_string_pretty, PrettyConfig};
+use show_image::{create_window, event, ImageInfo, ImageView, WindowOptions};
 
 #[cfg(not(feature = "f64"))]
 type Float = f32;
@@ -19,13 +19,20 @@ type Rotation3 = ultraviolet::DRotor3;
 mod demo_scenes;
 
 fn main() {
-    let scene = CornellScene::create();
+    let c = SerdeColors::MulColor(4., Colors::White);
+    let serde = to_string_pretty(&c, PrettyConfig::default()).unwrap();
 
-    let serialization =
-        to_string_pretty(&scene, PrettyConfig::default()).expect("Could not serialize to RON");
-
-    std::fs::write("./scenes/cornell.ron", serialization).expect("Could not write to RON file");
+    println!("{}", serde);
 }
+
+// fn main() {
+//     let scene = CornellScene::create();
+//
+//     let serialization =
+//         to_string_pretty(&scene, PrettyConfig::default()).expect("Could not serialize to RON");
+//
+//     std::fs::write("./scenes/cornell.ron", serialization).expect("Could not write to RON file");
+// }
 
 /*#[show_image::main]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

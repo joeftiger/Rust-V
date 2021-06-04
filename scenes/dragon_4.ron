@@ -1,12 +1,12 @@
 (
     config: (
-        filename: None,
+        filename: Some("dragon_path.png"),
         bounds: None,
         block_size: (
-            x: 8,
-            y: 8,
+            x: 16,
+            y: 16,
         ),
-        passes: 100,
+        passes: 50000,
         threads: None,
     ),
     camera: {
@@ -35,8 +35,10 @@
         ),
     },
     integrator: {
-        "Whitted": (
+        "Path": (
             max_depth: 8,
+            // light_wave_samples: 3,
+            // spectral_sampler: Hero,
         ),
     },
     sampler: Random,
@@ -70665,16 +70667,16 @@
                     "Sphere": (
                         center: (
                             x: 0,
-                            y: 2,
+                            y: 1.937,
                             z: 0,
                         ),
-                        radius: 0.25,
+                        radius: 0.0625,
                     ),
                 },
                 bsdf: (
                     bxdfs: [],
                 ),
-                emission: Color(White),
+                emission: MulColor(200, White),
             )),
         ],
     ),

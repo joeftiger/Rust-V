@@ -1,6 +1,6 @@
 (
     config: (
-        filename: None,
+        filename: Some("spectral.png"),
         bounds: None,
         block_size: (
             x: 8,
@@ -35,8 +35,10 @@
         ),
     },
     integrator: {
-        "Whitted": (
+        "Path": (
             max_depth: 8,
+            // light_wave_samples: 3,
+            // spectral_sampler: Hero,
         ),
     },
     sampler: Random,
@@ -194,16 +196,16 @@
                     "Sphere": (
                         center: (
                             x: 0,
-                            y: 2,
+                            y: 0,
                             z: 0,
                         ),
-                        radius: 0.25,
+                        radius: 0.0625,
                     ),
                 },
                 bsdf: (
                     bxdfs: [],
                 ),
-                emission: Color(White),
+                emission: MulColor(100, White),
             )),
         ],
     ),
