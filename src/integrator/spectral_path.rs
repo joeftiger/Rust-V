@@ -79,8 +79,8 @@ impl SpectralPath {
                     specular = typ.is_specular();
 
                     // decrease throughput according to wavelength
-                    for i in 0..illumination.len() {
-                        let lambda = bxdf.evaluate_light_wave(incident, outgoing, i);
+                    for (index, through) in throughput.iter_mut().enumerate() {
+                        let lambda = bxdf.evaluate_light_wave(incident, outgoing, index);
                         if lambda == 0.0 {
                             return;
                         }
@@ -92,7 +92,7 @@ impl SpectralPath {
                             incident.dot(normal).abs()
                         };
 
-                        throughput[i] *= lambda * cos_abs / pdf;
+                        *through *= lambda * cos_abs / pdf;
                     }
 
                     // trace next intersection
