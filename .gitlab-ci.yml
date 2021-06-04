@@ -25,4 +25,3 @@ test:cargo:
   script:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo test --workspace --verbose
-    - cargo test --workspace --verbose --features f64
