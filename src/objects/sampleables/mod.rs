@@ -1,5 +1,6 @@
 use crate::objects::SurfaceSample;
-use definitions::{Float, Vector2, Vector3};
+use crate::*;
+
 use geometry::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
 
 mod point;

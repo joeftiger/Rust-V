@@ -1,6 +1,6 @@
+use crate::Float;
 use crate::Spectrum;
 use color::{Color, IntSpectrum};
-use definitions::Float;
 use ultraviolet::UVec2;
 
 #[derive(Default, Clone)]

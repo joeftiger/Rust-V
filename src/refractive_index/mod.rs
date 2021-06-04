@@ -1,7 +1,7 @@
 #![allow(clippy::excessive_precision)]
 
+use crate::Float;
 use color::color_data::{LAMBDA_END, LAMBDA_START};
-use definitions::Float;
 use serde::{Deserialize, Serialize};
 use utility::floats::FloatExt;
 

@@ -2,7 +2,7 @@
 // needed to skip rustfmt
 #![allow(unused_attributes)]
 
-use definitions::Float;
+use crate::Float;
 
 // @formatter:off
 #[rustfmt::skip]

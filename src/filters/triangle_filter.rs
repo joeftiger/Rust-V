@@ -1,5 +1,6 @@
 use crate::filters::Filter;
-use definitions::{Float, Vector2};
+use crate::*;
+
 use serde::{Deserialize, Serialize};
 use utility::floats::FloatExt;
 

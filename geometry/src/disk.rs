@@ -1,5 +1,5 @@
+use crate::*;
 use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
-use definitions::{Float, Vector3};
 use utility::floats::FloatExt;
 
 pub struct Disk {

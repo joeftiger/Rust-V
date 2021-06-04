@@ -1,17 +1,20 @@
 #![allow(dead_code)]
-use crate::demo_scenes::{Demo, FOVY, SIGMA};
-use color::{AsColor, Color, Colors};
-use definitions::{Float, Rotation3, Vector3};
+use crate::demo_scenes::{Demo, Vector3, FOVY, SIGMA};
+use crate::*;
+use color::{Color, Colors};
 use geometry::{Aabb, Boundable, Cylinder, Mesh, Point, ShadingMode, Sphere};
 use rust_v::bxdf::{FresnelSpecular, LambertianReflection, OrenNayar, BSDF};
 use rust_v::camera::{Camera, PerspectiveCamera};
 use rust_v::objects::{Emitter, Receiver, SceneObject};
 use rust_v::refractive_index::RefractiveType;
 use rust_v::samplers::camera::CameraSampler;
-use rust_v::scene::Scene;
+
 use rust_v::serialization::Serialization;
 use rust_v::Spectrum;
-use std::f64::consts::FRAC_PI_2;
+#[cfg(not(feature = "f64"))]
+use std::f32::consts::FRAC_PI_2;
+#[cfg(feature = "f64")]
+use std::f32::consts::FRAC_PI_2;
 use std::sync::Arc;
 use ultraviolet::UVec2;
 
@@ -64,7 +67,7 @@ fn prism() -> SceneObject {
         prism.scale(unit_scale);
     }
     {
-        prism.rotate(Rotation3::from_rotation_yz(-FRAC_PI_2 as Float));
+        prism.rotate(Rotation3::from_rotation_yz(-FRAC_PI_2));
     }
     {
         let center = prism.bounds().center();

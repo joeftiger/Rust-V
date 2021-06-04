@@ -1,4 +1,4 @@
-use definitions::Float;
+use crate::Float;
 
 pub mod spectral;
 pub mod srgb;

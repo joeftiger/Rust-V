@@ -1,18 +1,16 @@
 #![allow(dead_code)]
 
-use crate::demo_scenes::{Demo, FOVY, SIGMA};
-use color::{AsColor, Color, Colors};
-use definitions::{Float, Rotation3, Vector3};
+use crate::demo_scenes::{Demo, Float, Vector3, FOVY, SIGMA};
+use color::{Color, Colors};
 use geometry::{Aabb, BiconvexLens, Boundable, Bubble, Mesh, ShadingMode, Sphere};
 use rust_v::bxdf::{FresnelSpecular, OrenNayar, BSDF};
 use rust_v::camera::{Camera, PerspectiveCamera};
 use rust_v::objects::{Emitter, Receiver, SceneObject};
 use rust_v::refractive_index::RefractiveType;
 use rust_v::samplers::camera::CameraSampler;
-use rust_v::scene::Scene;
+
 use rust_v::serialization::Serialization;
 use rust_v::Spectrum;
-use std::f64::consts::{FRAC_PI_2, PI};
 use std::sync::Arc;
 use ultraviolet::UVec2;
 
@@ -56,7 +54,7 @@ impl Demo for CornellScene {
         });
 
         // scene.add(create_sphere());
-        scene.add(create_dragon());
+        // scene.add(create_dragon());
         // scene.add(create_biconvex_lens());
         // scene.add(create_bubble());
         scene.add(create_emitter());
@@ -89,7 +87,7 @@ fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
 }
 
 fn create_dragon() -> SceneObject {
-    let mut dragon = Mesh::load("./meshes/dragon_4.obj", ShadingMode::Phong);
+    let mut dragon = Mesh::load("./meshes/dragon_4.obj", ShadingMode::Flat);
 
     // scaling the dragon to (DIMENSION / 1.5)
     let scale = Vector3::broadcast(DIMENSION / 1.5) / dragon.bounds().size();

@@ -3,7 +3,7 @@
 //! # Resources
 //! Data taken from [here](https://refractiveindex.info/?shelf=3d&book=liquids&page=water) on 2021-02-21.
 
-use definitions::Float;
+use crate::Float;
 
 pub static INDEX: [Float; 169] = {
     [

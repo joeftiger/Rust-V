@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 
+use crate::*;
 use utility::floats::FloatExt;
-
-use definitions::{Float, Vector2, Vector3};
 
 #[inline(always)]
 pub fn is_finite(v: Vector3) -> bool {

@@ -1,9 +1,8 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use crate::demo_scenes::{Demo, FOVY};
+use crate::demo_scenes::{Demo, Float, Vector3, FOVY};
 use color::Color;
-use definitions::{Float, Vector3};
 use geometry::{Aabb, Cylinder, Point, Sphere};
 use rust_v::bxdf::{
     FresnelType, LambertianReflection, SpecularReflection, SpecularTransmission, BSDF,
@@ -12,7 +11,7 @@ use rust_v::camera::{Camera, PerspectiveCamera};
 use rust_v::objects::{Emitter, Receiver, SceneObject};
 use rust_v::refractive_index::RefractiveType;
 use rust_v::samplers::camera::CameraSampler;
-use rust_v::scene::Scene;
+
 use rust_v::serialization::Serialization;
 use rust_v::Spectrum;
 use std::sync::Arc;

@@ -25,3 +25,20 @@ pub mod serialization;
 mod window;
 
 pub type Spectrum = color::Spectrum;
+
+#[cfg(not(feature = "f64"))]
+type Float = f32;
+#[cfg(not(feature = "f64"))]
+type Vector2 = ultraviolet::Vec2;
+#[cfg(not(feature = "f64"))]
+type Vector3 = ultraviolet::Vec3;
+#[cfg(not(feature = "f64"))]
+type Rotation3 = ultraviolet::Rotor3;
+#[cfg(feature = "f64")]
+type Float = f64;
+#[cfg(feature = "f64")]
+type Vector2 = ultraviolet::DVec2;
+#[cfg(feature = "f64")]
+type Vector3 = ultraviolet::DVec3;
+#[cfg(feature = "f64")]
+type Rotation3 = ultraviolet::DRotor3;

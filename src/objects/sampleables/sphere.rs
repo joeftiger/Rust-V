@@ -2,8 +2,12 @@ use crate::debug_utils::{is_finite, within_01};
 use crate::mc::{sample_unit_sphere, uniform_cone_pdf};
 use crate::objects::emitter::SurfaceSample;
 use crate::objects::Sampleable;
-use definitions::{Float, Vector2, Vector3};
+use crate::*;
+
 use geometry::{spherical_to_cartesian_frame_trig, CoordinateSystem, Sphere};
+#[cfg(not(feature = "f64"))]
+use std::f32::consts::TAU;
+#[cfg(feature = "f64")]
 use std::f64::consts::TAU;
 use utility::floats::FloatExt;
 

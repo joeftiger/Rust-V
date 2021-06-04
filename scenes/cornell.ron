@@ -1,0 +1,212 @@
+(
+    config: (
+        filename: Some("spectral.png"),
+        bounds: None,
+        block_size: (
+            x: 8,
+            y: 8,
+        ),
+        passes: 1000,
+        threads: None,
+    ),
+    camera: {
+        "PerspectiveCamera": (
+            Sampler: Random,
+            Position: (
+                x: 0,
+                y: 0,
+                z: 4,
+            ),
+            Target: (
+                x: 0,
+                y: 0,
+                z: 0,
+            ),
+            Up: (
+                x: 0,
+                y: 1,
+                z: 0,
+            ),
+            FovY: 70,
+            Resolution: (
+                x: 512,
+                y: 512,
+            ),
+        ),
+    },
+    integrator: {
+        "Path": (
+            max_depth: 8,
+            // light_wave_samples: 3,
+            // spectral_sampler: Hero,
+        ),
+    },
+    sampler: Random,
+    scene: (
+        bounding_box: (
+            min: (
+                x: -2.08,
+                y: -2.08,
+                z: -2.08,
+            ),
+            max: (
+                x: 2.08,
+                y: 2.25,
+                z: 2,
+            ),
+        ),
+        objects: [
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -2.08,
+                            y: 2,
+                            z: -2.08,
+                        ),
+                        max: (
+                            x: 2.08,
+                            y: 2.08,
+                            z: 2,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "OrenNayar": (
+                                r: Color(White),
+                                a: 0.86516786,
+                                b: 0.25882423,
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -2.08,
+                            y: -2.08,
+                            z: -2.08,
+                        ),
+                        max: (
+                            x: -2,
+                            y: 2.08,
+                            z: 2,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "OrenNayar": (
+                                r: Color(Red),
+                                a: 0.86516786,
+                                b: 0.25882423,
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -2.08,
+                            y: -2.08,
+                            z: -2.08,
+                        ),
+                        max: (
+                            x: 2.08,
+                            y: 2.08,
+                            z: -2,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "OrenNayar": (
+                                r: Color(White),
+                                a: 0.86516786,
+                                b: 0.25882423,
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: 2,
+                            y: -2.08,
+                            z: -2.08,
+                        ),
+                        max: (
+                            x: 2.08,
+                            y: 2.08,
+                            z: 2,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "OrenNayar": (
+                                r: Color(Green),
+                                a: 0.86516786,
+                                b: 0.25882423,
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -2.08,
+                            y: -2.08,
+                            z: -2.08,
+                        ),
+                        max: (
+                            x: 2.08,
+                            y: -2,
+                            z: 2,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "OrenNayar": (
+                                r: Color(White),
+                                a: 0.86516786,
+                                b: 0.25882423,
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Emitter((
+                geometry: {
+                    "Sphere": (
+                        center: (
+                            x: 0,
+                            y: 0,
+                            z: 0,
+                        ),
+                        radius: 0.0625,
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [],
+                ),
+                emission: MulColor(100, White),
+            )),
+        ],
+    ),
+)

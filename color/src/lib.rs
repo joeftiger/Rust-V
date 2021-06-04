@@ -7,7 +7,6 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_big_array::big_array;
 
 use color_data::{LAMBDA_END, LAMBDA_START};
-use definitions::Float;
 pub use int_spectrum::*;
 pub use spectrum::*;
 pub use srgb::*;
@@ -24,6 +23,11 @@ mod spectrum;
 mod srgb;
 mod xyz;
 
+#[cfg(not(feature = "f64"))]
+type Float = f32;
+#[cfg(feature = "f64")]
+type Float = f64;
+
 big_array! {
     SerdeBigArray;
     3, LAMBDA_NUM
@@ -37,6 +41,7 @@ pub enum SerdeColors {
     #[serde(with = "SerdeBigArray")]
     Spectrum([Float; 36]),
     Color(Colors),
+    MulColor(Float, Colors),
     Constant(Float),
 }
 

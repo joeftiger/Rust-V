@@ -1,5 +1,6 @@
 use crate::mc::{sample_unit_disk, sample_unit_disk_concentric};
-use definitions::Vector2;
+use crate::*;
+
 #[cfg(not(feature = "f64"))]
 use fastrand::f32 as rand;
 #[cfg(feature = "f64")]

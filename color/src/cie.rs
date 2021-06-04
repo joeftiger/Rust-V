@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 #![allow(clippy::excessive_precision)]
 
-use crate::Xyz;
-use definitions::Float;
+use crate::*;
 
 pub const CIE_SAMPLES: usize = 471;
 pub const CIE_Y_INTEGRAL: Float = 0.106856895;

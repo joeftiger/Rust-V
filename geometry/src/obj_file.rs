@@ -1,6 +1,6 @@
 use crate::debug_util::is_normalized;
 use crate::Face;
-use definitions::Vector3;
+use crate::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;

@@ -11,12 +11,15 @@ impl TryFrom<SerdeColors> for Spectrum {
     type Error = ();
 
     fn try_from(value: SerdeColors) -> Result<Self, Self::Error> {
-        match value {
-            SerdeColors::Spectrum(data) => Ok(Spectrum::new(data)),
-            SerdeColors::Color(c) => Ok(Self::from(c)),
-            SerdeColors::Constant(c) => Ok(Self::broadcast(c)),
-            _ => Err(()),
-        }
+        let spectrum = match value {
+            SerdeColors::Spectrum(data) => Spectrum::new(data),
+            SerdeColors::Color(c) => Self::from(c),
+            SerdeColors::MulColor(mul, c) => Self::from(c) * mul,
+            SerdeColors::Constant(c) => Self::broadcast(c),
+            _ => return Err(()),
+        };
+
+        Ok(spectrum)
     }
 }
 

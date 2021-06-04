@@ -7,17 +7,25 @@ use ultraviolet::UVec2;
 
 pub use cornell::CornellScene;
 pub use debug::DebugScene;
-use definitions::Float;
 pub use prism::PrismScene;
-use rust_v::camera::PerspectiveCamera;
+
 use rust_v::config::Config;
 use rust_v::integrator::{Integrator, Whitted};
 use rust_v::samplers::Sampler;
 use rust_v::scene::Scene;
-use rust_v::sensor::bounds::UBounds2;
+
 use rust_v::serialization::Serialization;
 pub use spheres::SphereScene;
 use std::sync::Arc;
+
+#[cfg(not(feature = "f64"))]
+type Float = f32;
+#[cfg(not(feature = "f64"))]
+type Vector3 = ultraviolet::Vec3;
+#[cfg(feature = "f64")]
+type Float = f64;
+#[cfg(feature = "f64")]
+type Vector3 = ultraviolet::DVec3;
 
 pub const SIGMA: Float = 20.0;
 pub const FOVY: Float = 70.0;

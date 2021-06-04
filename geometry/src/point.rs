@@ -1,5 +1,5 @@
+use crate::*;
 use crate::{Aabb, Boundable, Geometry, Intersectable, Intersection, Ray};
-use definitions::Vector3;
 use serde::{Deserialize, Serialize};
 
 /// Represents a point in space.

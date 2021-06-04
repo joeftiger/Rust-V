@@ -1,5 +1,5 @@
+use crate::*;
 use crate::{Aabb, Boundable, Container, Geometry, Intersectable, Intersection, Ray, Sphere};
-use definitions::Vector3;
 use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]

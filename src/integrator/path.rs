@@ -35,8 +35,6 @@ impl Integrator for Path {
                 let normal = hit.normal;
                 let bsdf = hit.object.bsdf();
 
-                let mut bounce_illum = Spectrum::broadcast(0.0);
-
                 if bounce == 0 {
                     if let SceneObject::Emitter(e) = &hit.object {
                         illumination = e.emission; //e.radiance(&outgoing, &normal);
@@ -49,9 +47,7 @@ impl Integrator for Path {
                     }
                 }
 
-                bounce_illum += direct_illumination(scene, sampler, &hit, bsdf);
-
-                illumination += throughput * bounce_illum;
+                illumination += throughput * direct_illumination(scene, sampler, &hit, bsdf);
 
                 let sample = sampler.get_sample();
                 if let Some(bxdf_sample) = bsdf.sample(normal, outgoing, Type::ALL, sample) {

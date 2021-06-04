@@ -1,5 +1,5 @@
 use crate::debug_util::{is_finite, is_normalized};
-use definitions::{Float, Vector3};
+use crate::*;
 use utility::floats::FloatExt;
 
 /// A ray consists of of an origin and a direction.

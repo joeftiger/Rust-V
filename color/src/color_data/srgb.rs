@@ -1,7 +1,7 @@
 #![allow(clippy::excessive_precision)]
 #![allow(unused_attributes)] // needed to skip rustfmt
 
-use definitions::Float;
+use crate::Float;
 
 // @formatter:off
 #[rustfmt::skip]

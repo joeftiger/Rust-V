@@ -7,16 +7,14 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ultraviolet = { git = "https://github.com/termhn/ultraviolet", branch = "main", features= ["serde"] }
+ultraviolet = { version = "0.8.1", features= ["serde"] }
 # de-/serialization
 serde = { version = "1.0.126", features = ["derive"] }
 typetag = "0.1.7"
-
-definitions = { path = "../definitions" }
 
 utility = { path = "../utility" }
 
 [features]
 default = ["watertight-mesh"]
 watertight-mesh = []
-f64 = ["ultraviolet/f64", "definitions/f64", "utility/f64"]
+f64 = ["ultraviolet/f64", "utility/f64"]

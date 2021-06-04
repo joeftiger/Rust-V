@@ -13,6 +13,27 @@ mod point;
 mod ray;
 mod sphere;
 
+#[cfg(not(feature = "f64"))]
+pub type Float = f32;
+#[cfg(not(feature = "f64"))]
+pub type Vector3 = ultraviolet::Vec3;
+#[cfg(not(feature = "f64"))]
+pub type Rotation3 = ultraviolet::Rotor3;
+#[cfg(not(feature = "f64"))]
+pub type Matrix3 = ultraviolet::Mat3;
+#[cfg(not(feature = "f64"))]
+use std::f32::consts::{PI, TAU};
+#[cfg(feature = "f64")]
+pub type Float = f64;
+#[cfg(feature = "f64")]
+pub type Vector3 = ultraviolet::DVec3;
+#[cfg(feature = "f64")]
+pub type Rotation3 = ultraviolet::DRotor3;
+#[cfg(feature = "f64")]
+pub type Matrix3 = ultraviolet::DMat3;
+#[cfg(feature = "f64")]
+use std::f64::consts::{PI, TAU};
+
 pub use plane::*;
 
 use crate::debug_util::{is_finite, is_normalized};
@@ -20,7 +41,6 @@ pub use aabb::*;
 pub use bubble::*;
 pub use composite::*;
 pub use cylinder::*;
-use definitions::{Float, Vector3};
 pub use disk::*;
 pub use lenses::*;
 pub use mesh::*;
@@ -156,16 +176,8 @@ pub fn offset_ray_to(point: Vector3, normal: Vector3, target: Vector3) -> Ray {
 /// # Returns
 /// * The corresponding cartesian vector
 pub fn spherical_to_cartesian_frame(theta: Float, phi: Float, frame: &CoordinateSystem) -> Vector3 {
-    #[cfg(feature = "f64")]
-    {
-        debug_assert!(theta.in_range_incl(0.0, std::f64::consts::TAU));
-        debug_assert!(phi.in_range_incl(0.0, std::f64::consts::PI));
-    }
-    #[cfg(not(feature = "f64"))]
-    {
-        debug_assert!(theta.in_range_incl(0.0, std::f32::consts::TAU));
-        debug_assert!(phi.in_range_incl(0.0, std::f32::consts::PI));
-    }
+    debug_assert!(theta.in_range_incl(0.0, TAU));
+    debug_assert!(phi.in_range_incl(0.0, PI));
 
     let (sin_theta, cos_theta) = theta.sin_cos();
     let (sin_phi, cos_phi) = phi.sin_cos();
@@ -232,16 +244,8 @@ pub fn spherical_to_cartesian_frame_trig(
 /// # Returns
 /// * The corresponding cartesian vector
 pub fn spherical_to_cartesian(theta: Float, phi: Float) -> Vector3 {
-    #[cfg(feature = "f64")]
-    {
-        debug_assert!(theta.in_range_incl(0.0, std::f64::consts::TAU));
-        debug_assert!(phi.in_range_incl(0.0, std::f64::consts::PI));
-    }
-    #[cfg(not(feature = "f64"))]
-    {
-        debug_assert!(theta.in_range_incl(0.0, std::f32::consts::TAU));
-        debug_assert!(phi.in_range_incl(0.0, std::f32::consts::PI));
-    }
+    debug_assert!(theta.in_range_incl(0.0, TAU));
+    debug_assert!(phi.in_range_incl(0.0, PI));
 
     let (sin_theta, cos_theta) = theta.sin_cos();
     let (sin_phi, cos_phi) = phi.sin_cos();
@@ -499,8 +503,8 @@ pub trait Intersectable {
     /// The **intersection normal** always points to the **outside**.
     /// To obtain the normal from inside the object, one can use following
     /// ```rust
-    /// use geometry::{Aabb, Intersectable, Ray};
-    /// use definitions::Vector3;
+    /// use geometry::{Aabb, Intersectable, Ray, Vector3};
+    /// use ultraviolet::Vec3;
     ///
     /// let cube = Aabb::default();
     /// let mut ray = Ray::new_fast(Vector3::zero(), Vector3::unit_x());

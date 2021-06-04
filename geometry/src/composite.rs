@@ -1,5 +1,5 @@
+use crate::*;
 use crate::{Aabb, Boundable, Container, Intersectable, Intersection, Ray};
-use definitions::Vector3;
 use std::ops::Deref;
 use utility::floats::FloatExt;
 

@@ -1,5 +1,6 @@
 use crate::debug_utils::within_01;
-use definitions::{Float, Vector2, Vector3};
+
+use crate::*;
 use serde::{Deserialize, Serialize};
 use utility::floats::FloatExt;
 

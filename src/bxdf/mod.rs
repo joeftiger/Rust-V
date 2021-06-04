@@ -16,7 +16,7 @@ pub use specular::*;
 use crate::debug_utils::{is_finite, is_normalized, within_01};
 use crate::mc::sample_unit_hemisphere;
 use crate::Spectrum;
-use definitions::{Float, Rotation3, Vector2, Vector3};
+use crate::*;
 use serde::{Deserialize, Serialize};
 use std::f64::consts::{FRAC_1_PI, PI};
 use utility::floats::FloatExt;
@@ -453,28 +453,20 @@ pub trait BxDF: Send + Sync {
         Some(BxDFSample::new(lambda, incident, pdf, self.get_type()))
     }
 
-    fn sample_light_waves(
+    fn sample_for_light_waves(
         &self,
         outgoing: Vector3,
         sample: Vector2,
-        light_wave_indices: &[usize],
-        samples_buf: &mut [Option<BxDFSample<Float>>],
-    ) {
+    ) -> Option<(Vector3, Float, Type)> {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
-        debug_assert_eq!(light_wave_indices.len(), samples_buf.len());
 
         let incident = flip_if_neg(sample_unit_hemisphere(sample));
-
-        let mut lambdas = Vec::with_capacity(light_wave_indices.len());
-        self.evaluate_light_waves(incident, outgoing, light_wave_indices, &mut lambdas);
 
         let pdf = self.pdf(incident, outgoing);
         let typ = self.get_type();
 
-        for (i, sample) in samples_buf.iter_mut().enumerate() {
-            *sample = Some(BxDFSample::new(lambdas[i], incident, pdf, typ))
-        }
+        Some((incident, pdf, typ))
     }
 
     /// Computes the probability density function (`pdf`) for the pair of directions.

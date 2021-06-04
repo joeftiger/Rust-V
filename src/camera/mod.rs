@@ -1,5 +1,5 @@
 mod perspective;
-pub mod perspective_simone;
+//pub mod perspective_simone;
 
 pub use perspective::PerspectiveCamera;
 
