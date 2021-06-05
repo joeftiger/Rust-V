@@ -18,6 +18,10 @@ use crate::mc::sample_unit_hemisphere;
 use crate::Spectrum;
 use crate::*;
 use serde::{Deserialize, Serialize};
+
+#[cfg(not(feature = "f64"))]
+use std::f32::consts::{FRAC_1_PI, PI};
+#[cfg(feature = "f64")]
 use std::f64::consts::{FRAC_1_PI, PI};
 use utility::floats::FloatExt;
 
@@ -203,7 +207,7 @@ pub fn world_to_bxdf(v: Vector3) -> Rotation3 {
     if v == Vector3::unit_y() {
         Rotation3::default()
     } else if v == -Vector3::unit_y() {
-        Rotation3::from_rotation_xy(PI as Float)
+        Rotation3::from_rotation_xy(PI)
     } else {
         Rotation3::from_rotation_between(v, bxdf_normal())
     }
@@ -216,7 +220,7 @@ pub fn bxdf_to_world(v: Vector3) -> Rotation3 {
     if v == Vector3::unit_y() {
         Rotation3::default()
     } else if v == -Vector3::unit_y() {
-        Rotation3::from_rotation_xy(-PI as Float)
+        Rotation3::from_rotation_xy(-PI)
     } else {
         Rotation3::from_rotation_between(bxdf_normal(), v)
     }
@@ -446,27 +450,50 @@ pub trait BxDF: Send + Sync {
         debug_assert!(within_01(sample));
         debug_assert!(light_wave_index < Spectrum::size());
 
-        let incident = flip_if_neg(sample_unit_hemisphere(sample));
+        let incident = self.sample_incident(outgoing, sample)?;
         let lambda = self.evaluate_light_wave(incident, outgoing, light_wave_index);
         let pdf = self.pdf(incident, outgoing);
 
         Some(BxDFSample::new(lambda, incident, pdf, self.get_type()))
     }
 
-    fn sample_for_light_waves(
-        &self,
-        outgoing: Vector3,
-        sample: Vector2,
-    ) -> Option<(Vector3, Float, Type)> {
+    #[inline]
+    fn sample_incident(&self, outgoing: Vector3, sample: Vector2) -> Option<Vector3> {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
 
-        let incident = flip_if_neg(sample_unit_hemisphere(sample));
+        Some(flip_if_neg(sample_unit_hemisphere(sample)))
+    }
 
-        let pdf = self.pdf(incident, outgoing);
-        let typ = self.get_type();
+    #[inline]
+    fn sample_incident_light_wave(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        _light_wave_index: usize,
+    ) -> Option<Vector3> {
+        self.sample_incident(outgoing, sample)
+    }
 
-        Some((incident, pdf, typ))
+    fn sample_incident_pdf(&self, outgoing: Vector3, sample: Vector2) -> Option<(Vector3, Float)> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        self.sample_incident(outgoing, sample)
+            .map(|incident| (incident, self.pdf(incident, outgoing)))
+    }
+
+    fn sample_incident_pdf_light_wave(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        light_wave_index: usize,
+    ) -> Option<(Vector3, Float)> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        self.sample_incident_light_wave(outgoing, sample, light_wave_index)
+            .map(|incident| (incident, self.pdf(incident, outgoing)))
     }
 
     /// Computes the probability density function (`pdf`) for the pair of directions.
@@ -486,7 +513,7 @@ pub trait BxDF: Send + Sync {
     #[inline]
     fn pdf(&self, incident: Vector3, outgoing: Vector3) -> Float {
         if same_hemisphere(incident, outgoing) {
-            cos_theta(incident).abs() * FRAC_1_PI as Float
+            cos_theta(incident).abs() * FRAC_1_PI
         } else {
             0.0
         }
@@ -538,13 +565,11 @@ impl BxDF for ScaledBxDF {
     }
 
     fn sample(&self, outgoing: Vector3, sample: Vector2) -> Option<BxDFSample<Spectrum>> {
-        if let Some(mut sample) = self.bxdf.sample(outgoing, sample) {
-            sample.spectrum *= self.scale;
+        self.bxdf.sample(outgoing, sample).map(|mut s| {
+            s.spectrum *= self.scale;
 
-            Some(sample)
-        } else {
-            None
-        }
+            s
+        })
     }
 
     fn pdf(&self, incident: Vector3, outgoing: Vector3) -> Float {

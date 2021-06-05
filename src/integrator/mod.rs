@@ -17,15 +17,14 @@
 //! * **Goral** radiosity: `ED*L`
 
 mod debug_normals;
-mod hero;
 mod path;
 mod spectral_path;
 mod whitted;
 
-pub use debug_normals::DebugNormals;
-pub use path::Path;
-pub use spectral_path::SpectralPath;
-pub use whitted::Whitted;
+pub use debug_normals::*;
+pub use path::*;
+pub use spectral_path::*;
+pub use whitted::*;
 
 use crate::bxdf::{Type, BSDF};
 use crate::samplers::Sampler;

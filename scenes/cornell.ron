@@ -35,10 +35,10 @@
         ),
     },
     integrator: {
-        "Path": (
+        "SpectralPath": (
             max_depth: 8,
-            // light_wave_samples: 3,
-            // spectral_sampler: Hero,
+            light_wave_samples: 3,
+            spectral_sampler: Hero,
         ),
     },
     sampler: Random,
@@ -193,19 +193,18 @@
             )),
             Emitter((
                 geometry: {
-                    "Sphere": (
-                        center: (
+                    "Point": (
+                        Vec3 (
                             x: 0,
                             y: 0,
                             z: 0,
                         ),
-                        radius: 0.0625,
                     ),
                 },
                 bsdf: (
                     bxdfs: [],
                 ),
-                emission: MulColor(100, White),
+                emission: MulColor(0.5, White),
             )),
         ],
     ),

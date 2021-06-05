@@ -11,6 +11,7 @@ use crate::*;
 use color::Color;
 
 use serde::{Deserialize, Serialize};
+use std::option::Option::Some;
 
 #[inline]
 fn etas(
@@ -99,6 +100,30 @@ impl BxDF for SpecularReflection {
         Some(BxDFSample::new(spectrum, incident, 1.0, self.get_type()))
     }
 
+    #[inline]
+    fn sample_incident(&self, outgoing: Vector3, _: Vector2) -> Option<Vector3> {
+        Some(bxdf_incident_to(outgoing))
+    }
+
+    #[inline]
+    fn sample_incident_pdf(&self, outgoing: Vector3, sample: Vector2) -> Option<(Vector3, Float)> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        self.sample_incident(outgoing, sample)
+            .map(|incident| (incident, 1.0))
+    }
+
+    #[inline]
+    fn sample_incident_pdf_light_wave(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        _: usize,
+    ) -> Option<(Vector3, Float)> {
+        self.sample_incident_pdf(outgoing, sample)
+    }
+
     /// No scattering for specular reflection leads to no pdf.
     ///
     /// # Arguments
@@ -157,16 +182,16 @@ impl BxDF for SpecularTransmission {
     }
 
     fn sample(&self, outgoing: Vector3, _: Vector2) -> Option<BxDFSample<Spectrum>> {
+        debug_assert!(is_normalized(outgoing));
+
         let (eta_i, eta_t, normal) = etas(self.fresnel.eta_i, self.fresnel.eta_t, outgoing);
 
-        refract(outgoing, normal, eta_i.n_uniform() / eta_t.n_uniform()).map(|mut incident| {
-            incident.normalize();
+        let incident = refract(outgoing, normal, eta_i.n_uniform() / eta_t.n_uniform())?;
 
-            let cos_i = cos_theta(incident);
-            let spectrum = self.t * (Spectrum::broadcast(1.0) - self.fresnel.evaluate(cos_i));
+        let cos_i = cos_theta(incident);
+        let spectrum = self.t * (Spectrum::broadcast(1.0) - self.fresnel.evaluate(cos_i));
 
-            BxDFSample::new(spectrum, incident, 1.0, self.get_type())
-        })
+        Some(BxDFSample::new(spectrum, incident, 1.0, self.get_type()))
     }
 
     fn sample_light_wave(
@@ -175,19 +200,61 @@ impl BxDF for SpecularTransmission {
         _: Vector2,
         light_wave_index: usize,
     ) -> Option<BxDFSample<Float>> {
+        debug_assert!(is_normalized(outgoing));
+
         let (eta_i, eta_t, normal) = etas(self.fresnel.eta_i, self.fresnel.eta_t, outgoing);
 
         let light_wave = self.t.as_light_wave(light_wave_index);
 
-        refract(outgoing, normal, eta_i.n_uniform() / eta_t.n_uniform()).map(|mut incident| {
-            incident.normalize();
+        let incident = refract(outgoing, normal, eta_i.n_uniform() / eta_t.n_uniform())?;
 
-            let cos_i = cos_theta(incident);
-            let lambda = light_wave.intensity
-                * (1.0 - self.fresnel.evaluate_lambda(light_wave.lambda, cos_i));
+        let cos_i = cos_theta(incident);
+        let lambda =
+            light_wave.intensity * (1.0 - self.fresnel.evaluate_lambda(light_wave.lambda, cos_i));
 
-            BxDFSample::new(lambda, incident, 1.0, self.get_type())
-        })
+        Some(BxDFSample::new(lambda, incident, 1.0, self.get_type()))
+    }
+
+    #[inline]
+    fn sample_incident(&self, outgoing: Vector3, _: Vector2) -> Option<Vector3> {
+        Some(bxdf_incident_to(outgoing))
+    }
+
+    #[inline]
+    fn sample_incident_light_wave(
+        &self,
+        outgoing: Vector3,
+        _: Vector2,
+        light_wave_index: usize,
+    ) -> Option<Vector3> {
+        let (eta_i, eta_t, normal) = etas(self.fresnel.eta_i, self.fresnel.eta_t, outgoing);
+
+        let lambda = Spectrum::lambda_of_index(light_wave_index);
+
+        refract(outgoing, normal, eta_i.n(lambda) / eta_t.n(lambda))
+    }
+
+    #[inline]
+    fn sample_incident_pdf(&self, outgoing: Vector3, sample: Vector2) -> Option<(Vector3, Float)> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        self.sample_incident(outgoing, sample)
+            .map(|incident| (incident, 1.0))
+    }
+
+    #[inline]
+    fn sample_incident_pdf_light_wave(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        light_wave_index: usize,
+    ) -> Option<(Vector3, Float)> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        self.sample_incident_light_wave(outgoing, sample, light_wave_index)
+            .map(|incident| (incident, 1.0))
     }
 
     /// No scattering for specular transmission leads to no pdf.
@@ -226,6 +293,31 @@ impl FresnelSpecular {
         let fresnel = FresnelDielectric::new(eta_i, eta_t);
         Self { r, t, fresnel }
     }
+
+    fn fresnel_incident(
+        outgoing: Vector3,
+        sample: Vector2,
+        eta_i_orig: Float,
+        eta_t_orig: Float,
+    ) -> Option<Vector3> {
+        let cos_outgoing = cos_theta(outgoing);
+        let f = fresnel_dielectric(cos_outgoing, eta_i_orig, eta_t_orig);
+
+        let incident = if f < sample.x {
+            // if entering
+            let (eta_i, eta_t, normal) = if cos_outgoing > 0.0 {
+                (eta_i_orig, eta_t_orig, bxdf_normal())
+            } else {
+                (eta_t_orig, eta_i_orig, -bxdf_normal())
+            };
+
+            refract(outgoing, normal, eta_i / eta_t)?
+        } else {
+            bxdf_incident_to(outgoing)
+        };
+
+        Some(incident)
+    }
 }
 
 #[typetag::serde]
@@ -258,22 +350,21 @@ impl BxDF for FresnelSpecular {
         let eta_t_orig = self.fresnel.eta_t.n_uniform();
         let f = fresnel_dielectric(cos_outgoing, eta_i_orig, eta_t_orig);
 
-        // if entering
-        let (eta_i, eta_t, normal) = if cos_outgoing > 0.0 {
-            (eta_i_orig, eta_t_orig, bxdf_normal())
-        } else {
-            (eta_t_orig, eta_i_orig, -bxdf_normal())
-        };
-
         if f < sample.x {
-            if let Some(incident) = refract(outgoing, normal, eta_i / eta_t) {
-                let cos_i = cos_theta(incident);
+            // if entering
+            let (eta_i, eta_t, normal) = if cos_outgoing > 0.0 {
+                (eta_i_orig, eta_t_orig, bxdf_normal())
+            } else {
+                (eta_t_orig, eta_i_orig, -bxdf_normal())
+            };
 
-                let spectrum = self.t * (Spectrum::broadcast(1.0) - self.fresnel.evaluate(cos_i));
-                let typ = Type::SPECULAR | Type::TRANSMISSION;
+            let incident = refract(outgoing, normal, eta_i / eta_t)?;
+            let cos_i = cos_theta(incident);
 
-                return Some(BxDFSample::new(spectrum, incident, 1.0 - f, typ));
-            }
+            let spectrum = self.t * (Spectrum::broadcast(1.0) - self.fresnel.evaluate(cos_i));
+            let typ = Type::SPECULAR | Type::TRANSMISSION;
+
+            return Some(BxDFSample::new(spectrum, incident, 1.0 - f, typ));
         }
 
         let incident = bxdf_incident_to(outgoing);
@@ -300,23 +391,22 @@ impl BxDF for FresnelSpecular {
         let eta_t_orig = self.fresnel.eta_t.n(lambda);
         let f = fresnel_dielectric(cos_outgoing, eta_i_orig, eta_t_orig);
 
-        // if entering
-        let (eta_i, eta_t, normal) = if cos_outgoing > 0.0 {
-            (eta_i_orig, eta_t_orig, bxdf_normal())
-        } else {
-            (eta_t_orig, eta_i_orig, -bxdf_normal())
-        };
-
         if f < sample.x {
-            if let Some(incident) = refract(outgoing, normal, eta_i / eta_t) {
-                let cos_i = cos_theta(incident);
+            // if entering
+            let (eta_i, eta_t, normal) = if cos_outgoing > 0.0 {
+                (eta_i_orig, eta_t_orig, bxdf_normal())
+            } else {
+                (eta_t_orig, eta_i_orig, -bxdf_normal())
+            };
 
-                let intensity =
-                    self.t[light_wave_index] * (1.0 - self.fresnel.evaluate_lambda(lambda, cos_i));
-                let typ = Type::SPECULAR | Type::TRANSMISSION;
+            let incident = refract(outgoing, normal, eta_i / eta_t)?;
+            let cos_i = cos_theta(incident);
 
-                return Some(BxDFSample::new(intensity, incident, 1.0 - f, typ));
-            }
+            let intensity =
+                self.t[light_wave_index] * (1.0 - self.fresnel.evaluate_lambda(lambda, cos_i));
+            let typ = Type::SPECULAR | Type::TRANSMISSION;
+
+            return Some(BxDFSample::new(intensity, incident, 1.0 - f, typ));
         }
 
         let intensity = self.r[light_wave_index] * f;
@@ -324,6 +414,57 @@ impl BxDF for FresnelSpecular {
         let typ = Type::REFLECTION | Type::SPECULAR;
 
         Some(BxDFSample::new(intensity, incident, f, typ))
+    }
+
+    #[inline]
+    fn sample_incident(&self, outgoing: Vector3, sample: Vector2) -> Option<Vector3> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        let eta_i_orig = self.fresnel.eta_i.n_uniform();
+        let eta_t_orig = self.fresnel.eta_t.n_uniform();
+
+        Self::fresnel_incident(outgoing, sample, eta_i_orig, eta_t_orig)
+    }
+
+    #[inline]
+    fn sample_incident_light_wave(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        light_wave_index: usize,
+    ) -> Option<Vector3> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        let lambda = Spectrum::lambda_of_index(light_wave_index);
+        let eta_i_orig = self.fresnel.eta_i.n(lambda);
+        let eta_t_orig = self.fresnel.eta_t.n(lambda);
+
+        Self::fresnel_incident(outgoing, sample, eta_i_orig, eta_t_orig)
+    }
+
+    #[inline]
+    fn sample_incident_pdf(&self, outgoing: Vector3, sample: Vector2) -> Option<(Vector3, Float)> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        self.sample_incident(outgoing, sample)
+            .map(|incident| (incident, 1.0))
+    }
+
+    #[inline]
+    fn sample_incident_pdf_light_wave(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        light_wave_index: usize,
+    ) -> Option<(Vector3, Float)> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        self.sample_incident_light_wave(outgoing, sample, light_wave_index)
+            .map(|incident| (incident, 1.0))
     }
 
     /// No scattering for specular reflection/transmission leads to no pdf.

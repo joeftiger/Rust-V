@@ -15,6 +15,9 @@ const LIVE: &str = "LIVE_WINDOW";
 const VERBOSE: &str = "VERBOSE";
 const INPUT: &str = "INPUT";
 const FORMAT: &str = "FORMAT";
+const OUTPUT: &str = "OUTPUT";
+const PASSES: &str = "PASSES";
+const THREADS: &str = "THREADS";
 
 #[cfg(not(feature = "show-image"))]
 fn main() -> Result<(), Box<dyn Error>> {
@@ -44,29 +47,58 @@ fn create_config() -> CmdInput {
         Ok(format) => format,
         Err(err) => panic!("Cannot parse pixel format: {}", err),
     };
+    let output = matches.value_of(OUTPUT).map(|s| s.to_string());
+    let passes = matches
+        .value_of(PASSES)
+        .map(|string| match string.parse::<u32>() {
+            Ok(p) => p,
+            Err(err) => panic!("Cannot parse passes override: {}", err),
+        });
+    let threads = matches
+        .value_of(THREADS)
+        .map(|string| match string.parse::<u32>() {
+            Ok(t) => t,
+            Err(err) => panic!("Cannot parse threads override: {}", err),
+        });
 
     CmdInput {
         verbose,
         live,
         input: input.to_owned(),
         pixel_type,
+        output,
+        passes,
+        threads,
     }
 }
 
 #[derive(Debug, Clone)]
 struct CmdInput {
-    pub verbose: bool,
-    pub live: bool,
-    pub input: String,
-    pub pixel_type: PixelType,
+    verbose: bool,
+    live: bool,
+    input: String,
+    pixel_type: PixelType,
+    output: Option<String>,
+    passes: Option<u32>,
+    threads: Option<u32>,
 }
 
 impl CmdInput {
     fn deserialize_renderer(&self) -> Renderer {
         let content =
             std::fs::read_to_string(&self.input).expect("Could not read serialization file");
-        let serialization: Serialization =
+        let mut serialization: Serialization =
             from_str(content.as_str()).expect("Could not parse serialization file");
+
+        if self.output.is_some() {
+            serialization.config.filename = self.output.clone()
+        }
+        if let Some(p) = self.passes {
+            serialization.config.passes = p;
+        }
+        if self.threads.is_some() {
+            serialization.config.threads = self.threads
+        }
 
         if self.verbose {
             println!("{:#?}", serialization.config);

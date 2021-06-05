@@ -17,3 +17,18 @@ args:
       help: "The output pixel format. (Default = u8)"
       possible_values: [ u8, u16 ]
       takes_value: true
+  - OUTPUT:
+      short: o
+      long: output
+      help: "Override the output file of the scene file."
+      takes_value: true
+  - PASSES:
+      short: p
+      long: passes
+      help: "Override the number of passes of the scene file."
+      takes_value: true
+  - THREADS:
+      short: t
+      long: threads
+      help: "Override the number of threads of the scene file."
+      takes_value: true

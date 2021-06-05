@@ -35,10 +35,10 @@
         ),
     },
     integrator: {
-        "Path": (
+        "SpectralPath": (
             max_depth: 8,
-            // light_wave_samples: 3,
-            // spectral_sampler: Hero,
+            light_wave_samples: 3,
+            spectral_sampler: Hero,
         ),
     },
     sampler: Random,
@@ -70651,8 +70651,8 @@
                     bxdfs: [
                         {
                             "FresnelSpecular": (
-                                r: Constant(1),
-                                t: Constant(1),
+                                r: Constant(0.9),
+                                t: Constant(0.8),
                                 fresnel: (
                                     eta_i: Air,
                                     eta_t: Sapphire,
@@ -70664,19 +70664,18 @@
             )),
             Emitter((
                 geometry: {
-                    "Sphere": (
-                        center: (
+                    "Point": (
+                        Vec3 (
                             x: 0,
                             y: 1.937,
                             z: 0,
                         ),
-                        radius: 0.0625,
                     ),
                 },
                 bsdf: (
                     bxdfs: [],
                 ),
-                emission: MulColor(200, White),
+                emission: MulColor(0.7, White),
             )),
         ],
     ),
