@@ -53,4 +53,4 @@ impl Intersectable for Plane {
 }
 
 #[typetag::serde]
-impl Geometry for Aabb {}
+impl Geometry for Plane {}

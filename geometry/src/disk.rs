@@ -71,4 +71,4 @@ impl Intersectable for Disk {
 }
 
 #[typetag::serde]
-impl Geometry for Aabb {}
+impl Geometry for Disk {}
