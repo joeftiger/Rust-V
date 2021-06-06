@@ -69,3 +69,6 @@ impl Intersectable for Disk {
         (point - self.center).mag_sq() <= self.radius * self.radius
     }
 }
+
+#[typetag::serde]
+impl Geometry for Aabb {}

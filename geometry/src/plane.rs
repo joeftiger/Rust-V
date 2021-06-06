@@ -51,3 +51,6 @@ impl Intersectable for Plane {
         self.normal.dot(ray.direction).is_approx_zero()
     }
 }
+
+#[typetag::serde]
+impl Geometry for Aabb {}
