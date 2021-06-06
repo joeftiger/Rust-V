@@ -7,24 +7,17 @@ This project is WIP and actively being worked on.
 Some demo scenes are available, but nothing "fancy" as of now.
 
 ## TODO
-- Hero integrator
-- Enhanced Hero integrator (continue using paths instead of discarding)
+- Fix spectral integrator.
 
 ## Building
-### Submodules
-As we make use of [ultraviolet upstream](https://github.com/termhn/ultraviolet) due to some commits not yet released,
-please run
-```
-git submodule update --init --recursive --remote --merge
-```
-To initialize the needed dependency.
-
 ### Features
 #### `f64`
-Uses `f64` types for higher precision. It might be noticeable for some visuals, but increases the runtime duration.
+Uses `f64` types for higher precision. It might be noticeable for some visuals,
+but increases the runtime duration due to increased cache pressure.
 
-#### `live-window`
-By passing `--live` as runtime argument, the rendering will open in a window , showing you the progress.
+#### `show-image`
+By passing `--live` as runtime argument, the rendering will open in a window,
+showing you the progress.
 
 The window allows you some commands like following:
 - `Ctrl + s`: Save current rendering as 8-bit PNG (with GUI ;-)
@@ -37,7 +30,12 @@ Run: \
 For a release (optimized) version, append `--release`: \
 `$  cargo build --package rust-v --bin main --release`
 
-For a live-window enabled version, append `--features "live-window"`: \
-`$  cargo build --package rust-v --bin main --features "live-window"`
+For a live-window enabled version, append `--features "show-image"`: \
+`$  cargo build --package rust-v --bin main --features "show-image"`
 
 The compiled binary should be in the folder `./target/(dev|release)/rust_v`
+
+## Scene files
+We have some example scene files inside the `./scenes/` folder.
+
+Refer to the syntax [here](./SceneSyntax.md) to write your own!.
