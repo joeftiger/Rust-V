@@ -11,7 +11,7 @@ color = { path = "../color" }
 geometry = { path = "../geometry" }
 #utility = { path = "../utility" }
 rust-v = { path = ".." }
-ultraviolet = { version = "0.8.1" }
+ultraviolet = "0.8.1"
 fastrand = "1.4.1"
 ron = "0.6.4"
 

@@ -1,4 +1,4 @@
-(
+( 
     config: (
         filename: Some("spectral.png"),
         bounds: None,

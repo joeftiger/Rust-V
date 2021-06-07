@@ -20,14 +20,14 @@ fastrand = "1.4.1"
 # image loading / saving
 image = "0.23.14"
 # progress bars etc.
-indicatif = "0.16.0"
+indicatif = "0.16.2"
 # num of logical / physical cpus
 num_cpus = "1.13.0"
 # live image of rendering
 show-image = { version = "0.8.4", features = ["image", "save"], optional = true }
 # linear algebra
 #ultraviolet = { version = "", features= ["int", "serde"] }
-ultraviolet = { version = "0.8.1", features= ["int", "serde"] }
+ultraviolet = { version = "0.8.1", features = ["int", "serde"] }
 
 # De-/Serialization
 serde = { version = "1.0.126", features = ["derive", "rc"] }
@@ -39,7 +39,7 @@ geometry = { path = "./geometry" }
 utility = { path = "./utility" }
 
 [dev-dependencies]
-criterion = ""
+criterion = "0.3.4"
 
 [[bench]]
 name = "refractive_index"
