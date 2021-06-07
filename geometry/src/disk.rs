@@ -1,7 +1,9 @@
 use crate::*;
 use crate::{Aabb, Boundable, Intersectable, Intersection, Ray};
+use serde::{Deserialize, Serialize};
 use utility::floats::FloatExt;
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Disk {
     pub center: Vector3,
     pub normal: Vector3,
