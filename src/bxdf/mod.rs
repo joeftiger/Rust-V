@@ -208,6 +208,8 @@ pub fn world_to_bxdf(v: Vector3) -> Rotation3 {
         Rotation3::default()
     } else if v == -Vector3::unit_y() {
         Rotation3::from_rotation_xy(PI)
+    // if v == -Vector3::unit_y() {
+    //     Rotation3::from_rotation_xy(PI)
     } else {
         Rotation3::from_rotation_between(v, bxdf_normal())
     }

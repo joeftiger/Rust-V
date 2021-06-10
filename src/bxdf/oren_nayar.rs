@@ -17,14 +17,14 @@ pub struct OrenNayar {
 }
 
 impl OrenNayar {
-    /// Creates a new oren-nayar reflection.
+    /// Creates a new Oren-Nayar reflection.
     ///
     /// # Constraints
     /// * `sigma` - Should be in range `[0, inf)`.
     ///
     /// # Arguments
     /// * `r` - The reflection
-    /// * `sigma` - The roughness (gradient of the surface elevation)
+    /// * `sigma` - The roughness (gradient of the surface elevation) in degrees
     ///
     /// # Returns
     /// * Self
