@@ -67,7 +67,7 @@ impl OrenNayar {
             let cos_phi_o = cos_phi(outgoing);
 
             let d_cos = cos_phi_i * cos_phi_o + sin_phi_i * sin_phi_o;
-            d_cos.max(0.0)
+            d_cos.fast_max(0.0)
         } else {
             0.0
         };
@@ -75,11 +75,15 @@ impl OrenNayar {
         let cos_theta_i_abs = cos_theta(incident).abs();
         let cos_theta_o_abs = cos_theta(outgoing).abs();
 
-        let (sin_alpha, tan_beta) = if cos_theta_i_abs > cos_theta_o_abs {
-            (sin_theta_o, sin_theta_i / cos_theta_i_abs)
+        let sin_alpha;
+        let tan_beta;
+        if cos_theta_i_abs > cos_theta_o_abs {
+            sin_alpha = sin_theta_o;
+            tan_beta = sin_theta_i / cos_theta_i_abs;
         } else {
-            (sin_theta_i, sin_theta_o / cos_theta_o_abs)
-        };
+            sin_alpha = sin_theta_i;
+            tan_beta = sin_theta_o / cos_theta_o_abs;
+        }
 
         FRAC_1_PI * (self.a + self.b * max_cos * sin_alpha * tan_beta)
     }

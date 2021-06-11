@@ -3,6 +3,7 @@
 mod bsdf;
 mod fresnel;
 mod lambertian;
+mod microfacet;
 mod oren_nayar;
 mod specular;
 
@@ -10,6 +11,7 @@ pub use bsdf::BSDF;
 
 pub use fresnel::*;
 pub use lambertian::*;
+pub use microfacet::*;
 pub use oren_nayar::*;
 pub use specular::*;
 
