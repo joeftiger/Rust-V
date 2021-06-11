@@ -12,6 +12,11 @@ pub enum SpectralSampler {
 impl SpectralSampler {
     #[inline]
     pub fn fill_samples(&self, buf: &mut [usize]) {
+        if buf.len() == Spectrum::size() {
+            buf.iter_mut().enumerate().for_each(|(i, idx)| *idx = i);
+            return;
+        }
+
         match self {
             SpectralSampler::Random => buf
                 .iter_mut()
