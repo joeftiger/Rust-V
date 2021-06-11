@@ -11,6 +11,7 @@ use crate::sensor::pixel::Pixel;
 use crate::Float;
 use geometry::{offset_ray_towards, Ray};
 use serde::{Deserialize, Serialize};
+use utility::floats::FloatExt;
 
 enum TraceResult {
     Done,
@@ -156,7 +157,7 @@ impl SpectralPath {
             // sample bxdf
             if let Some(bxdf) = bsdf.random_matching_bxdf(Type::ALL, sampler.get_1d()) {
                 // if specular, trace single
-                if bxdf.is_type(Type::SPECULAR) {
+                if bxdf.get_type().is_specular() {
                     for i in 0..indices.len() {
                         self.trace_single(
                             scene,
@@ -184,11 +185,8 @@ impl SpectralPath {
                     for i in 0..illumination.len() {
                         let intensity = bxdf.evaluate_light_wave(incident, outgoing, indices[i]);
 
-                        throughput[i] = if intensity == 0.0 {
-                            0.0
-                        } else {
-                            intensity * incident.dot(normal).abs() / pdf
-                        }
+                        throughput[i] *=
+                            intensity * incident.dot(normal).fast_clamp(0.0, 1.0) / pdf;
                     }
 
                     // trace next intersection
