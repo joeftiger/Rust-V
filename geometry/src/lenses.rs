@@ -17,7 +17,7 @@ impl BiconvexLens {
 impl Boundable for BiconvexLens {
     fn bounds(&self) -> Aabb {
         // not tight fitting, but okay enough
-        let max = self.sphere0.radius.max(self.sphere1.radius);
+        let max = self.sphere0.radius.fast_max(self.sphere1.radius);
         let offset = Vector3::one() * max;
         let center = (self.sphere0.center + self.sphere1.center) / 2.0;
 

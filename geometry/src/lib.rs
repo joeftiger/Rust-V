@@ -228,6 +228,11 @@ pub fn spherical_to_cartesian_frame_trig(
     x + y + z
 }
 
+#[inline]
+pub fn spherical_to_cartesian1(sin_theta: Float, cos_theta: Float, phi: Float) -> Vector3 {
+    Vector3::new(sin_theta * phi.cos(), sin_theta * phi.sin(), cos_theta)
+}
+
 /// Converts spherical coordinates to cartesian coordinates in the following describe frame:
 /// * x-axis: to your right
 /// * y-axis: to your top
