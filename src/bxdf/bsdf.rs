@@ -57,6 +57,7 @@ impl BSDF {
         mut types: Type,
     ) -> Spectrum {
         let rotation = world_to_bxdf(normal);
+
         let incident = rotation * incident_world;
         let outgoing = rotation * outgoing_world;
 
@@ -110,6 +111,20 @@ impl BSDF {
             .sum()
     }
 
+    pub fn evaluate_bxdf_light_wave(
+        bxdf: &dyn BxDF,
+        normal: Vector3,
+        incident_world: Vector3,
+        outgoing_world: Vector3,
+        light_wave_index: usize,
+    ) -> Float {
+        let rotation = world_to_bxdf(normal);
+        let incident = rotation * incident_world;
+        let outgoing = rotation * outgoing_world;
+
+        bxdf.evaluate_light_wave(incident, outgoing, light_wave_index)
+    }
+
     pub fn sample(
         &self,
         normal: Vector3,
@@ -126,7 +141,7 @@ impl BSDF {
         let bxdf = self.random_matching_bxdf(types, sample.one_d)?;
 
         bxdf.sample(outgoing, sample.two_d).map(|mut s| {
-            s.incident.rotate_by(rotation.reversed());
+            s.incident = rotation.reversed() * s.incident;
             s
         })
     }
@@ -144,7 +159,7 @@ impl BSDF {
         let outgoing = rotation * outgoing_world;
 
         bxdf.sample(outgoing, sample.two_d).map(|mut s| {
-            s.incident.rotate_by(rotation.reversed());
+            s.incident = rotation.reversed() * s.incident;
             s
         })
     }
@@ -167,7 +182,7 @@ impl BSDF {
 
         bxdf.sample_light_wave(outgoing, sample.two_d, light_wave_index)
             .map(|mut s| {
-                s.incident.rotate_by(rotation.reversed());
+                s.incident = rotation.reversed() * s.incident;
                 s
             })
     }
@@ -187,7 +202,7 @@ impl BSDF {
 
         bxdf.sample_light_wave(outgoing, sample.two_d, light_wave_index)
             .map(|mut s| {
-                s.incident.rotate_by(rotation.reversed());
+                s.incident = rotation.reversed() * s.incident;
                 s
             })
     }
@@ -222,7 +237,7 @@ impl BSDF {
         let outgoing = rotation * outgoing_world;
 
         bxdf.sample_incident_light_wave(outgoing, sample, light_wave_index)
-            .map(|incident| incident.rotated_by(rotation.reversed()))
+            .map(|incident| rotation.reversed() * incident)
     }
 
     pub fn sample_bxdf_incident_pdf(
@@ -236,10 +251,10 @@ impl BSDF {
         debug_assert!(is_normalized(outgoing_world));
 
         let rotation = world_to_bxdf(normal);
-        let outgoing = outgoing_world.rotated_by(rotation);
+        let outgoing = rotation * outgoing_world;
 
         bxdf.sample_incident_pdf(outgoing, sample)
-            .map(|(incident, pdf)| (incident.rotated_by(rotation.reversed()), pdf))
+            .map(|(incident, pdf)| (rotation.reversed() * incident, pdf))
     }
 
     pub fn sample_bxdf_incident_pdf_light_wave(
@@ -257,7 +272,7 @@ impl BSDF {
         let outgoing = rotation * outgoing_world;
 
         bxdf.sample_incident_pdf_light_wave(outgoing, sample, light_wave_index)
-            .map(|(incident, pdf)| (incident.rotated_by(rotation.reversed()), pdf))
+            .map(|(incident, pdf)| (rotation.reversed() * incident, pdf))
     }
 
     pub fn pdf(

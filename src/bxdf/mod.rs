@@ -25,7 +25,43 @@ use serde::{Deserialize, Serialize};
 use std::f32::consts::{FRAC_1_PI, PI};
 #[cfg(feature = "f64")]
 use std::f64::consts::{FRAC_1_PI, PI};
+use std::ops::Mul;
 use utility::floats::FloatExt;
+
+/// A rotation is either
+/// - not happening
+/// - flipping direction
+/// - some rotation
+#[derive(Copy, Clone, Debug)]
+pub enum Rotation {
+    None,
+    Flip,
+    Some(Rotation3),
+}
+
+impl Rotation {
+    /// Reversed the rotation (if any).
+    #[inline]
+    pub fn reversed(&self) -> Self {
+        match self {
+            Rotation::Some(r) => Self::Some(r.reversed()),
+            _ => *self,
+        }
+    }
+}
+
+impl Mul<Vector3> for Rotation {
+    type Output = Vector3;
+
+    #[inline]
+    fn mul(self, rhs: Vector3) -> Self::Output {
+        match self {
+            Rotation::None => rhs,
+            Rotation::Flip => flip(rhs),
+            Rotation::Some(r) => r * rhs,
+        }
+    }
+}
 
 /// Allows indicating whether an intersection was found along a path starting from a camera or one
 /// starting from a light source.
@@ -67,6 +103,14 @@ pub fn flip_if_neg(mut v: Vector3) -> Vector3 {
     if is_neg(v) {
         v.y = -v.y;
     }
+    v
+}
+
+#[inline(always)]
+pub fn flip(mut v: Vector3) -> Vector3 {
+    debug_assert!(is_finite(v));
+
+    v.y = -v.y;
     v
 }
 
@@ -157,7 +201,7 @@ pub fn sin2_phi(v: Vector3) -> Float {
     sin_phi * sin_phi
 }
 
-#[inline(always)]
+#[inline]
 pub fn cos_d_phi(a: Vector3, b: Vector3) -> Float {
     debug_assert!(is_finite(a));
     debug_assert!(is_finite(b));
@@ -203,17 +247,15 @@ pub fn same_hemisphere(a: Vector3, b: Vector3) -> bool {
 }
 
 #[inline(always)]
-pub fn world_to_bxdf(v: Vector3) -> Rotation3 {
+pub fn world_to_bxdf(v: Vector3) -> Rotation {
     debug_assert!(is_finite(v));
 
     if v == Vector3::unit_y() {
-        Rotation3::default()
+        Rotation::None
     } else if v == -Vector3::unit_y() {
-        Rotation3::from_rotation_xy(PI)
-    // if v == -Vector3::unit_y() {
-    //     Rotation3::from_rotation_xy(PI)
+        Rotation::Flip
     } else {
-        Rotation3::from_rotation_between(v, bxdf_normal())
+        Rotation::Some(Rotation3::from_rotation_between(v, bxdf_normal()))
     }
 }
 

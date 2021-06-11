@@ -183,7 +183,9 @@ impl SpectralPath {
 
                     // decrease throughput according to wavelength
                     for i in 0..illumination.len() {
-                        let intensity = bxdf.evaluate_light_wave(incident, outgoing, indices[i]);
+                        let intensity = BSDF::evaluate_bxdf_light_wave(
+                            bxdf, normal, incident, outgoing, indices[i],
+                        );
 
                         throughput[i] *=
                             intensity * incident.dot(normal).fast_clamp(0.0, 1.0) / pdf;
