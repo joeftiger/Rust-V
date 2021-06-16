@@ -191,7 +191,7 @@ impl BSDF {
         bxdf: &dyn BxDF,
         normal: Vector3,
         outgoing_world: Vector3,
-        sample: Sample,
+        sample: Vector2,
         light_wave_index: usize,
     ) -> Option<BxDFSample<Float>> {
         debug_assert!(is_normalized(normal));
@@ -200,7 +200,7 @@ impl BSDF {
         let rotation = world_to_bxdf(normal);
         let outgoing = rotation * outgoing_world;
 
-        bxdf.sample_light_wave(outgoing, sample.two_d, light_wave_index)
+        bxdf.sample_light_wave(outgoing, sample, light_wave_index)
             .map(|mut s| {
                 s.incident = rotation.reversed() * s.incident;
                 s

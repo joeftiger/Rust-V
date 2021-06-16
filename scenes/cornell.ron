@@ -3,15 +3,15 @@
         filename: Some("spectral.png"),
         bounds: None,
         block_size: (
-            x: 8,
-            y: 8,
+            x: 32,
+            y: 32,
         ),
         passes: 1000,
         threads: None,
     ),
     camera: {
         "PerspectiveCamera": (
-            Sampler: Random,
+            Sampler: NoOp,
             Position: (
                 x: 0,
                 y: 0,
@@ -29,15 +29,15 @@
             ),
             FovY: 70,
             Resolution: (
-                x: 512,
-                y: 512,
+                x: 256,
+                y: 256,
             ),
         ),
     },
     integrator: {
         "SpectralPath": (
             max_depth: 8,
-            light_wave_samples: 3,
+            light_wave_samples: 6,
             spectral_sampler: Hero,
         ),
     },
@@ -191,18 +191,48 @@
                     ],
                 ),
             )),
+            Receiver((
+                geometry: {
+                    "Sphere": (
+                        center: (
+                            x: 0,
+                            y: 0,
+                            z: 0,
+                        ),
+                        radius: 0.5,
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "SpecularReflection": (
+                                r: Constant(0.9),
+                                fresnel: NoOp,
+                            ),
+                        },
+                    ],
+                ),
+            )),
             Emitter((
                 geometry: {
                     "Point": ((
                         x: 0,
-                        y: 0,
+                        y: 1.937,
                         z: 0,
                     )),
+                    // "Sphere": (
+                    //     center: (
+                    //         x: 0,
+                    //         y: 1.937,
+                    //         z: 0,
+                    //     ),
+                    //     radius: 0.0625,
+                    // ),
                 },
                 bsdf: (
                     bxdfs: [],
                 ),
-                emission: MulColor(0.5, White),
+                emission: MulColor(2, White),
             )),
         ],
     ),

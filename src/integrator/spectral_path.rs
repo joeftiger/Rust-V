@@ -50,33 +50,7 @@ impl SpectralPath {
         illumination: &mut Float,
         throughput: &mut Float,
     ) {
-        if let SceneObject::Emitter(e) = &hit.object {
-            *illumination += *throughput * e.emission_light_wave(index); //e.radiance(&outgoing, &normal);
-            return;
-        }
-
-        let mut specular = false;
-
-        if let Some(bxdf_sample) = BSDF::sample_bxdf_light_wave(
-            bxdf,
-            hit.normal,
-            -hit.ray.direction,
-            sampler.get_sample(),
-            index,
-        ) {
-            if bxdf_sample.pdf == 0.0 || bxdf_sample.spectrum == 0.0 {
-                return;
-            }
-
-            *throughput *= bxdf_sample.spectrum / bxdf_sample.pdf;
-
-            let ray = offset_ray_towards(hit.point, hit.normal, bxdf_sample.incident);
-            match scene.intersect(&ray) {
-                Some(i) => hit = i,
-                None => return,
-            }
-        }
-
+        let mut specular = true;
         for bounce in current_bounce..self.max_depth {
             let outgoing = -hit.ray.direction;
             let normal = hit.normal;
@@ -85,18 +59,21 @@ impl SpectralPath {
             if specular {
                 if let SceneObject::Emitter(e) = &hit.object {
                     *illumination += *throughput * e.emission_light_wave(index); //e.radiance(&outgoing, &normal);
-                    return;
+                    break;
                 }
             }
 
             *illumination +=
                 *throughput * direct_illumination_light_wave(scene, sampler, &hit, bsdf, index);
 
-            if let Some(bxdf_sample) =
+            let bxdf_sample = if bounce == current_bounce {
+                BSDF::sample_bxdf_light_wave(bxdf, normal, outgoing, sampler.get_2d(), index)
+            } else {
                 bsdf.sample_light_wave(normal, outgoing, Type::ALL, sampler.get_sample(), index)
-            {
+            };
+            if let Some(bxdf_sample) = bxdf_sample {
                 if bxdf_sample.pdf == 0.0 || bxdf_sample.spectrum == 0.0 {
-                    return;
+                    break;
                 }
 
                 specular = bxdf_sample.typ.is_specular();
@@ -112,10 +89,10 @@ impl SpectralPath {
                 let ray = offset_ray_towards(hit.point, hit.normal, bxdf_sample.incident);
                 match scene.intersect(&ray) {
                     Some(i) => hit = i,
-                    None => return,
+                    None => break,
                 }
             } else {
-                return;
+                break;
             }
         }
     }
