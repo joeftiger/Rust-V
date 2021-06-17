@@ -435,6 +435,13 @@ pub trait BxDF: Send + Sync {
     /// * A scaling spectrum
     fn evaluate(&self, incident: Vector3, outgoing: Vector3) -> Spectrum;
 
+    fn evaluate_buf(&self, incident: Vector3, outgoing: Vector3, indices: &[usize]) -> Vec<Float> {
+        indices
+            .iter()
+            .map(|&i| self.evaluate_light_wave(incident, outgoing, i))
+            .collect()
+    }
+
     fn evaluate_light_wave(
         &self,
         incident: Vector3,
@@ -481,6 +488,22 @@ pub trait BxDF: Send + Sync {
 
         let incident = flip_if_neg(sample_unit_hemisphere(sample));
         let spectrum = self.evaluate(incident, outgoing);
+        let pdf = self.pdf(incident, outgoing);
+
+        Some(BxDFSample::new(spectrum, incident, pdf, self.get_type()))
+    }
+
+    fn sample_buf(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        indices: &[usize],
+    ) -> Option<BxDFSample<Vec<Float>>> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        let incident = flip_if_neg(sample_unit_hemisphere(sample));
+        let spectrum = self.evaluate_buf(incident, outgoing, indices);
         let pdf = self.pdf(incident, outgoing);
 
         Some(BxDFSample::new(spectrum, incident, pdf, self.get_type()))

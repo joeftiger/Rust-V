@@ -26,7 +26,6 @@ num_cpus = "1.13.0"
 # live image of rendering
 show-image = { version = "0.8.4", features = ["image", "save"], optional = true }
 # linear algebra
-#ultraviolet = { version = "", features= ["int", "serde"] }
 ultraviolet = { version = "0.8.1", features = ["int", "serde"] }
 
 # De-/Serialization

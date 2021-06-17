@@ -101,6 +101,12 @@ impl BxDF for OrenNayar {
         self.r * oren_nayar
     }
 
+    fn evaluate_buf(&self, incident: Vector3, outgoing: Vector3, indices: &[usize]) -> Vec<Float> {
+        let oren_nayar = self.calc_param(incident, outgoing);
+
+        indices.iter().map(|&i| self.r[i] * oren_nayar).collect()
+    }
+
     fn evaluate_light_wave(
         &self,
         incident: Vector3,

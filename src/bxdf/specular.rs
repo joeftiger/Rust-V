@@ -67,6 +67,10 @@ impl BxDF for SpecularReflection {
         Spectrum::broadcast(0.0)
     }
 
+    fn evaluate_buf(&self, _: Vector3, _: Vector3, indices: &[usize]) -> Vec<Float> {
+        vec![0.0; indices.len()]
+    }
+
     fn evaluate_light_wave(&self, _: Vector3, _: Vector3, _: usize) -> Float {
         0.0
     }
@@ -78,6 +82,31 @@ impl BxDF for SpecularReflection {
 
         let cos_i = cos_theta(incident);
         let spectrum = self.fresnel.evaluate(cos_i) * self.r;
+
+        Some(BxDFSample::new(spectrum, incident, 1.0, self.get_type()))
+    }
+
+    fn sample_buf(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        indices: &[usize],
+    ) -> Option<BxDFSample<Vec<Float>>> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        let incident = bxdf_incident_to(outgoing);
+
+        let cos_i = cos_theta(incident);
+        let spectrum = indices
+            .iter()
+            .map(|&i| {
+                self.r[i]
+                    * self
+                        .fresnel
+                        .evaluate_lambda(Spectrum::lambda_of_index(i), cos_i)
+            })
+            .collect();
 
         Some(BxDFSample::new(spectrum, incident, 1.0, self.get_type()))
     }
@@ -177,6 +206,10 @@ impl BxDF for SpecularTransmission {
         Spectrum::broadcast(0.0)
     }
 
+    fn evaluate_buf(&self, _: Vector3, _: Vector3, indices: &[usize]) -> Vec<Float> {
+        vec![0.0; indices.len()]
+    }
+
     fn evaluate_light_wave(&self, _: Vector3, _: Vector3, _: usize) -> Float {
         0.0
     }
@@ -185,11 +218,38 @@ impl BxDF for SpecularTransmission {
         debug_assert!(is_normalized(outgoing));
 
         let (eta_i, eta_t, normal) = etas(self.fresnel.eta_i, self.fresnel.eta_t, outgoing);
-
         let incident = refract(outgoing, normal, eta_i.n_uniform() / eta_t.n_uniform())?;
 
         let cos_i = cos_theta(incident);
         let spectrum = self.t * (Spectrum::broadcast(1.0) - self.fresnel.evaluate(cos_i));
+
+        Some(BxDFSample::new(spectrum, incident, 1.0, self.get_type()))
+    }
+
+    fn sample_buf(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        indices: &[usize],
+    ) -> Option<BxDFSample<Vec<Float>>> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        let (eta_i, eta_t, normal) = etas(self.fresnel.eta_i, self.fresnel.eta_t, outgoing);
+        let lambda = Spectrum::lambda_of_index(indices[0]);
+        let incident = refract(outgoing, normal, eta_i.n(lambda) / eta_t.n(lambda))?;
+
+        let cos_i = cos_theta(incident);
+        let spectrum = indices
+            .iter()
+            .map(|&i| {
+                self.t[i]
+                    * (1.0
+                        - self
+                            .fresnel
+                            .evaluate_lambda(Spectrum::lambda_of_index(i), cos_i))
+            })
+            .collect();
 
         Some(BxDFSample::new(spectrum, incident, 1.0, self.get_type()))
     }
@@ -337,6 +397,10 @@ impl BxDF for FresnelSpecular {
         Spectrum::broadcast(0.0)
     }
 
+    fn evaluate_buf(&self, _: Vector3, _: Vector3, indices: &[usize]) -> Vec<Float> {
+        vec![0.0; indices.len()]
+    }
+
     fn evaluate_light_wave(&self, _: Vector3, _: Vector3, _: usize) -> Float {
         0.0
     }
@@ -372,6 +436,72 @@ impl BxDF for FresnelSpecular {
         let spectrum = self.r * f;
 
         Some(BxDFSample::new(spectrum, incident, f, typ))
+    }
+
+    fn sample_buf(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        indices: &[usize],
+    ) -> Option<BxDFSample<Vec<Float>>> {
+        debug_assert!(is_normalized(outgoing));
+        debug_assert!(within_01(sample));
+
+        let cos_outgoing = cos_theta(outgoing);
+
+        let hero_lambda = Spectrum::lambda_of_index(indices[0]);
+
+        let eta_i_orig = self.fresnel.eta_i.n(hero_lambda);
+        let eta_t_orig = self.fresnel.eta_t.n(hero_lambda);
+        let f = fresnel_dielectric(cos_outgoing, eta_i_orig, eta_t_orig);
+
+        let incident;
+        let spectrum;
+        let typ;
+        let pdf;
+        if f < sample.x {
+            // if entering
+            let (eta_i, eta_t, normal) = if cos_outgoing > 0.0 {
+                (eta_i_orig, eta_t_orig, bxdf_normal())
+            } else {
+                (eta_t_orig, eta_i_orig, -bxdf_normal())
+            };
+
+            incident = refract(outgoing, normal, eta_i / eta_t)?;
+
+            let cos_i = cos_theta(incident);
+            spectrum = indices
+                .iter()
+                .map(|&i| {
+                    self.t[0]
+                        * (1.0
+                            - self
+                                .fresnel
+                                .evaluate_lambda(Spectrum::lambda_of_index(i), cos_i))
+                })
+                .collect();
+
+            typ = Type::SPECULAR | Type::TRANSMISSION;
+            pdf = 1.0 - f;
+        } else {
+            incident = bxdf_incident_to(outgoing);
+
+            let cos_i = cos_theta(incident);
+            spectrum = indices
+                .iter()
+                .map(|&i| {
+                    self.r[i]
+                        * self
+                            .fresnel
+                            .evaluate_lambda(Spectrum::lambda_of_index(i), cos_i)
+                })
+                .collect();
+
+            typ = Type::SPECULAR | Type::REFLECTION;
+            pdf = 1.0;
+        }
+
+        Some(BxDFSample::new(spectrum, incident, pdf, typ))
     }
 
     fn sample_light_wave(

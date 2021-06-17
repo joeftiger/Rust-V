@@ -11,7 +11,6 @@ use crate::sensor::pixel::Pixel;
 use crate::Float;
 use geometry::{offset_ray_towards, Ray};
 use serde::{Deserialize, Serialize};
-use utility::floats::FloatExt;
 
 enum TraceResult {
     Done,
@@ -46,11 +45,11 @@ impl SpectralPath {
         sampler: Sampler,
         bxdf: &dyn BxDF,
         current_bounce: u32,
+        mut throughput: Float,
         index: usize,
-        illumination: &mut Float,
-        throughput: &mut Float,
-    ) {
+    ) -> Float {
         let mut specular = true;
+        let mut illumination = 0.0;
         for bounce in current_bounce..self.max_depth {
             let outgoing = -hit.ray.direction;
             let normal = hit.normal;
@@ -58,13 +57,16 @@ impl SpectralPath {
 
             if specular {
                 if let SceneObject::Emitter(e) = &hit.object {
-                    *illumination += *throughput * e.emission_light_wave(index); //e.radiance(&outgoing, &normal);
+                    illumination += throughput * e.emission[index];
                     break;
                 }
             }
 
-            *illumination +=
-                *throughput * direct_illumination_light_wave(scene, sampler, &hit, bsdf, index);
+            // already done "upstairs"
+            if bounce != current_bounce {
+                illumination +=
+                    throughput * direct_illumination_light_wave(scene, sampler, &hit, bsdf, index);
+            }
 
             let bxdf_sample = if bounce == current_bounce {
                 BSDF::sample_bxdf_light_wave(bxdf, normal, outgoing, sampler.get_2d(), index)
@@ -84,7 +86,7 @@ impl SpectralPath {
                     bxdf_sample.incident.dot(normal).abs()
                 };
 
-                *throughput *= bxdf_sample.spectrum * (cos_abs / bxdf_sample.pdf);
+                throughput *= bxdf_sample.spectrum * (cos_abs / bxdf_sample.pdf);
 
                 let ray = offset_ray_towards(hit.point, hit.normal, bxdf_sample.incident);
                 match scene.intersect(&ray) {
@@ -95,6 +97,8 @@ impl SpectralPath {
                 break;
             }
         }
+
+        illumination
     }
 
     fn trace_bundle(
@@ -118,7 +122,7 @@ impl SpectralPath {
             if bounce == 0 {
                 if let SceneObject::Emitter(e) = &hit.object {
                     for i in 0..indices.len() {
-                        illumination[i] = e.emission_light_wave(indices[i]);
+                        illumination[i] = e.emission[i];
                     }
                     return;
                 }
@@ -136,16 +140,17 @@ impl SpectralPath {
                 // if specular, trace single
                 if bxdf.get_type().is_specular() {
                     for i in 0..indices.len() {
-                        self.trace_single(
+                        let tail_illum = self.trace_single(
                             scene,
                             hit.clone(),
                             sampler,
                             bxdf,
                             bounce,
+                            throughput[i],
                             i,
-                            &mut illumination[i],
-                            &mut throughput[i],
                         );
+
+                        illumination[i] += tail_illum;
                     }
 
                     return;
@@ -164,8 +169,7 @@ impl SpectralPath {
                             bxdf, normal, incident, outgoing, indices[i],
                         );
 
-                        throughput[i] *=
-                            intensity * incident.dot(normal).fast_clamp(0.0, 1.0) / pdf;
+                        throughput[i] *= intensity * incident.dot(normal).abs() / pdf;
                     }
 
                     // trace next intersection

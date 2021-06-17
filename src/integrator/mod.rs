@@ -17,23 +17,28 @@
 //! * **Goral** radiosity: `ED*L`
 
 mod debug_normals;
+mod hero;
 mod path;
 mod spectral_path;
 mod whitted;
 
 pub use debug_normals::*;
+pub use hero::*;
 pub use path::*;
 pub use spectral_path::*;
 pub use whitted::*;
 
 use crate::bxdf::{Type, BSDF};
+use crate::objects::Emitter;
 use crate::samplers::Sampler;
 use crate::scene::{Scene, SceneIntersection};
 use crate::sensor::pixel::Pixel;
 use crate::Float;
 use crate::Spectrum;
 use color::Color;
+use core::slice::Iter;
 use geometry::Ray;
+use std::sync::Arc;
 
 /// An integrator to calculate the color of a pixel / ray.
 #[typetag::serde]
@@ -49,6 +54,27 @@ pub trait Integrator: Send + Sync {
     /// # Returns
     /// * The color spectrum of the given ray
     fn integrate(&self, pixel: &mut Pixel, scene: &Scene, primary_ray: &Ray, sampler: Sampler);
+}
+
+use serde::{Deserialize, Serialize};
+use std::ops::Index;
+
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+pub enum DirectLightStrategy {
+    All,
+    Random,
+}
+
+impl DirectLightStrategy {
+    pub fn get_emitters<'a>(&self, scene: &'a Scene, sample: Float) -> Iter<'a, Arc<Emitter>> {
+        match self {
+            DirectLightStrategy::All => scene.emitters.iter(),
+            DirectLightStrategy::Random => {
+                let i = (scene.emitters.len() as Float * sample) as usize;
+                core::slice::from_ref(scene.emitters.index(i)).iter()
+            }
+        }
+    }
 }
 
 #[inline]
@@ -92,6 +118,43 @@ fn direct_illumination(
     }
 
     illumination
+}
+
+fn direct_illumination_buf(
+    scene: &Scene,
+    sampler: Sampler,
+    strategy: DirectLightStrategy,
+    hit: &SceneIntersection,
+    bsdf: &BSDF,
+    indices: &[usize],
+    illumination: &mut [Float],
+) {
+    if bsdf.is_empty() {
+        return;
+    }
+
+    let outgoing_world = -hit.ray.direction;
+    for light in strategy.get_emitters(scene, sampler.get_1d()) {
+        let sample = light.sample_buf(hit.point, sampler.get_2d(), indices);
+
+        if sample.pdf > 0.0 && sample.occlusion_tester.unoccluded(scene) {
+            let intensities = bsdf.evaluate_buf(
+                hit.normal,
+                sample.incident,
+                outgoing_world,
+                Type::ALL,
+                indices,
+            );
+
+            for i in 0..indices.len() {
+                if intensities[i] != 0.0 && sample.radiance[i] != 0.0 {
+                    let cos_abs = sample.incident.dot(hit.normal).abs();
+
+                    illumination[i] += intensities[i] * sample.radiance[i] * cos_abs / sample.pdf;
+                }
+            }
+        }
+    }
 }
 
 #[inline]

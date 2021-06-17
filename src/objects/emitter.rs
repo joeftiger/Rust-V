@@ -72,6 +72,23 @@ impl Emitter {
         }
     }
 
+    pub fn radiance_buf(
+        &self,
+        incident: Vector3,
+        normal: Vector3,
+        indices: &[usize],
+    ) -> Vec<Float> {
+        let mut buf = vec![0.0; indices.len()];
+
+        if incident.dot(normal) > 0.0 {
+            for i in 0..indices.len() {
+                buf[i] = self.emission[indices[i]];
+            }
+        }
+
+        buf
+    }
+
     pub fn radiance_light_wave(
         &self,
         incident: Vector3,
@@ -116,6 +133,25 @@ impl Emitter {
         let radiance = self.radiance(-incident, surface_sample.normal);
 
         EmitterSample::new(radiance, incident, surface_sample.pdf, occlusion_tester)
+    }
+
+    pub fn sample_buf(
+        &self,
+        point: Vector3,
+        sample: Vector2,
+        indices: &[usize],
+    ) -> EmitterSample<Vec<Float>> {
+        debug_assert!(is_finite(point));
+        debug_assert!(within_01(sample));
+
+        let surface_sample = self.geometry.sample_surface(point, sample);
+
+        let occlusion_tester = OcclusionTester::between(point, surface_sample.point);
+        let incident = occlusion_tester.ray.direction;
+
+        let radiances = self.radiance_buf(-incident, surface_sample.normal, indices);
+
+        EmitterSample::new(radiances, incident, surface_sample.pdf, occlusion_tester)
     }
 
     pub fn sample_light_wave(
