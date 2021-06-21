@@ -345,10 +345,7 @@ pub struct BxDFSample<T> {
     pub typ: Type,
 }
 
-impl<T> BxDFSample<T>
-where
-    T: Default,
-{
+impl<T> BxDFSample<T> {
     /// Creates a new sample.
     ///
     /// # Constraints
@@ -364,30 +361,6 @@ where
     /// * Self
     pub fn new(spectrum: T, incident: Vector3, pdf: Float, typ: Type) -> Self {
         debug_assert!(is_normalized(incident));
-
-        Self {
-            spectrum,
-            incident,
-            pdf,
-            typ,
-        }
-    }
-
-    /// Creates an "empty" sample, assigning zeroes to all struct members.
-    ///
-    /// Strictly speaking, the resulting sample is invalid, as the `incident` is a zero vector,
-    ///
-    /// # Returns
-    /// * Self with values:
-    ///     * `spectrum` - Zero / black
-    ///     * `incident` - Zero
-    ///     * `pdf` - Zero
-    ///     * `typ` - None
-    pub fn empty() -> Self {
-        let spectrum = Default::default();
-        let incident = Vector3::zero();
-        let pdf = 0.0;
-        let typ = Type::NONE;
 
         Self {
             spectrum,

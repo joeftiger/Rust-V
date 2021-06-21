@@ -14,6 +14,24 @@ use std::path::Path;
 #[cfg(not(feature = "watertight-mesh"))]
 use utility::floats::FloatExt;
 
+/*#[derive(Debug, Serialize, Deserialize)]
+pub enum SerdeMesh {
+    Mesh(Mesh),
+    File {
+        path: String,
+        shading_mode: ShadingMode,
+    },
+}
+
+impl From<SerdeMesh> for Mesh {
+    fn from(sm: SerdeMesh) -> Self {
+        match sm {
+            SerdeMesh::Mesh(m) => m,
+            SerdeMesh::File { path, shading_mode } => Mesh::load(path, shading_mode).build_bvh()
+        }
+    }
+}*/
+
 /// The shading mode defines the shading of normals. In `Flat` mode, the surface of triangles will
 /// appear flat. In `Phong` however, they will be interpolated to create a smooth looking surface.
 #[derive(Debug, Serialize, Deserialize)]
@@ -563,7 +581,7 @@ impl Mesh {
         self
     }
 
-    pub fn update_bounds(&mut self) {
+    pub fn update_bounds(&mut self) -> &mut Self {
         let mut new_bounds = Aabb::empty();
         self.vertices.iter_mut().for_each(|v| {
             new_bounds.min = new_bounds.min.min_by_component(*v);
@@ -571,10 +589,14 @@ impl Mesh {
         });
 
         self.bounds = new_bounds;
+
+        self
     }
 
-    pub fn build_bvh(&mut self) {
+    pub fn build_bvh(&mut self) -> &mut Self {
         self.bvh = Tree::new(self.faces.clone(), |f| f.bounds(&self.vertices));
+
+        self
     }
 }
 

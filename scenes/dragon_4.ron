@@ -29,15 +29,16 @@
             ),
             FovY: 70,
             Resolution: (
-                x: 512,
-                y: 512,
+                x: 256,
+                y: 256,
             ),
         ),
     },
     integrator: {
-        "SpectralPath": (
-            max_depth: 8,
-            light_wave_samples: 3,
+        "Hero": (
+            max_depth: 5,
+            light_wave_samples: 6,
+            direct_light_strategy: All,
             spectral_sampler: Hero,
         ),
     },
@@ -70664,18 +70665,26 @@
             )),
             Emitter((
                 geometry: {
-                    "Point": (
-                        Vec3 (
+                    // "Point": (
+                    //     Vec3 (
+                    //         x: 0,
+                    //         y: 1.937,
+                    //         z: 0,
+                    //     ),
+                    // ),
+                    "Sphere": (
+                        center: (
                             x: 0,
                             y: 1.937,
                             z: 0,
                         ),
+                        radius: 0.0625,
                     ),
                 },
                 bsdf: (
                     bxdfs: [],
                 ),
-                emission: MulColor(0.7, White),
+                emission: MulColor(200, White),
             )),
         ],
     ),
