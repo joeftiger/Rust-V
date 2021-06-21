@@ -221,24 +221,6 @@ impl BSDF {
             })
     }
 
-    pub fn sample_bxdf(
-        bxdf: &dyn BxDF,
-        normal: Vector3,
-        outgoing_world: Vector3,
-        sample: Sample,
-    ) -> Option<BxDFSample<Spectrum>> {
-        debug_assert!(is_normalized(normal));
-        debug_assert!(is_normalized(outgoing_world));
-
-        let rotation = world_to_bxdf(normal);
-        let outgoing = rotation * outgoing_world;
-
-        bxdf.sample(outgoing, sample.two_d).map(|mut s| {
-            s.incident = rotation.reversed() * s.incident;
-            s
-        })
-    }
-
     pub fn sample_light_wave(
         &self,
         normal: Vector3,
@@ -260,94 +242,6 @@ impl BSDF {
                 s.incident = rotation.reversed() * s.incident;
                 s
             })
-    }
-
-    pub fn sample_bxdf_light_wave(
-        bxdf: &dyn BxDF,
-        normal: Vector3,
-        outgoing_world: Vector3,
-        sample: Vector2,
-        light_wave_index: usize,
-    ) -> Option<BxDFSample<Float>> {
-        debug_assert!(is_normalized(normal));
-        debug_assert!(is_normalized(outgoing_world));
-
-        let rotation = world_to_bxdf(normal);
-        let outgoing = rotation * outgoing_world;
-
-        bxdf.sample_light_wave(outgoing, sample, light_wave_index)
-            .map(|mut s| {
-                s.incident = rotation.reversed() * s.incident;
-                s
-            })
-    }
-
-    pub fn sample_bxdf_incident(
-        bxdf: &dyn BxDF,
-        normal: Vector3,
-        outgoing_world: Vector3,
-        sample: Vector2,
-    ) -> Option<Vector3> {
-        debug_assert!(is_normalized(normal));
-        debug_assert!(is_normalized(outgoing_world));
-
-        let rotation = world_to_bxdf(normal);
-        let outgoing = rotation * outgoing_world;
-
-        bxdf.sample_incident(outgoing, sample)
-            .map(|incident| rotation.reversed() * incident)
-    }
-
-    pub fn sample_bxdf_incident_light_wave(
-        bxdf: &dyn BxDF,
-        normal: Vector3,
-        outgoing_world: Vector3,
-        sample: Vector2,
-        light_wave_index: usize,
-    ) -> Option<Vector3> {
-        debug_assert!(is_normalized(normal));
-        debug_assert!(is_normalized(outgoing_world));
-
-        let rotation = world_to_bxdf(normal);
-        let outgoing = rotation * outgoing_world;
-
-        bxdf.sample_incident_light_wave(outgoing, sample, light_wave_index)
-            .map(|incident| rotation.reversed() * incident)
-    }
-
-    pub fn sample_bxdf_incident_pdf(
-        bxdf: &dyn BxDF,
-        normal: Vector3,
-        outgoing_world: Vector3,
-        sample: Vector2,
-    ) -> Option<(Vector3, Float)> {
-        debug_assert!(!bxdf.is_type(Type::SPECULAR));
-        debug_assert!(is_normalized(normal));
-        debug_assert!(is_normalized(outgoing_world));
-
-        let rotation = world_to_bxdf(normal);
-        let outgoing = rotation * outgoing_world;
-
-        bxdf.sample_incident_pdf(outgoing, sample)
-            .map(|(incident, pdf)| (rotation.reversed() * incident, pdf))
-    }
-
-    pub fn sample_bxdf_incident_pdf_light_wave(
-        bxdf: &dyn BxDF,
-        normal: Vector3,
-        outgoing_world: Vector3,
-        sample: Vector2,
-        light_wave_index: usize,
-    ) -> Option<(Vector3, Float)> {
-        debug_assert!(!bxdf.is_type(Type::SPECULAR));
-        debug_assert!(is_normalized(normal));
-        debug_assert!(is_normalized(outgoing_world));
-
-        let rotation = world_to_bxdf(normal);
-        let outgoing = rotation * outgoing_world;
-
-        bxdf.sample_incident_pdf_light_wave(outgoing, sample, light_wave_index)
-            .map(|(incident, pdf)| (rotation.reversed() * incident, pdf))
     }
 
     pub fn pdf(

@@ -128,6 +128,7 @@ fn direct_illumination_buf(
     bsdf: &BSDF,
     indices: &[usize],
     illumination: &mut [Float],
+    throughput: &[Float],
 ) {
     if bsdf.is_empty() {
         return;
@@ -150,55 +151,10 @@ fn direct_illumination_buf(
                 if intensities[i] != 0.0 && sample.radiance[i] != 0.0 {
                     let cos_abs = sample.incident.dot(hit.normal).abs();
 
-                    illumination[i] += intensities[i] * sample.radiance[i] * cos_abs / sample.pdf;
+                    illumination[i] +=
+                        throughput[i] * intensities[i] * sample.radiance[i] * cos_abs / sample.pdf;
                 }
             }
         }
     }
-}
-
-#[inline]
-fn direct_illumination_light_wave(
-    scene: &Scene,
-    sampler: Sampler,
-    intersection: &SceneIntersection,
-    bsdf: &BSDF,
-    light_wave_index: usize,
-) -> Float {
-    let mut illumination = 0.0;
-
-    if bsdf.is_empty() {
-        return illumination;
-    }
-
-    let outgoing_world = -intersection.ray.direction;
-
-    for light in &scene.emitters {
-        let emitter_sample =
-            light.sample_light_wave(intersection.point, sampler.get_2d(), light_wave_index);
-
-        if emitter_sample.pdf > 0.0
-            && emitter_sample.radiance != 0.0
-            && emitter_sample.occlusion_tester.unoccluded(scene)
-        {
-            let bsdf_intensity = bsdf.evaluate_light_wave(
-                intersection.normal,
-                emitter_sample.incident,
-                outgoing_world,
-                Type::ALL,
-                light_wave_index,
-            );
-
-            if bsdf_intensity != 0.0 {
-                let cos = emitter_sample.incident.dot(intersection.normal);
-
-                if cos != 0.0 {
-                    illumination +=
-                        bsdf_intensity * emitter_sample.radiance * cos.abs() / emitter_sample.pdf;
-                }
-            }
-        }
-    }
-
-    illumination
 }

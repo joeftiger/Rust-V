@@ -1,4 +1,4 @@
-#![allow(unused_variables)]
+/*#![allow(unused_variables)]
 #![allow(dead_code)]
 
 use crate::bxdf::{BxDF, BxDFSample, Type, BSDF};
@@ -213,3 +213,4 @@ impl Integrator for SpectralPath {
         }
     }
 }
+*/

@@ -13,10 +13,12 @@ use serde::{Deserialize, Serialize};
 pub struct Hero {
     max_depth: u32,
     light_wave_samples: u32,
-    strategy: DirectLightStrategy,
+    direct_light_strategy: DirectLightStrategy,
+    spectral_sampler: SpectralSampler,
 }
 
 impl Hero {
+    #[allow(clippy::needless_range_loop)] // clippy is stupid here
     fn trace(
         &self,
         scene: &Scene,
@@ -26,8 +28,9 @@ impl Hero {
         illumination: &mut [Float],
         throughput: &mut [Float],
     ) {
-        assert_eq!(indices.len(), illumination.len());
-        assert_eq!(indices.len(), throughput.len());
+        let buf_size = indices.len();
+        assert_eq!(buf_size, illumination.len());
+        assert_eq!(buf_size, throughput.len());
 
         let mut specular = false;
         for bounce in 0..self.max_depth {
@@ -38,14 +41,14 @@ impl Hero {
             // immediately hitting emitter?
             if bounce == 0 {
                 if let SceneObject::Emitter(e) = &hit.object {
-                    for i in 0..indices.len() {
+                    for i in 0..buf_size {
                         illumination[i] = e.emission[i];
                     }
                     break;
                 }
             } else if specular {
                 if let SceneObject::Emitter(e) = &hit.object {
-                    for i in 0..indices.len() {
+                    for i in 0..buf_size {
                         illumination[i] = throughput[i] * e.emission[i];
                     }
                     break;
@@ -56,17 +59,18 @@ impl Hero {
             direct_illumination_buf(
                 scene,
                 sampler,
-                self.strategy,
+                self.direct_light_strategy,
                 &hit,
                 bsdf,
                 indices,
                 illumination,
+                throughput,
             );
 
             if let Some(bxdf_sample) =
                 bsdf.sample_buf(normal, outgoing, Type::ALL, sampler.get_sample(), indices)
             {
-                if bxdf_sample.pdf == 0.0 || bxdf_sample.spectrum.iter().any(|&s| s == 0.0) {
+                if bxdf_sample.pdf == 0.0 || bxdf_sample.spectrum.iter().all(|&s| s == 0.0) {
                     break;
                 }
 
@@ -78,16 +82,8 @@ impl Hero {
                     bxdf_sample.incident.dot(normal).abs()
                 };
 
-                for i in 0..indices.len() {
-                    let before = throughput[i];
-                    throughput[i] *= bxdf_sample.spectrum[i] * cos_abs
-                        / bxdf_sample.pdf
-                        / indices.len() as Float;
-                    let after = throughput[i];
-
-                    if before <= after {
-                        println!("Before: {:.3}\tAfter: {:.3}", before, after);
-                    }
+                for i in 0..buf_size {
+                    throughput[i] *= bxdf_sample.spectrum[i] * cos_abs / bxdf_sample.pdf;
                 }
 
                 let ray = offset_ray_towards(hit.point, hit.normal, bxdf_sample.incident);
@@ -110,7 +106,7 @@ impl Integrator for Hero {
             let mut illumination = vec![0.0; self.light_wave_samples as usize];
             let mut throughput = vec![1.0; self.light_wave_samples as usize];
 
-            SpectralSampler::Hero.fill_samples(&mut indices);
+            self.spectral_sampler.fill_samples(&mut indices);
 
             self.trace(
                 scene,

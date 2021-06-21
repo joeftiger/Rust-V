@@ -38,11 +38,9 @@
         "Hero": (
             max_depth: 8,
             light_wave_samples: 6,
-            strategy: All,
+            direct_light_strategy: All,
+            spectral_sampler: Hero,
         ),
-        //"Path": (
-        //    max_depth: 8,
-        //),
     },
     sampler: Random,
     scene: (
