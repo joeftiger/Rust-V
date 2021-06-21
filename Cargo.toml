@@ -4,7 +4,7 @@ default-members = [ "color", "demos", "geometry", "utility" ]
 
 [package]
 name = "rust-v"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Julius Oeftiger <j.oeftiger@protonmail.com>"]
 edition = "2018"
 
@@ -48,9 +48,9 @@ harness = false
 f64 = ["ultraviolet/f64", "color/f64", "geometry/f64", "utility/f64"]
 
 [profile.release]
-#codegen-units = 1
+codegen-units = 1
 opt-level = 3
-#lto = true
+lto = true
 incremental = true
 
 [profile.dev]

@@ -35,7 +35,7 @@
         ),
     },
     integrator: {
-        "Hero": (
+        "SpectralPath": (
             max_depth: 8,
             light_wave_samples: 6,
             direct_light_strategy: All,

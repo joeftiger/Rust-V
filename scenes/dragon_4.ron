@@ -3,10 +3,10 @@
         filename: Some("dragon_path.png"),
         bounds: None,
         block_size: (
-            x: 16,
-            y: 16,
+            x: 10,
+            y: 1,
         ),
-        passes: 50000,
+        passes: 500000,
         threads: None,
     ),
     camera: {
@@ -35,7 +35,7 @@
         ),
     },
     integrator: {
-        "Hero": (
+        "SpectralPath": (
             max_depth: 5,
             light_wave_samples: 6,
             direct_light_strategy: All,

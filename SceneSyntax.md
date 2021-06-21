@@ -46,6 +46,14 @@ Vec3 ( // name may be omitted
 )
 ```
 
+### `UBounds2`
+```ron
+UBounds2 ( // name may be omitted
+	min: Vec2,
+	max: Vec2,		// not checked to really be max!
+)
+```
+
 ### `Option<T>`
 Same as in rust code:
 ```ron
@@ -150,6 +158,14 @@ The spectral sampling method for the spectral path tracer.
 Random
 // or
 Hero
+```
+
+### `DirectLightStrategy`
+Defines how we want to calculate the direct illumination.
+```ron
+All         // calculates influence of all lights
+// or
+Random      // calculates influence of only one random light
 ```
 
 

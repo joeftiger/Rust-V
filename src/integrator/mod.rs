@@ -17,13 +17,11 @@
 //! * **Goral** radiosity: `ED*L`
 
 mod debug_normals;
-mod hero;
 mod path;
 mod spectral_path;
 mod whitted;
 
 pub use debug_normals::*;
-pub use hero::*;
 pub use path::*;
 pub use spectral_path::*;
 pub use whitted::*;
