@@ -92,7 +92,6 @@ impl<'a> RenderWindow<'a> {
         // wait for user save or stop
         for event in self.window.event_channel()? {
             if let event::WindowEvent::KeyboardInput(event) = event {
-                println!("{:#?}", event);
                 if event.input.state.is_pressed()
                     && event.input.key_code == Some(event::VirtualKeyCode::Escape)
                 {
