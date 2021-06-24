@@ -75,7 +75,6 @@ impl DirectLightStrategy {
     }
 }
 
-#[inline]
 fn direct_illumination(
     scene: &Scene,
     sampler: Sampler,
@@ -155,4 +154,48 @@ fn direct_illumination_buf(
             }
         }
     }
+}
+
+#[inline]
+fn direct_illumination_wavelength(
+    scene: &Scene,
+    sampler: Sampler,
+    strategy: DirectLightStrategy,
+    intersection: &SceneIntersection,
+    bsdf: &BSDF,
+    index: usize,
+) -> Float {
+    let mut illumination = 0.0;
+
+    if bsdf.is_empty() {
+        return illumination;
+    }
+
+    let outgoing_world = -intersection.ray.direction;
+
+    for light in strategy.get_emitters(scene, sampler.get_1d()) {
+        let emitter_sample = light.sample_wavelength(intersection.point, sampler.get_2d(), index);
+
+        if emitter_sample.pdf != 0.0
+            && emitter_sample.radiance != 0.0
+            && emitter_sample.occlusion_tester.unoccluded(scene)
+        {
+            let bsdf_spectrum = bsdf.evaluate_wavelength(
+                intersection.normal,
+                emitter_sample.incident,
+                outgoing_world,
+                Type::ALL,
+                index,
+            );
+
+            if bsdf_spectrum != 0.0 {
+                let cos = emitter_sample.incident.dot(intersection.normal);
+
+                illumination +=
+                    bsdf_spectrum * emitter_sample.radiance * (cos.abs() / emitter_sample.pdf)
+            }
+        }
+    }
+
+    illumination
 }
