@@ -1,6 +1,7 @@
 #![allow(clippy::upper_case_acronyms)]
 
 mod bsdf;
+mod diffuse;
 mod fresnel;
 mod lambertian;
 mod microfacet;
@@ -9,6 +10,7 @@ mod specular;
 
 pub use bsdf::BSDF;
 
+pub use diffuse::*;
 pub use fresnel::*;
 pub use lambertian::*;
 pub use microfacet::*;
@@ -333,6 +335,27 @@ impl Type {
     }
 }
 
+/// The result of sampling a BxDF with multiple wavelengths.
+///
+/// If the sampling was wavelength-independent, it is of type `Single`.
+/// Otherwise it's of type `Buffer` and needs to be handled accordingly.
+pub enum BxDFSampleBufResult {
+    Single(BxDFSample<Vec<Float>>),
+    Buffer(BxDFSampleBuf),
+}
+
+/// Contains of
+/// * `spectrum` - evaluated scaling spectrum buffer
+/// * `incident` - evaluated incident directions
+/// * `pdf` - evaluated pdfs
+/// * `typ` - sampled `Type`
+pub struct BxDFSampleBuf {
+    pub spectrum: Vec<Float>,
+    pub incidents: Vec<Vector3>,
+    pub pdfs: Vec<Float>,
+    pub types: Vec<Type>,
+}
+
 /// Contains of
 /// * `spectrum` - An evaluated scaling spectrum
 /// * `incident` - An evaluated incident direction
@@ -411,35 +434,11 @@ pub trait BxDF: Send + Sync {
     fn evaluate_buf(&self, incident: Vector3, outgoing: Vector3, indices: &[usize]) -> Vec<Float> {
         indices
             .iter()
-            .map(|&i| self.evaluate_light_wave(incident, outgoing, i))
+            .map(|&i| self.evaluate_wavelength(incident, outgoing, i))
             .collect()
     }
 
-    fn evaluate_light_wave(
-        &self,
-        incident: Vector3,
-        outgoing: Vector3,
-        light_wave_index: usize,
-    ) -> Float;
-
-    fn evaluate_light_waves(
-        &self,
-        incident: Vector3,
-        outgoing: Vector3,
-        light_wave_indices: &[usize],
-        samples_buf: &mut [Float],
-    ) {
-        debug_assert!(is_normalized(incident));
-        debug_assert!(is_normalized(outgoing));
-        debug_assert_eq!(light_wave_indices.len(), samples_buf.len());
-
-        light_wave_indices
-            .iter()
-            .enumerate()
-            .for_each(|(i, &index)| {
-                samples_buf[i] = self.evaluate_light_wave(incident, outgoing, index)
-            });
-    }
+    fn evaluate_wavelength(&self, incident: Vector3, outgoing: Vector3, index: usize) -> Float;
 
     /// Samples an incident light direction for an outgoing light direction from the given sample
     /// space.
@@ -471,7 +470,7 @@ pub trait BxDF: Send + Sync {
         outgoing: Vector3,
         sample: Vector2,
         indices: &[usize],
-    ) -> Option<BxDFSample<Vec<Float>>> {
+    ) -> Option<BxDFSampleBufResult> {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
 
@@ -479,10 +478,15 @@ pub trait BxDF: Send + Sync {
         let spectrum = self.evaluate_buf(incident, outgoing, indices);
         let pdf = self.pdf(incident, outgoing);
 
-        Some(BxDFSample::new(spectrum, incident, pdf, self.get_type()))
+        Some(BxDFSampleBufResult::Single(BxDFSample::new(
+            spectrum,
+            incident,
+            pdf,
+            self.get_type(),
+        )))
     }
 
-    fn sample_light_wave(
+    fn sample_wavelength(
         &self,
         outgoing: Vector3,
         sample: Vector2,
@@ -492,50 +496,11 @@ pub trait BxDF: Send + Sync {
         debug_assert!(within_01(sample));
         debug_assert!(light_wave_index < Spectrum::size());
 
-        let incident = self.sample_incident(outgoing, sample)?;
-        let lambda = self.evaluate_light_wave(incident, outgoing, light_wave_index);
+        let incident = flip_if_neg(sample_unit_hemisphere(sample));
+        let lambda = self.evaluate_wavelength(incident, outgoing, light_wave_index);
         let pdf = self.pdf(incident, outgoing);
 
         Some(BxDFSample::new(lambda, incident, pdf, self.get_type()))
-    }
-
-    #[inline]
-    fn sample_incident(&self, outgoing: Vector3, sample: Vector2) -> Option<Vector3> {
-        debug_assert!(is_normalized(outgoing));
-        debug_assert!(within_01(sample));
-
-        Some(flip_if_neg(sample_unit_hemisphere(sample)))
-    }
-
-    #[inline]
-    fn sample_incident_light_wave(
-        &self,
-        outgoing: Vector3,
-        sample: Vector2,
-        _light_wave_index: usize,
-    ) -> Option<Vector3> {
-        self.sample_incident(outgoing, sample)
-    }
-
-    fn sample_incident_pdf(&self, outgoing: Vector3, sample: Vector2) -> Option<(Vector3, Float)> {
-        debug_assert!(is_normalized(outgoing));
-        debug_assert!(within_01(sample));
-
-        self.sample_incident(outgoing, sample)
-            .map(|incident| (incident, self.pdf(incident, outgoing)))
-    }
-
-    fn sample_incident_pdf_light_wave(
-        &self,
-        outgoing: Vector3,
-        sample: Vector2,
-        light_wave_index: usize,
-    ) -> Option<(Vector3, Float)> {
-        debug_assert!(is_normalized(outgoing));
-        debug_assert!(within_01(sample));
-
-        self.sample_incident_light_wave(outgoing, sample, light_wave_index)
-            .map(|incident| (incident, self.pdf(incident, outgoing)))
     }
 
     /// Computes the probability density function (`pdf`) for the pair of directions.
@@ -594,7 +559,7 @@ impl BxDF for ScaledBxDF {
         self.scale * self.bxdf.evaluate(view, from)
     }
 
-    fn evaluate_light_wave(
+    fn evaluate_wavelength(
         &self,
         incident: Vector3,
         outgoing: Vector3,
@@ -603,7 +568,7 @@ impl BxDF for ScaledBxDF {
         self.scale[light_wave_index]
             * self
                 .bxdf
-                .evaluate_light_wave(incident, outgoing, light_wave_index)
+                .evaluate_wavelength(incident, outgoing, light_wave_index)
     }
 
     fn sample(&self, outgoing: Vector3, sample: Vector2) -> Option<BxDFSample<Spectrum>> {

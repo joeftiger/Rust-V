@@ -330,6 +330,35 @@ impl MicrofacetReflection {
             fresnel,
         }
     }
+
+    /// Samples for a incident and wh if possible.
+    ///
+    /// # Returns
+    /// `(incident, wh)`
+    fn sample_incident_wh_cos_o(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+    ) -> Option<(Vector3, Vector3, Float)> {
+        // Sample microfacet orientation $\wh$ and reflected direction $\wi$
+        if bxdf_is_parallel(outgoing) {
+            return None;
+        }
+
+        let wh = self.distribution.sample_wh(outgoing, sample);
+        let cos_o = outgoing.dot(wh);
+        // Should be rare
+        if cos_o < 0.0 {
+            return None;
+        }
+
+        let incident = outgoing.reflected(wh);
+        if !same_hemisphere(incident, outgoing) {
+            return None;
+        }
+
+        Some((incident, wh, cos_o))
+    }
 }
 
 #[typetag::serde]
@@ -358,7 +387,31 @@ impl BxDF for MicrofacetReflection {
         self.r * f * (mul / (4.0 * cos_theta_i * cos_theta_o))
     }
 
-    fn evaluate_light_wave(
+    fn evaluate_buf(&self, incident: Vector3, outgoing: Vector3, indices: &[usize]) -> Vec<Float> {
+        let cos_theta_i = cos_theta(incident).abs();
+        let cos_theta_o = cos_theta(outgoing).abs();
+        if cos_theta_i == 0.0 || cos_theta_o == 0.0 {
+            return vec![0.0; indices.len()];
+        }
+
+        let wh = incident + outgoing;
+        if wh == Vector3::zero() {
+            return vec![0.0; indices.len()];
+        }
+
+        let wh = wh.normalized();
+        let cos_i = incident.dot(wh);
+        let mul = self.distribution.d(wh) * self.distribution.g(incident, outgoing)
+            / (4.0 * cos_theta_i * cos_theta_o);
+
+        indices
+            .iter()
+            .map(|&i| (Spectrum::lambda_of_index(i), i))
+            .map(|(lambda, i)| self.fresnel.evaluate_lambda(cos_i, lambda) * self.r[i] * mul)
+            .collect()
+    }
+
+    fn evaluate_wavelength(
         &self,
         incident: Vector3,
         outgoing: Vector3,
@@ -376,32 +429,52 @@ impl BxDF for MicrofacetReflection {
         }
 
         let wh = wh.normalized();
+        let cos_i = incident.dot(wh);
+        let lambda = Spectrum::lambda_of_index(light_wave_index);
 
-        let f = self.fresnel.evaluate(incident.dot(wh));
+        let f = self.fresnel.evaluate_lambda(cos_i, lambda);
         let mul = self.distribution.d(wh) * self.distribution.g(incident, outgoing);
 
-        self.r[light_wave_index] * f[light_wave_index] * (mul / (4.0 * cos_theta_i * cos_theta_o))
+        self.r[light_wave_index] * f * (mul / (4.0 * cos_theta_i * cos_theta_o))
     }
 
     fn sample(&self, outgoing: Vector3, sample: Vector2) -> Option<BxDFSample<Spectrum>> {
-        // Sample microfacet orientation $\wh$ and reflected direction $\wi$
-        if bxdf_is_parallel(outgoing) {
-            return None;
-        }
-
-        let wh = self.distribution.sample_wh(outgoing, sample);
-        let cos_o = outgoing.dot(wh);
-        // Should be rare
-        if cos_o < 0.0 {
-            return None;
-        }
-
-        let incident = outgoing.reflected(wh);
-        if !same_hemisphere(incident, outgoing) {
-            return None;
-        }
+        let (incident, wh, cos_o) = self.sample_incident_wh_cos_o(outgoing, sample)?;
 
         let spectrum = self.evaluate(incident, outgoing);
+        let pdf = self.distribution.pdf(outgoing, wh) / (4.0 * cos_o);
+
+        Some(BxDFSample::new(spectrum, incident, pdf, self.get_type()))
+    }
+
+    fn sample_buf(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        indices: &[usize],
+    ) -> Option<BxDFSampleBufResult> {
+        let (incident, wh, cos_o) = self.sample_incident_wh_cos_o(outgoing, sample)?;
+
+        let spectrum = self.evaluate_buf(incident, outgoing, indices);
+        let pdf = self.distribution.pdf(outgoing, wh) / (4.0 * cos_o);
+
+        Some(BxDFSampleBufResult::Single(BxDFSample::new(
+            spectrum,
+            incident,
+            pdf,
+            self.get_type(),
+        )))
+    }
+
+    fn sample_wavelength(
+        &self,
+        outgoing: Vector3,
+        sample: Vector2,
+        index: usize,
+    ) -> Option<BxDFSample<Float>> {
+        let (incident, wh, cos_o) = self.sample_incident_wh_cos_o(outgoing, sample)?;
+
+        let spectrum = self.evaluate_wavelength(incident, outgoing, index);
         let pdf = self.distribution.pdf(outgoing, wh) / (4.0 * cos_o);
 
         Some(BxDFSample::new(spectrum, incident, pdf, self.get_type()))

@@ -26,9 +26,9 @@ impl Fresnel for FresnelType {
     }
 
     #[inline]
-    fn evaluate_lambda(&self, lambda: Float, cos_i: Float) -> Float {
+    fn evaluate_lambda(&self, cos_i: Float, lambda: Float) -> Float {
         match self {
-            FresnelType::Dielectric(f) => f.evaluate_lambda(lambda, cos_i),
+            FresnelType::Dielectric(f) => f.evaluate_lambda(cos_i, lambda),
             FresnelType::NoOp => 1.0,
         }
     }
@@ -80,7 +80,6 @@ pub fn dielectric_perpendicular(cos_i: Float, cos_t: Float, eta_i: Float, eta_t:
 /// # Returns
 /// * The Fresnel reflectance
 pub fn fresnel_dielectric(mut cos_i: Float, mut eta_i: Float, mut eta_t: Float) -> Float {
-    cos_i = cos_i.fast_clamp(-1.0, 1.0);
     // potentially swap indices of refraction
     let entering = cos_i > 0.0;
     if !entering {
@@ -97,11 +96,11 @@ pub fn fresnel_dielectric(mut cos_i: Float, mut eta_i: Float, mut eta_t: Float) 
         return 1.0;
     }
 
-    let cos_t = sin_t.mul_add(-sin_t, 1.0).fast_max(0.0).sqrt();
+    let cos_t = Float::fast_max(0.0, 1.0 - sin_t * sin_t).sqrt();
     let r_par = dielectric_parallel(cos_i, cos_t, eta_i, eta_t);
     let r_perp = dielectric_perpendicular(cos_i, cos_t, eta_i, eta_t);
 
-    r_par.mul_add(r_par, r_perp * r_perp) / 2.0
+    0.5 * (r_par * r_par + r_perp * r_perp)
 }
 
 /// Provides an interface for computing Fresnel reflection coefficients.
@@ -147,7 +146,7 @@ impl Fresnel for FresnelDielectric {
     }
 
     #[inline]
-    fn evaluate_lambda(&self, lambda: Float, cos_i: Float) -> Float {
+    fn evaluate_lambda(&self, cos_i: Float, lambda: Float) -> Float {
         fresnel_dielectric(cos_i, self.eta_i.n(lambda), self.eta_t.n(lambda))
     }
 }

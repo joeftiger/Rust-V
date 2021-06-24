@@ -107,7 +107,7 @@ impl BxDF for OrenNayar {
         indices.iter().map(|&i| self.r[i] * oren_nayar).collect()
     }
 
-    fn evaluate_light_wave(
+    fn evaluate_wavelength(
         &self,
         incident: Vector3,
         outgoing: Vector3,
@@ -116,23 +116,5 @@ impl BxDF for OrenNayar {
         let oren_nayar = self.calc_param(incident, outgoing);
 
         self.r[light_wave_index] * oren_nayar
-    }
-
-    fn evaluate_light_waves(
-        &self,
-        incident: Vector3,
-        outgoing: Vector3,
-        light_wave_indices: &[usize],
-        samples_buf: &mut [Float],
-    ) {
-        debug_assert!(is_normalized(incident));
-        debug_assert!(is_normalized(outgoing));
-        debug_assert_eq!(light_wave_indices.len(), samples_buf.len());
-
-        let oren_nayar = self.calc_param(incident, outgoing);
-
-        for (&index, sample) in light_wave_indices.iter().zip(samples_buf.iter_mut()) {
-            *sample = self.r[index] * oren_nayar
-        }
     }
 }

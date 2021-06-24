@@ -1,4 +1,4 @@
-use crate::bxdf::{same_hemisphere, world_to_bxdf, BxDF, BxDFSample, Type};
+use crate::bxdf::{same_hemisphere, world_to_bxdf, BxDF, BxDFSample, BxDFSampleBufResult, Type};
 use crate::debug_utils::is_normalized;
 use crate::samplers::Sample;
 use crate::*;
@@ -115,14 +115,14 @@ impl BSDF {
             .filter(|bxdf| bxdf.is_type(types))
             .for_each(|bxdf| {
                 for i in 0..indices.len() {
-                    buf[i] += bxdf.evaluate_light_wave(incident, outgoing, indices[i]);
+                    buf[i] += bxdf.evaluate_wavelength(incident, outgoing, indices[i]);
                 }
             });
 
         buf
     }
 
-    pub fn evaluate_light_wave(
+    pub fn evaluate_wavelength(
         &self,
         normal: Vector3,
         incident_world: Vector3,
@@ -145,7 +145,7 @@ impl BSDF {
             .iter()
             .filter_map(|bxdf| {
                 if bxdf.is_type(types) {
-                    Some(bxdf.evaluate_light_wave(incident, outgoing, light_wave_index))
+                    Some(bxdf.evaluate_wavelength(incident, outgoing, light_wave_index))
                 } else {
                     None
                 }
@@ -164,7 +164,7 @@ impl BSDF {
         let incident = rotation * incident_world;
         let outgoing = rotation * outgoing_world;
 
-        bxdf.evaluate_light_wave(incident, outgoing, light_wave_index)
+        bxdf.evaluate_wavelength(incident, outgoing, light_wave_index)
     }
 
     pub fn sample(
@@ -205,7 +205,7 @@ impl BSDF {
         types: Type,
         sample: Sample,
         indices: &[usize],
-    ) -> Option<BxDFSample<Vec<Float>>> {
+    ) -> Option<BxDFSampleBufResult> {
         debug_assert!(is_normalized(normal));
         debug_assert!(is_normalized(outgoing_world));
 
@@ -215,9 +215,17 @@ impl BSDF {
         let bxdf = self.random_matching_bxdf(types, sample.one_d)?;
 
         bxdf.sample_buf(outgoing, sample.two_d, indices)
-            .map(|mut s| {
-                s.incident = rotation.reversed() * s.incident;
-                s
+            .map(|mut sample| {
+                let reverse = rotation.reversed();
+
+                match sample {
+                    BxDFSampleBufResult::Single(ref mut s) => s.incident = reverse * s.incident,
+                    BxDFSampleBufResult::Buffer(ref mut s) => {
+                        s.incidents.iter_mut().for_each(|i| *i = reverse * *i)
+                    }
+                }
+
+                sample
             })
     }
 
@@ -237,7 +245,7 @@ impl BSDF {
 
         let bxdf = self.random_matching_bxdf(types, sample.one_d)?;
 
-        bxdf.sample_light_wave(outgoing, sample.two_d, light_wave_index)
+        bxdf.sample_wavelength(outgoing, sample.two_d, light_wave_index)
             .map(|mut s| {
                 s.incident = rotation.reversed() * s.incident;
                 s

@@ -1,12 +1,12 @@
 ( 
     config: (
-        filename: Some("spectral.png"),
+        filename: Some("cornell_oren_nayar.png"),
         bounds: None,
         block_size: (
             x: 32,
             y: 32,
         ),
-        passes: 1000,
+        passes: 100,
         threads: None,
     ),
     camera: {
@@ -29,18 +29,21 @@
             ),
             FovY: 70,
             Resolution: (
-                x: 256,
-                y: 256,
+                x: 512,
+                y: 512,
             ),
         ),
     },
     integrator: {
-        "SpectralPath": (
+        "Path": (
             max_depth: 8,
-            light_wave_samples: 6,
-            direct_light_strategy: All,
-            spectral_sampler: Hero,
         ),
+        // "SpectralPath": (
+        //     max_depth: 8,
+        //     light_wave_samples: 6,
+        //     direct_light_strategy: All,
+        //     spectral_sampler: Hero,
+        // ),
     },
     sampler: Random,
     scene: (
