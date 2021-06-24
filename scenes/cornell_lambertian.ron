@@ -1,12 +1,12 @@
 ( 
     config: (
-        filename: Some("cornell_on_target.png"),
+        filename: Some("cornell_lambertian.png"),
         bounds: None,
         block_size: (
             x: 32,
             y: 32,
         ),
-        passes: 10000000,
+        passes: 100,
         threads: None,
     ),
     camera: {
@@ -35,15 +35,15 @@
         ),
     },
     integrator: {
-        // "Path": (
-        //     max_depth: 8,
-        // ),
-        "SpectralPath": (
-            max_depth: 100,
-            light_wave_samples: 36,
-            direct_light_strategy: All,
-            spectral_sampler: Hero,
+        "Path": (
+            max_depth: 8,
         ),
+        // "SpectralPath": (
+        //     max_depth: 8,
+        //     light_wave_samples: 6,
+        //     direct_light_strategy: All,
+        //     spectral_sampler: Hero,
+        // ),
     },
     sampler: Random,
     scene: (
@@ -78,10 +78,8 @@
                 bsdf: (
                     bxdfs: [
                         {
-                            "OrenNayar": (
+                            "LambertianReflection": (
                                 r: Color(White),
-                                a: 0.86516786,
-                                b: 0.25882423,
                             ),
                         },
                     ],
@@ -105,10 +103,8 @@
                 bsdf: (
                     bxdfs: [
                         {
-                            "OrenNayar": (
+                            "LambertianReflection": (
                                 r: Color(Red),
-                                a: 0.86516786,
-                                b: 0.25882423,
                             ),
                         },
                     ],
@@ -132,10 +128,8 @@
                 bsdf: (
                     bxdfs: [
                         {
-                            "OrenNayar": (
+                            "LambertianReflection": (
                                 r: Color(White),
-                                a: 0.86516786,
-                                b: 0.25882423,
                             ),
                         },
                     ],
@@ -159,10 +153,8 @@
                 bsdf: (
                     bxdfs: [
                         {
-                            "OrenNayar": (
+                            "LambertianReflection": (
                                 r: Color(Green),
-                                a: 0.86516786,
-                                b: 0.25882423,
                             ),
                         },
                     ],
@@ -186,10 +178,8 @@
                 bsdf: (
                     bxdfs: [
                         {
-                            "OrenNayar": (
+                            "LambertianReflection": (
                                 r: Color(White),
-                                a: 0.86516786,
-                                b: 0.25882423,
                             ),
                         },
                     ],
