@@ -40,7 +40,7 @@ use std::sync::Arc;
 
 /// An integrator to calculate the color of a pixel / ray.
 #[typetag::serde]
-pub trait Integrator: Send + Sync {
+pub trait Integrator: DynClone + Send + Sync {
     /// Integrates the given scene with the primary ray and the sampler for a given pixel.
     ///
     /// # Arguments
@@ -54,6 +54,7 @@ pub trait Integrator: Send + Sync {
     fn integrate(&self, pixel: &mut Pixel, scene: &Scene, primary_ray: &Ray, sampler: Sampler);
 }
 
+use dyn_clone::DynClone;
 use serde::{Deserialize, Serialize};
 use std::ops::Index;
 

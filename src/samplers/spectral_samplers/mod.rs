@@ -1,7 +1,7 @@
 use crate::Spectrum;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum SpectralSampler {
     /// Fully randomized samples
     Random,

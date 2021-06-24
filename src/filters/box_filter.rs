@@ -7,30 +7,23 @@ use serde::{Deserialize, Serialize};
 #[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct BoxFilter {
     pub radius: Vector2,
-    pub inv_radius: Vector2,
 }
 
 impl BoxFilter {
     pub fn new(radius: Vector2) -> Self {
-        Self {
-            radius,
-            inv_radius: Vector2::one() / radius,
-        }
+        Self { radius }
     }
 }
 
 #[typetag::serde]
 impl Filter for BoxFilter {
-    fn radius(&self) -> Vector2 {
-        self.radius
-    }
-
-    fn inv_radius(&self) -> Vector2 {
-        self.inv_radius
-    }
-
-    #[inline(always)]
-    fn evaluate(&self, _: Vector2) -> Float {
-        1.0
+    #[inline]
+    fn evaluate(&self, point: Vector2) -> Float {
+        let diff = self.radius - point.abs();
+        if diff.x < 0.0 || diff.y < 0.0 {
+            0.0
+        } else {
+            1.0
+        }
     }
 }

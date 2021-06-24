@@ -11,7 +11,7 @@ use crate::Float;
 use geometry::{offset_ray_towards, Ray};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpectralPath {
     max_depth: u32,
     light_wave_samples: u32,

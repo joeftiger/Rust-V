@@ -3,12 +3,16 @@ mod perspective;
 
 pub use perspective::PerspectiveCamera;
 
+use crate::filters::Filter;
+use dyn_clone::DynClone;
 use geometry::Ray;
 use ultraviolet::UVec2;
 
 #[typetag::serde]
-pub trait Camera: Send + Sync {
+pub trait Camera: DynClone + Send + Sync {
     fn resolution(&self) -> UVec2;
+
+    fn get_filter(&self) -> &dyn Filter;
 
     /// Creates a new primary ray of the given pixel.
     ///

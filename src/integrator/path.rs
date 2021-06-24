@@ -9,7 +9,7 @@ use color::Color;
 use geometry::{offset_ray_towards, Ray};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Path {
     max_depth: u32,
 }

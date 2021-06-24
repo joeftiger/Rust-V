@@ -10,7 +10,7 @@ use geometry::{offset_ray_towards, Ray};
 use serde::{Deserialize, Serialize};
 
 /// The Whitted integrator is a common integrator following specular reflection/transmission recursively.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Whitted {
     max_depth: u32,
 }

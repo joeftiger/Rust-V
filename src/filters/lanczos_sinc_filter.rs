@@ -10,17 +10,12 @@ use utility::math::sinc;
 #[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct LanczosSincFilter {
     pub radius: Vector2,
-    pub inv_radius: Vector2,
     tau: Float,
 }
 
 impl LanczosSincFilter {
     pub fn new(radius: Vector2, tau: Float) -> Self {
-        Self {
-            radius,
-            inv_radius: Vector2::one() / radius,
-            tau,
-        }
+        Self { radius, tau }
     }
 
     #[inline]
@@ -39,14 +34,6 @@ impl LanczosSincFilter {
 
 #[typetag::serde]
 impl Filter for LanczosSincFilter {
-    fn radius(&self) -> Vector2 {
-        self.radius
-    }
-
-    fn inv_radius(&self) -> Vector2 {
-        self.inv_radius
-    }
-
     fn evaluate(&self, point: Vector2) -> Float {
         self.windowed_sinc(point.x, self.radius.x) * self.windowed_sinc(point.y, self.radius.y)
     }

@@ -72,16 +72,30 @@ impl<T> RenderJob<T> {
     }
 }
 
-#[derive(Clone)]
 pub struct Renderer {
     scene: Arc<Scene>,
-    camera: Arc<dyn Camera>,
+    camera: Box<dyn Camera>,
     sampler: Sampler,
-    integrator: Arc<dyn Integrator>,
+    integrator: Box<dyn Integrator>,
     sensor: Arc<Sensor>,
     config: Config,
     progress: Arc<AtomicUsize>,
     pub progress_bar: Arc<Mutex<ProgressBar>>,
+}
+
+impl Clone for Renderer {
+    fn clone(&self) -> Self {
+        Self {
+            scene: self.scene.clone(),
+            camera: dyn_clone::clone_box(&*self.camera),
+            sampler: self.sampler,
+            integrator: dyn_clone::clone_box(&*self.integrator),
+            sensor: self.sensor.clone(),
+            config: self.config.clone(),
+            progress: self.progress.clone(),
+            progress_bar: self.progress_bar.clone(),
+        }
+    }
 }
 
 impl Renderer {

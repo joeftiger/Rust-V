@@ -133,7 +133,7 @@ fn global_light() -> SceneObject {
 }
 
 //noinspection DuplicatedCode
-fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
+fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
     let position = Vector3::new(0.0, 3.0, 10.0);
     let target = Vector3::new(0.0, 0.0, 0.0);
 
@@ -146,5 +146,5 @@ fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
         resolution,
     );
 
-    Arc::new(camera)
+    Box::new(camera)
 }

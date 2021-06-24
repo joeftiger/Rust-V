@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct GaussianFilter {
     pub radius: Vector2,
-    pub inv_radius: Vector2,
     alpha: Float,
     exp: Vector2,
 }
@@ -16,12 +15,7 @@ impl GaussianFilter {
     pub fn new(radius: Vector2, alpha: Float) -> Self {
         let exp = -alpha * radius * radius;
 
-        Self {
-            radius,
-            inv_radius: Vector2::one() / radius,
-            alpha,
-            exp,
-        }
+        Self { radius, alpha, exp }
     }
 
     #[inline]
@@ -32,13 +26,6 @@ impl GaussianFilter {
 
 #[typetag::serde]
 impl Filter for GaussianFilter {
-    fn radius(&self) -> Vector2 {
-        self.radius
-    }
-    fn inv_radius(&self) -> Vector2 {
-        self.inv_radius
-    }
-
     fn evaluate(&self, point: Vector2) -> Float {
         self.gaussian(point.x, self.exp.x) * self.gaussian(point.y, self.exp.y)
     }

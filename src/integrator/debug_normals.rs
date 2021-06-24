@@ -13,7 +13,7 @@ use geometry::Ray;
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DebugNormals;
 
 #[typetag::serde]

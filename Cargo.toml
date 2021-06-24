@@ -33,6 +33,8 @@ serde = { version = "1.0.126", features = ["derive", "rc"] }
 typetag = "0.1.7"
 ron = "0.6.4"
 
+dyn-clone = "1.0.4"
+
 color = { path = "./color" }
 geometry = { path = "./geometry" }
 utility = { path = "./utility" }
@@ -48,9 +50,9 @@ harness = false
 f64 = ["ultraviolet/f64", "color/f64", "geometry/f64", "utility/f64"]
 
 [profile.release]
-codegen-units = 1
+#codegen-units = 1
 opt-level = 3
-lto = true
+#lto = true
 incremental = true
 
 [profile.dev]

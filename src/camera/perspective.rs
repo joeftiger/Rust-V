@@ -1,5 +1,6 @@
 use crate::camera::Camera;
 use crate::debug_utils::{is_finite, is_normalized};
+use crate::filters::Filter;
 use crate::samplers::camera::CameraSampler;
 use crate::{Float, Vector3};
 use geometry::Ray;
@@ -11,6 +12,7 @@ use ultraviolet::UVec2;
 use utility::floats::FloatExt;
 
 /// A perspective camera with a fov somewhere in space, looking at a target.
+#[derive(Clone, Debug)]
 pub struct PerspectiveCamera {
     sampler: CameraSampler,
     position: Vector3,
@@ -93,6 +95,10 @@ impl PerspectiveCamera {
 impl Camera for PerspectiveCamera {
     fn resolution(&self) -> UVec2 {
         self.resolution
+    }
+
+    fn get_filter(&self) -> &dyn Filter {
+        todo!()
     }
 
     #[inline]

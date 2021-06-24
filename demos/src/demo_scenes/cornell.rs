@@ -70,7 +70,7 @@ impl Demo for CornellScene {
     }
 }
 
-fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
+fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
     let position = Vector3::new(X_CENTER, Y_CENTER, FRONT + DIMENSION / 2.0);
     let target = Vector3::new(X_CENTER, Y_CENTER, Z_CENTER);
 
@@ -83,7 +83,7 @@ fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
         resolution,
     );
 
-    Arc::new(camera)
+    Box::new(camera)
 }
 
 fn create_dragon() -> SceneObject {

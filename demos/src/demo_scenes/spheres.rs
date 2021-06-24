@@ -181,7 +181,7 @@ fn create_scene() -> Scene {
 }
 
 //noinspection DuplicatedCode
-fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
+fn create_camera(resolution: UVec2) -> Box<dyn Camera> {
     let position = Vector3::new(0.0, 5.0, 10.0);
     let target = Vector3::new(0.0, 1.0, 0.0);
 
@@ -195,5 +195,5 @@ fn create_camera(resolution: UVec2) -> Arc<dyn Camera> {
     );
     // let camera = crate::camera::perspective_simone::PerspectiveCamera::new(position, target, Vector3::unit_y(), FOVY, resolution);
 
-    Arc::new(camera)
+    Box::new(camera)
 }

@@ -7,7 +7,7 @@ use fastrand::f32 as rand;
 use fastrand::f64 as rand;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum CameraSampler {
     /// No-operation sampler, always returns `Vector2 { x: 0.5, y: 0.5 }`
     NoOp,

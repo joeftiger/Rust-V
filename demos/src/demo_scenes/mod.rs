@@ -16,7 +16,6 @@ use rust_v::scene::Scene;
 
 use rust_v::serialization::Serialization;
 pub use spheres::SphereScene;
-use std::sync::Arc;
 
 #[cfg(not(feature = "f64"))]
 type Float = f32;
@@ -34,7 +33,7 @@ pub trait Demo {
     // TODO: WIP
     fn create() -> Serialization;
 
-    fn empty() -> (UVec2, Config, Arc<dyn Integrator>, Sampler, Scene) {
+    fn empty() -> (UVec2, Config, Box<dyn Integrator>, Sampler, Scene) {
         let resolution = UVec2::new(512, 512);
         let config = Config {
             filename: None,
@@ -44,7 +43,7 @@ pub trait Demo {
             threads: None,
         };
 
-        let integrator = Arc::new(Whitted::new(8));
+        let integrator = Box::new(Whitted::new(8));
         let sampler = Sampler::Random;
         let scene = Scene::default();
 

@@ -1,5 +1,8 @@
 use crate::floats::FloatExt;
 use crate::*;
+#[cfg(not(feature = "f64"))]
+use std::f32::consts::PI;
+#[cfg(feature = "f64")]
 use std::f64::consts::PI;
 
 /// Solves a quadratic equation, handling generics.
@@ -62,7 +65,8 @@ pub fn solve_quadratic(a: Float, b: Float, c: Float) -> Option<(Float, Float)> {
 ///
 /// # Returns
 /// * The sinc of `x`
-#[inline(always)]
+#[inline]
+#[must_use]
 pub fn sinc(mut x: Float) -> Float {
     debug_assert!(x.is_finite());
 
@@ -71,7 +75,7 @@ pub fn sinc(mut x: Float) -> Float {
     if x < Float::epsilon() {
         1.0
     } else {
-        let pix = PI as Float * x;
+        let pix = PI * x;
         Float::sin(pix) / pix
     }
 }

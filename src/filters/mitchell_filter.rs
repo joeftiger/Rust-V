@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 /// Has a good trade off between ringing and blurring.
 #[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct MitchellFilter {
-    pub radius: Vector2,
     pub inv_radius: Vector2,
     b: Float,
     c: Float,
@@ -17,7 +16,6 @@ pub struct MitchellFilter {
 impl MitchellFilter {
     pub fn new(radius: Vector2, b: Float, c: Float) -> Self {
         Self {
-            radius,
             inv_radius: Vector2::one() / radius,
             b,
             c,
@@ -46,14 +44,6 @@ impl MitchellFilter {
 
 #[typetag::serde]
 impl Filter for MitchellFilter {
-    fn radius(&self) -> Vector2 {
-        self.radius
-    }
-
-    fn inv_radius(&self) -> Vector2 {
-        self.inv_radius
-    }
-
     fn evaluate(&self, point: Vector2) -> Float {
         let var = point * self.inv_radius;
         self.mitchell_1d(var.x) * self.mitchell_1d(var.y)

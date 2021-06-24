@@ -13,9 +13,6 @@ pub use triangle_filter::*;
 
 #[typetag::serde]
 pub trait Filter {
-    fn radius(&self) -> Vector2;
-    fn inv_radius(&self) -> Vector2;
-
     /// Evaluates a relative sample point to filter center position.
     ///
     /// # Constraints
