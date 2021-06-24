@@ -36,10 +36,9 @@ impl Emitter {
         }
     }
 
-    pub fn emission_light_wave(&self, light_wave_index: usize) -> Float {
-        debug_assert!(light_wave_index < Spectrum::size());
-
-        self.emission[light_wave_index]
+    #[inline]
+    pub fn emission_wavelength(&self, wavelength_index: usize) -> Float {
+        self.emission[wavelength_index]
     }
 
     /// Returns the radiance of this emitter, comparing the incident and normal vector.
@@ -89,21 +88,21 @@ impl Emitter {
         buf
     }
 
-    pub fn radiance_light_wave(
+    #[inline]
+    pub fn radiance_wavelength(
         &self,
         incident: Vector3,
         normal: Vector3,
-        light_wave_index: usize,
+        wavelenth_index: usize,
     ) -> Float {
         debug_assert!(is_finite(incident));
         debug_assert!(is_normalized(incident));
         debug_assert!(is_finite(normal));
         debug_assert!(is_normalized(normal));
-        debug_assert!(light_wave_index < Spectrum::size());
 
         let dot = incident.dot(normal);
         if dot > 0.0 {
-            self.emission_light_wave(light_wave_index)
+            self.emission_wavelength(wavelenth_index)
         } else {
             0.0
         }
@@ -154,22 +153,21 @@ impl Emitter {
         EmitterSample::new(radiances, incident, surface_sample.pdf, occlusion_tester)
     }
 
-    pub fn sample_light_wave(
+    pub fn sample_wavelength(
         &self,
         point: Vector3,
         sample: Vector2,
-        light_wave_index: usize,
+        wavelength_index: usize,
     ) -> EmitterSample<Float> {
         debug_assert!(is_finite(point));
         debug_assert!(within_01(sample));
-        debug_assert!(light_wave_index < Spectrum::size());
 
         let surface_sample = self.geometry.sample_surface(point, sample);
 
         let occlusion_tester = OcclusionTester::between(point, surface_sample.point);
         let incident = occlusion_tester.ray.direction;
 
-        let radiance = self.radiance_light_wave(-incident, surface_sample.normal, light_wave_index);
+        let radiance = self.radiance_wavelength(-incident, surface_sample.normal, wavelength_index);
 
         EmitterSample::new(radiance, incident, surface_sample.pdf, occlusion_tester)
     }
