@@ -1,7 +1,16 @@
 ( 
     config: (
         filename: Some("cornell_on_target.png"),
-        bounds: None,
+        // bounds: Some((
+        //     min: (
+        //         x: 192,
+        //         y: 192,
+        //     ),
+        //     max: (
+        //         x: 320,
+        //         y: 320,
+        //     ),
+        // )),
         block_size: (
             x: 32,
             y: 32,
@@ -29,8 +38,8 @@
             ),
             FovY: 70,
             Resolution: (
-                x: 512,
-                y: 512,
+                x: 256,
+                y: 256,
             ),
         ),
     },
@@ -38,9 +47,9 @@
         // "Path": (
         //     max_depth: 8,
         // ),
-        "SpectralPath": (
-            max_depth: 100,
-            light_wave_samples: 36,
+        "SpectralPathSingle": (
+            max_depth: 8,
+            light_wave_samples: 6,
             direct_light_strategy: All,
             spectral_sampler: Hero,
         ),
@@ -199,8 +208,8 @@
                 geometry: {
                     "Sphere": (
                         center: (
-                            x: 0,
-                            y: 0,
+                            x: 0.5,
+                            y: -1.5,
                             z: 0,
                         ),
                         radius: 0.5,
@@ -210,11 +219,11 @@
                     bxdfs: [
                         {
                             "FresnelSpecular": (
-                                r: Constant(0.9),
-                                t: Constant(0.8),
+                                r: Constant(1),
+                                t: Constant(1),
                                 fresnel: (
                                     eta_i: Air,
-                                    eta_t: Sapphire,
+                                    eta_t: Glass,
                                 ),
                             ),
                         },
@@ -223,24 +232,24 @@
             )),
             Emitter((
                 geometry: {
-                    "Point": ((
-                        x: 0,
-                        y: 1.937,
-                        z: 0,
-                    )),
-                    // "Sphere": (
-                    //     center: (
-                    //         x: 0,
-                    //         y: 1.937,
-                    //         z: 0,
-                    //     ),
-                    //     radius: 0.0625,
-                    // ),
+                    // "Point": ((
+                    //     x: 0,
+                    //     y: 1.937,
+                    //     z: 0,
+                    // )),
+                    "Sphere": (
+                        center: (
+                            x: -1,
+                            y: 1,
+                            z: -1,
+                        ),
+                        radius: 0.5,
+                    ),
                 },
                 bsdf: (
                     bxdfs: [],
                 ),
-                emission: MulColor(2, White),
+                emission: MulColor(4, White),
             )),
         ],
     ),
