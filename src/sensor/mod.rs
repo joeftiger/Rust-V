@@ -18,7 +18,7 @@ pub fn index_to_vec2(index: usize, height: usize) -> UVec2 {
 use crate::sensor::bounds::UBounds2;
 use crate::sensor::sensor_tile::SensorTile;
 use crate::Float;
-use std::sync::Mutex;
+use parking_lot::Mutex;
 
 pub struct Sensor {
     pub resolution: UVec2,

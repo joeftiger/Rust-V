@@ -90,9 +90,12 @@ impl CmdInput {
         let mut serialization: Serialization =
             from_str(content.as_str()).expect("Could not parse serialization file");
 
-        if self.output.is_some() {
-            serialization.config.filename = self.output.clone()
+        if let Some(o) = &self.output {
+            if !o.is_empty() {
+                serialization.config.filename = self.output.clone()
+            }
         }
+
         if let Some(p) = self.passes {
             serialization.config.passes = p;
         }

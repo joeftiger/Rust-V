@@ -9,8 +9,9 @@ use crate::sensor::Sensor;
 use crate::serialization::Serialization;
 use image::{ImageBuffer, Rgb};
 use indicatif::{ProgressBar, ProgressStyle};
+use parking_lot::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
 
@@ -62,11 +63,7 @@ impl<T> RenderJob<T> {
             handle.join()?;
         }
 
-        self.renderer
-            .progress_bar
-            .lock()
-            .expect("Progress bar poisoned")
-            .finish();
+        self.renderer.progress_bar.lock().finish();
 
         Ok(())
     }
@@ -186,7 +183,7 @@ impl Renderer {
     pub fn render(&mut self) -> RenderJob<()> {
         // reset progress bar
         {
-            let bar = self.progress_bar.lock().expect("Progress bar poisoned");
+            let bar = self.progress_bar.lock();
             bar.set_length((self.sensor.num_tiles() * self.config.passes as usize) as u64);
             bar.reset();
         }
@@ -212,25 +209,21 @@ impl Renderer {
                         break;
                     }
 
-                    if let Some((progress, lock)) = this.clone().get_progress_and_next_tile() {
+                    if let Some((progress, sensor)) = this.clone().get_progress_and_next_tile() {
                         if progress % tiles == 0 {
                             let frame = this_frames.fetch_add(1, Ordering::Relaxed);
-                            let bar = this.progress_bar.lock().expect("Progress bar poisoned");
-                            bar.set_message(format!("Frames rendered: {}", frame));
+                            this.progress_bar
+                                .lock()
+                                .set_message(format!("Frames rendered: {}", frame));
                         }
 
-                        let mut tile = lock.lock().expect("SensorTile is poisoned");
-
-                        for px in &mut tile.pixels {
+                        for px in &mut sensor.lock().pixels {
                             let primary_ray = this.camera.primary_ray(px.position);
                             this.integrator
                                 .integrate(px, &this.scene, &primary_ray, this.sampler);
                         }
 
-                        this.progress_bar
-                            .lock()
-                            .expect("Progress bar is poisoned")
-                            .inc(1);
+                        this.progress_bar.lock().inc(1);
                     } else {
                         break;
                     }
@@ -250,9 +243,7 @@ impl Renderer {
         let mut buffer = ImageBuffer::new(res.x, res.y);
 
         for lock in &self.sensor.tiles {
-            let tile = lock.lock().expect("SensorTile is poisoned");
-
-            for px in &tile.pixels {
+            for px in &lock.lock().pixels {
                 let (x, y) = (px.position.x - bounds.min.x, px.position.y - bounds.min.y);
 
                 buffer.put_pixel(x, y, Rgb::from(px.average));
@@ -269,9 +260,7 @@ impl Renderer {
         let mut buffer = ImageBuffer::new(res.x, res.y);
 
         for lock in &self.sensor.tiles {
-            let tile = lock.lock().expect("SensorTile is poisoned");
-
-            for px in &tile.pixels {
+            for px in &lock.lock().pixels {
                 let (x, y) = (px.position.x - bounds.min.x, px.position.y - bounds.min.y);
 
                 buffer.put_pixel(x, y, Rgb::from(px.average));
