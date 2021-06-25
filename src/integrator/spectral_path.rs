@@ -26,11 +26,10 @@ impl SpectralPath {
         mut hit: SceneIntersection,
         sampler: Sampler,
         index: usize,
+        illumination: &mut Float,
         mut throughput: Float,
         current_bounce: u32,
-    ) -> Float {
-        let mut illumination = 0.0;
-
+    ) {
         let mut specular = false;
         for _ in current_bounce..self.max_depth {
             let outgoing = -hit.ray.direction;
@@ -39,12 +38,12 @@ impl SpectralPath {
 
             if specular {
                 if let SceneObject::Emitter(e) = &hit.object {
-                    illumination += throughput * e.emission[index];
+                    *illumination += throughput * e.emission[index];
                     break;
                 }
             }
 
-            illumination += throughput
+            *illumination += throughput
                 * direct_illumination_wavelength(
                     scene,
                     sampler,
@@ -69,7 +68,7 @@ impl SpectralPath {
                     bxdf_sample.incident.dot(normal).abs()
                 };
 
-                throughput *= bxdf_sample.spectrum * (cos_abs / bxdf_sample.pdf);
+                throughput *= bxdf_sample.spectrum * cos_abs / bxdf_sample.pdf;
 
                 let ray = offset_ray_towards(hit.point, hit.normal, bxdf_sample.incident);
                 match scene.intersect(&ray) {
@@ -80,8 +79,6 @@ impl SpectralPath {
                 break;
             }
         }
-
-        illumination
     }
 
     #[allow(clippy::needless_range_loop)] // clippy is stupid here
@@ -105,17 +102,10 @@ impl SpectralPath {
             let bsdf = hit.object.bsdf();
 
             // immediately hitting emitter?
-            if bounce == 0 {
+            if bounce == 0 || specular {
                 if let SceneObject::Emitter(e) = &hit.object {
                     for i in 0..buf_size {
-                        illumination[i] = e.emission[i];
-                    }
-                    break;
-                }
-            } else if specular {
-                if let SceneObject::Emitter(e) = &hit.object {
-                    for i in 0..buf_size {
-                        illumination[i] += throughput[i] * e.emission[i];
+                        illumination[i] = throughput[i] * e.emission[i];
                     }
                     break;
                 }
@@ -172,7 +162,7 @@ impl SpectralPath {
                                 continue;
                             }
 
-                            specular = typ.is_specular();
+                            let specular = typ.is_specular();
                             let cos_abs = if specular {
                                 // division of cosine omitted in specular bxdfs
                                 1.0
@@ -184,16 +174,15 @@ impl SpectralPath {
 
                             let ray = offset_ray_towards(hit.point, hit.normal, incident);
                             match scene.intersect(&ray) {
-                                Some(new_hit) => {
-                                    illumination[index] += self.trace_single(
-                                        scene,
-                                        new_hit,
-                                        sampler,
-                                        index,
-                                        throughput[index],
-                                        bounce,
-                                    )
-                                }
+                                Some(new_hit) => self.trace_single(
+                                    scene,
+                                    new_hit,
+                                    sampler,
+                                    index,
+                                    &mut illumination[index],
+                                    throughput[index],
+                                    bounce,
+                                ),
                                 None => continue,
                             }
                         }
@@ -212,9 +201,11 @@ impl SpectralPath {
 impl Integrator for SpectralPath {
     fn integrate(&self, pixel: &mut Pixel, scene: &Scene, primary_ray: &Ray, sampler: Sampler) {
         if let Some(hit) = scene.intersect(primary_ray) {
-            let mut indices = vec![0; self.light_wave_samples as usize];
-            let mut illumination = vec![0.0; self.light_wave_samples as usize];
-            let mut throughput = vec![1.0; self.light_wave_samples as usize];
+            let len = self.light_wave_samples as usize;
+
+            let mut indices = vec![0; len];
+            let mut illumination = vec![0.0; len];
+            let mut throughput = vec![1.0; len];
 
             self.spectral_sampler.fill_samples(&mut indices);
 
@@ -227,7 +218,10 @@ impl Integrator for SpectralPath {
                 &mut throughput,
             );
 
-            for (&index, &lambda) in indices.iter().zip(illumination.iter()) {
+            for i in 0..len {
+                let index = indices[i];
+                let lambda = illumination[i];
+
                 pixel.add_light_wave(lambda, index);
             }
         } else {

@@ -1,13 +1,13 @@
-use serde::{Deserialize, Serialize};
-use crate::integrator::{DirectLightStrategy, direct_illumination_wavelength, Integrator};
-use crate::samplers::spectral_samplers::SpectralSampler;
-use crate::scene::{Scene, SceneIntersection};
-use crate::samplers::Sampler;
-use crate::Float;
-use crate::objects::SceneObject;
-use geometry::{offset_ray_towards, Ray};
 use crate::bxdf::Type;
+use crate::integrator::{direct_illumination_wavelength, DirectLightStrategy, Integrator};
+use crate::objects::SceneObject;
+use crate::samplers::spectral_samplers::SpectralSampler;
+use crate::samplers::Sampler;
+use crate::scene::{Scene, SceneIntersection};
 use crate::sensor::pixel::Pixel;
+use crate::Float;
+use geometry::{offset_ray_towards, Ray};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpectralPathSingle {
@@ -43,13 +43,13 @@ impl SpectralPathSingle {
 
             illumination += throughput
                 * direct_illumination_wavelength(
-                scene,
-                sampler,
-                self.direct_light_strategy,
-                &hit,
-                bsdf,
-                index,
-            );
+                    scene,
+                    sampler,
+                    self.direct_light_strategy,
+                    &hit,
+                    bsdf,
+                    index,
+                );
 
             if let Some(bxdf_sample) =
                 bsdf.sample_light_wave(normal, outgoing, Type::ALL, sampler.get_sample(), index)
@@ -66,7 +66,7 @@ impl SpectralPathSingle {
                     bxdf_sample.incident.dot(normal).abs()
                 };
 
-                throughput *= bxdf_sample.spectrum * (cos_abs / bxdf_sample.pdf);
+                throughput *= bxdf_sample.spectrum * cos_abs / bxdf_sample.pdf;
 
                 let ray = offset_ray_towards(hit.point, hit.normal, bxdf_sample.incident);
                 match scene.intersect(&ray) {
