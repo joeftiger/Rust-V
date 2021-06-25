@@ -19,11 +19,13 @@
 mod debug_normals;
 mod path;
 mod spectral_path;
+mod spectral_path_single;
 mod whitted;
 
 pub use debug_normals::*;
 pub use path::*;
 pub use spectral_path::*;
+pub use spectral_path_single::*;
 pub use whitted::*;
 
 use crate::bxdf::{Type, BSDF};
