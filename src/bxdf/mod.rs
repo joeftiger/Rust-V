@@ -337,23 +337,37 @@ impl Type {
 
 /// The result of sampling a BxDF with multiple wavelengths.
 ///
-/// If the sampling was wavelength-independent, it is of type `Single`.
+/// If the sampling was wavelength-independent, it is of type `Bundle`.
 /// Otherwise it's of type `Buffer` and needs to be handled accordingly.
-pub enum BxDFSampleBufResult {
-    Single(BxDFSample<Vec<Float>>),
-    Buffer(BxDFSampleBuf),
+pub enum BxDFSampleResult {
+    Bundle(BxDFSample<Vec<Float>>),
+    ScatteredBundle(Vec<BxDFSampleIndex>),
 }
 
 /// Contains of
-/// * `spectrum` - evaluated scaling spectrum buffer
-/// * `incident` - evaluated incident directions
-/// * `pdf` - evaluated pdfs
-/// * `typ` - sampled `Type`
-pub struct BxDFSampleBuf {
-    pub spectrum: Vec<Float>,
-    pub incidents: Vec<Vector3>,
-    pub pdfs: Vec<Float>,
-    pub types: Vec<Type>,
+/// * `intensity` - An evaluated scaling intensity.
+/// * `incident` - An evaluated incident direction.
+/// * `pdf` - An evaluated pdf.
+/// * `typ` - The sampled `Type`.
+/// * `index` - The wavelength index.
+pub struct BxDFSampleIndex {
+    pub intensity: Float,
+    pub incident: Vector3,
+    pub pdf: Float,
+    pub typ: Type,
+    pub index: usize,
+}
+
+impl BxDFSampleIndex {
+    pub fn new(intensity: Float, incident: Vector3, pdf: Float, typ: Type, index: usize) -> Self {
+        Self {
+            intensity,
+            incident,
+            pdf,
+            typ,
+            index,
+        }
+    }
 }
 
 /// Contains of
@@ -470,7 +484,7 @@ pub trait BxDF: Send + Sync {
         outgoing: Vector3,
         sample: Vector2,
         indices: &[usize],
-    ) -> Option<BxDFSampleBufResult> {
+    ) -> Option<BxDFSampleResult> {
         debug_assert!(is_normalized(outgoing));
         debug_assert!(within_01(sample));
 
@@ -478,7 +492,7 @@ pub trait BxDF: Send + Sync {
         let spectrum = self.evaluate_buf(incident, outgoing, indices);
         let pdf = self.pdf(incident, outgoing);
 
-        Some(BxDFSampleBufResult::Single(BxDFSample::new(
+        Some(BxDFSampleResult::Bundle(BxDFSample::new(
             spectrum,
             incident,
             pdf,

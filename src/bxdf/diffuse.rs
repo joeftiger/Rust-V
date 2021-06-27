@@ -1,4 +1,4 @@
-use crate::bxdf::{bxdf_normal, BxDF, BxDFSample, BxDFSampleBufResult, Type};
+use crate::bxdf::{bxdf_normal, BxDF, BxDFSample, BxDFSampleResult, Type};
 use crate::mc::sample_unit_sphere;
 use crate::*;
 use serde::{Deserialize, Serialize};
@@ -43,7 +43,7 @@ impl BxDF for DiffuseReflection {
         outgoing: Vector3,
         sample: Vector2,
         indices: &[usize],
-    ) -> Option<BxDFSampleBufResult> {
+    ) -> Option<BxDFSampleResult> {
         let target = sample_unit_sphere(sample) + bxdf_normal();
         let incident = target.normalized();
 
@@ -52,7 +52,7 @@ impl BxDF for DiffuseReflection {
 
         let sample = BxDFSample::new(spectrum, incident, pdf, self.get_type());
 
-        Some(BxDFSampleBufResult::Single(sample))
+        Some(BxDFSampleResult::Bundle(sample))
     }
 
     fn sample_wavelength(

@@ -1,4 +1,4 @@
-use crate::bxdf::{same_hemisphere, world_to_bxdf, BxDF, BxDFSample, BxDFSampleBufResult, Type};
+use crate::bxdf::{same_hemisphere, world_to_bxdf, BxDF, BxDFSample, BxDFSampleResult, Type};
 use crate::debug_utils::is_normalized;
 use crate::samplers::Sample;
 use crate::*;
@@ -205,7 +205,7 @@ impl BSDF {
         types: Type,
         sample: Sample,
         indices: &[usize],
-    ) -> Option<BxDFSampleBufResult> {
+    ) -> Option<BxDFSampleResult> {
         debug_assert!(is_normalized(normal));
         debug_assert!(is_normalized(outgoing_world));
 
@@ -219,9 +219,9 @@ impl BSDF {
                 let reverse = rotation.reversed();
 
                 match sample {
-                    BxDFSampleBufResult::Single(ref mut s) => s.incident = reverse * s.incident,
-                    BxDFSampleBufResult::Buffer(ref mut s) => {
-                        s.incidents.iter_mut().for_each(|i| *i = reverse * *i)
+                    BxDFSampleResult::Bundle(ref mut s) => s.incident = reverse * s.incident,
+                    BxDFSampleResult::ScatteredBundle(ref mut s) => {
+                        s.iter_mut().for_each(|s| s.incident = reverse * s.incident)
                     }
                 }
 

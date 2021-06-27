@@ -452,13 +452,13 @@ impl BxDF for MicrofacetReflection {
         outgoing: Vector3,
         sample: Vector2,
         indices: &[usize],
-    ) -> Option<BxDFSampleBufResult> {
+    ) -> Option<BxDFSampleResult> {
         let (incident, wh, cos_o) = self.sample_incident_wh_cos_o(outgoing, sample)?;
 
         let spectrum = self.evaluate_buf(incident, outgoing, indices);
         let pdf = self.distribution.pdf(outgoing, wh) / (4.0 * cos_o);
 
-        Some(BxDFSampleBufResult::Single(BxDFSample::new(
+        Some(BxDFSampleResult::Bundle(BxDFSample::new(
             spectrum,
             incident,
             pdf,

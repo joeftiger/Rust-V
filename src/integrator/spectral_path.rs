@@ -1,4 +1,4 @@
-use crate::bxdf::{BxDFSampleBufResult, Type};
+use crate::bxdf::{BxDFSampleResult, Type};
 use crate::integrator::{
     direct_illumination_buf, direct_illumination_wavelength, DirectLightStrategy, Integrator,
 };
@@ -27,7 +27,7 @@ impl SpectralPath {
         sampler: Sampler,
         index: usize,
         illumination: &mut Float,
-        mut throughput: Float,
+        throughput: &mut Float,
         current_bounce: u32,
     ) {
         let mut specular = false;
@@ -38,12 +38,12 @@ impl SpectralPath {
 
             if specular {
                 if let SceneObject::Emitter(e) = &hit.object {
-                    *illumination += throughput * e.emission[index];
+                    *illumination += *throughput * e.emission[index];
                     break;
                 }
             }
 
-            *illumination += throughput
+            *illumination += *throughput
                 * direct_illumination_wavelength(
                     scene,
                     sampler,
@@ -68,7 +68,7 @@ impl SpectralPath {
                     bxdf_sample.incident.dot(normal).abs()
                 };
 
-                throughput *= bxdf_sample.spectrum * cos_abs / bxdf_sample.pdf;
+                *throughput *= bxdf_sample.spectrum * cos_abs / bxdf_sample.pdf;
 
                 let ray = offset_ray_towards(hit.point, hit.normal, bxdf_sample.incident);
                 match scene.intersect(&ray) {
@@ -127,7 +127,7 @@ impl SpectralPath {
                 bsdf.sample_buf(normal, outgoing, Type::ALL, sampler.get_sample(), indices)
             {
                 match spectral_sample {
-                    BxDFSampleBufResult::Single(bxdf_sample) => {
+                    BxDFSampleResult::Bundle(bxdf_sample) => {
                         if bxdf_sample.pdf == 0.0 || bxdf_sample.spectrum.iter().all(|&s| s == 0.0)
                         {
                             break;
@@ -151,36 +151,31 @@ impl SpectralPath {
                             None => break,
                         }
                     }
-                    BxDFSampleBufResult::Buffer(bxdf_sample) => {
-                        for index in 0..buf_size {
-                            let spectrum = bxdf_sample.spectrum[index];
-                            let incident = bxdf_sample.incidents[index];
-                            let pdf = bxdf_sample.pdfs[index];
-                            let typ = bxdf_sample.types[index];
-
-                            if pdf == 0.0 || spectrum == 0.0 {
+                    BxDFSampleResult::ScatteredBundle(bundle) => {
+                        for sample in bundle {
+                            if sample.pdf == 0.0 || sample.intensity == 0.0 {
                                 continue;
                             }
 
-                            let specular = typ.is_specular();
+                            let specular = sample.typ.is_specular();
                             let cos_abs = if specular {
                                 // division of cosine omitted in specular bxdfs
                                 1.0
                             } else {
-                                incident.dot(normal).abs()
+                                sample.incident.dot(normal).abs()
                             };
 
-                            throughput[index] *= spectrum * cos_abs / pdf;
+                            throughput[sample.index] *= sample.intensity * cos_abs / sample.pdf;
 
-                            let ray = offset_ray_towards(hit.point, hit.normal, incident);
+                            let ray = offset_ray_towards(hit.point, hit.normal, sample.incident);
                             match scene.intersect(&ray) {
                                 Some(new_hit) => self.trace_single(
                                     scene,
                                     new_hit,
                                     sampler,
-                                    index,
-                                    &mut illumination[index],
-                                    throughput[index],
+                                    sample.index,
+                                    &mut illumination[sample.index],
+                                    &mut throughput[sample.index],
                                     bounce,
                                 ),
                                 None => continue,
