@@ -76,21 +76,21 @@ impl RefractiveType {
     ///
     /// # Returns
     /// * The corresponding refractive index
-    #[rustfmt::skip]
     #[inline]
     pub fn n(&self, lambda: Float) -> Float {
         match self {
-            // RefractiveType::AIR => search_and_get(&air::INDEX, &air::N, lambda),
             RefractiveType::Air => air::sellmeier_n(lambda),
             RefractiveType::Vacuum => 1.0,
             RefractiveType::Water => search_and_lerp(&water::INDEX, &water::N, lambda),
             RefractiveType::Glass => glass::sellmeier_n(lambda),
             RefractiveType::Sapphire => sapphire::sellmeier_n(lambda),
-            RefractiveType::Linear2 => Float::lerp_map(LAMBDA_START, LAMBDA_END, 1.0, 2.0, lambda),
-            RefractiveType::Linear4 => Float::lerp_map(LAMBDA_START, LAMBDA_END, 1.0, 4.0, lambda),
-            RefractiveType::Linear6 => Float::lerp_map(LAMBDA_START, LAMBDA_END, 1.0, 8.0, lambda),
-            RefractiveType::Linear8 => Float::lerp_map(LAMBDA_START, LAMBDA_END, 1.0, 8.0, lambda),
-            RefractiveType::Linear10 => Float::lerp_map(LAMBDA_START, LAMBDA_END, 1.0, 10.0, lambda),
+            RefractiveType::Linear2 => Float::lerp_map(LAMBDA_START, LAMBDA_END, 2.0, 1.0, lambda),
+            RefractiveType::Linear4 => Float::lerp_map(LAMBDA_START, LAMBDA_END, 4.0, 1.0, lambda),
+            RefractiveType::Linear6 => Float::lerp_map(LAMBDA_START, LAMBDA_END, 8.0, 1.0, lambda),
+            RefractiveType::Linear8 => Float::lerp_map(LAMBDA_START, LAMBDA_END, 8.0, 1.0, lambda),
+            RefractiveType::Linear10 => {
+                Float::lerp_map(LAMBDA_START, LAMBDA_END, 10.0, 1.0, lambda)
+            }
         }
     }
 
