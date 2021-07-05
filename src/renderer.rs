@@ -14,6 +14,7 @@ use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
+use ultraviolet::UVec2;
 
 /// A render job consists of thread handles.
 /// It can be stopped or joined at the end of execution.
@@ -178,6 +179,11 @@ impl Renderer {
         } else {
             None
         }
+    }
+
+    #[inline]
+    pub fn resolution(&self) -> UVec2 {
+        self.camera.resolution()
     }
 
     pub fn render(&mut self) -> RenderJob<()> {
