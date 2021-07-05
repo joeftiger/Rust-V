@@ -16,8 +16,9 @@ impl<'a> RenderWindow<'a> {
     where
         T: Into<String>,
     {
-        let width = 900;
-        let height = 900;
+        let resolution = renderer.resolution();
+        let width = resolution.x.min(900);
+        let height = resolution.y.min(900);
 
         let options = WindowOptions::default()
             .set_size([width, height])
