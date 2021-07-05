@@ -13,8 +13,8 @@ edition = "2018"
 [dependencies]
 # bitmask flag generator
 bitflags = "1.2.1"
-# Program argument parser
-clap = { version = "2.33.3", features = ["yaml"] }
+# Program argument parser (beta due to security bug in old dependency in clap)
+clap = { version = "3.0.0-beta.2", features = ["yaml"] }
 # fast random types
 fastrand = "1.4.1"
 # image loading / saving
@@ -33,7 +33,10 @@ serde = { version = "1.0.126", features = ["derive", "rc"] }
 typetag = "0.1.7"
 ron = "0.6.4"
 
+# Clone dynamic trait objects
 dyn-clone = "1.0.4"
+# Faster Mutexes
+parking_lot = "0.11.1"
 
 color = { path = "./color" }
 geometry = { path = "./geometry" }
