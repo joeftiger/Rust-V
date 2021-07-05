@@ -11,14 +11,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpectralPathSingle {
-    max_depth: u32,
-    light_wave_samples: u32,
-    direct_light_strategy: DirectLightStrategy,
-    spectral_sampler: SpectralSampler,
+    pub(crate) max_depth: u32,
+    pub(crate) light_wave_samples: u32,
+    pub(crate) direct_light_strategy: DirectLightStrategy,
+    pub(crate) spectral_sampler: SpectralSampler,
 }
 
 impl SpectralPathSingle {
-    fn trace_single(
+    pub(crate) fn trace_single(
         &self,
         scene: &Scene,
         mut hit: SceneIntersection,
@@ -92,6 +92,7 @@ impl Integrator for SpectralPathSingle {
 
             for index in indices {
                 let lambda = self.trace_single(scene, hit.clone(), sampler, index);
+
                 pixel.add_light_wave(lambda, index);
             }
         } else {
