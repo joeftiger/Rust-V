@@ -222,6 +222,7 @@ impl BxDF for SpecularTransmission {
 
         let mut bundle = Vec::with_capacity(indices.len());
 
+        #[allow(clippy::needless_range_loop)]
         for index in 0..indices.len() {
             let lambda = Spectrum::lambda_of_index(indices[index]);
             let eta = eta_i.n(lambda) / eta_t.n(lambda);
