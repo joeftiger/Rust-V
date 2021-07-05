@@ -35,12 +35,7 @@ impl Integrator for Path {
                 let normal = hit.normal;
                 let bsdf = hit.object.bsdf();
 
-                if bounce == 0 {
-                    if let SceneObject::Emitter(e) = &hit.object {
-                        illumination = e.emission; //e.radiance(&outgoing, &normal);
-                        break;
-                    }
-                } else if specular {
+                if bounce == 0 || specular {
                     if let SceneObject::Emitter(e) = &hit.object {
                         illumination += throughput * e.emission; //e.radiance(&outgoing, &normal);
                         break;
