@@ -46,11 +46,11 @@ Vec3 ( // name may be omitted
 )
 ```
 
-### `UBounds2`
+### `Bounds2`
 ```ron
-UBounds2 ( // name may be omitted
-	min: Vec2,
-	max: Vec2,		// not checked to really be max!
+Bounds2 ( // name may be omitted
+	min: Vec2,		// clamped to [0, 1]
+	max: Vec2,		// clamped to [0, 1] not checked to really be max!
 )
 ```
 
@@ -175,7 +175,7 @@ The basic configuration contains following key-value pairs:
 ```
 config: (
 	filename: Option<String>,	// output image
-	bounds: Option<Vec2>,		// only trace a part of the whole resolution
+	bounds: Option<Bounds2>,	// only trace a part of the whole resolution (percentage area)
 	block_size: Vec2,			// threads trace pixels in bulk
 	passes: u32,				// number of passes per pixel
 	threads: Option<u32>,		// Defaults to all available threads
