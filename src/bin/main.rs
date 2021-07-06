@@ -38,7 +38,7 @@ fn create_config() -> CmdInput {
     #[cfg(feature = "show-image")]
     let yaml = load_yaml!("cli-live.yml");
 
-    let matches = App::from_yaml(yaml).get_matches();
+    let matches = App::from(yaml).get_matches();
 
     let verbose = matches.is_present(VERBOSE);
     let live = cfg!(feature = "show-image") && matches.is_present(LIVE);

@@ -3,7 +3,7 @@ use crate::config::Config;
 use crate::integrator::Integrator;
 use crate::samplers::Sampler;
 use crate::scene::Scene;
-use crate::sensor::bounds::UBounds2;
+use crate::sensor::bounds::{UBounds2, Bounds2};
 use crate::sensor::sensor_tile::SensorTile;
 use crate::sensor::Sensor;
 use crate::serialization::Serialization;
@@ -15,6 +15,7 @@ use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
 use ultraviolet::UVec2;
+use crate::{Vector2, Float};
 
 /// A render job consists of thread handles.
 /// It can be stopped or joined at the end of execution.
@@ -116,12 +117,27 @@ impl Renderer {
         let integrator = serialization.integrator;
 
         let config = serialization.config.clone();
+
+        let resolution = camera.resolution();
+        let mut bounds = config.bounds.unwrap_or(Bounds2::new(Vector2::zero(), Vector2::one()));
+        bounds.min.clamp(Vector2::zero(), Vector2::one());
+        bounds.max.clamp(Vector2::zero(), Vector2::one());
+
+        let sensor_bounds = UBounds2::new(
+            UVec2::new(
+                (bounds.min.x * resolution.x as Float).round() as u32,
+                (bounds.min.y * resolution.y as Float).round() as u32,
+            ),
+            UVec2::new(
+                (bounds.max.x * resolution.x as Float).round() as u32,
+                (bounds.max.y * resolution.y as Float).round() as u32,
+            ),
+        );
+
         let sensor = Sensor::new(
             camera.resolution(),
             config.filename,
-            config
-                .bounds
-                .unwrap_or_else(|| UBounds2::from(camera.resolution())),
+            sensor_bounds,
             config.block_size,
         );
 

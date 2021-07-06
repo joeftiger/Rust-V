@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
-use ultraviolet::{UVec2, Vec2};
+use ultraviolet::UVec2;
+use crate::Vector2;
 
 pub type UBounds2 = Bound<UVec2>;
-pub type Bounds2 = Bound<Vec2>;
+pub type Bounds2 = Bound<Vector2>;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct Bound<T> {
@@ -26,8 +27,8 @@ fn in_range<T: PartialOrd>(t: T, min: T, max: T) -> bool {
     min <= t && t <= max
 }
 
-impl Bound<Vec2> {
-    pub fn contains(&self, p: Vec2) -> bool {
+impl Bound<Vector2> {
+    pub fn contains(&self, p: Vector2) -> bool {
         in_range(p.x, self.min.x, self.max.x) && in_range(p.y, self.min.y, self.max.y)
     }
 }
