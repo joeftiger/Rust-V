@@ -15,7 +15,7 @@ ultraviolet = "0.8.1"
 fastrand = "1.4.1"
 ron = "0.6.4"
 
-show-image = "0.8.4"
+show-image = "0.9.0"
 
 [features]
 f64 = ["color/f64", "geometry/f64", "rust-v/f64", "ultraviolet/f64"]
