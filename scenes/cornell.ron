@@ -1,6 +1,6 @@
 ( 
     config: (
-        filename: Some("batch.png"),
+        filename: Some("batch2.png"),
         // bounds: Some((
         //     min: (
         //         x: 0.4,
@@ -17,7 +17,7 @@
             y: 32,
         ),
         passes: 100,
-        threads: Some(8),
+        threads: None,
     ),
     camera: {
         "PerspectiveCamera": (
@@ -45,14 +45,8 @@
         ),
     },
     integrator: {
-        // "Path": (
-        //     max_depth: 80,
-        // ),
-        "SpectralPath": (
+        "Path": (
             max_depth: 8,
-            light_wave_samples: 6,
-            direct_light_strategy: All,
-            spectral_sampler: Hero,
         ),
     },
     sampler: Random,
@@ -200,39 +194,6 @@
                                 r: Color(White),
                                 a: 0.86516786,
                                 b: 0.25882423,
-                            ),
-                        },
-                    ],
-                ),
-            )),
-            Receiver((
-                geometry: {
-                    "Sphere": (
-                        center: (
-                            x: 0.5,
-                            y: -1,
-                            z: 0,
-                        ),
-                        radius: 1,
-                    ),
-                },
-                bsdf: (
-                    bxdfs: [
-                        {
-                            //"SpecularTransmission": (
-                            //    t: Constant(1),
-                            //    fresnel: (
-                            //        eta_i: Air,
-                            //        eta_t: Glass,
-                            //    ),
-                            //),
-                            "FresnelSpecular": (
-                                r: Constant(1),
-                                t: Constant(1),
-                                fresnel: (
-                                    eta_i: Air,
-                                    eta_t: Sapphire,
-                                ),
                             ),
                         },
                     ],

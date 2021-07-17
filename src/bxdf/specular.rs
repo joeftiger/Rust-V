@@ -400,7 +400,7 @@ impl BxDF for FresnelSpecular {
         let mut bundle = Vec::with_capacity(indices.len());
 
         for index in 0..indices.len() {
-            let lambda = Spectrum::lambda_of_index(index);
+            let lambda = Spectrum::lambda_of_index(indices[index]);
 
             let eta_i = self.fresnel.eta_i.n(lambda);
             let eta_t = self.fresnel.eta_t.n(lambda);

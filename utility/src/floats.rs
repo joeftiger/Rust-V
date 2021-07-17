@@ -123,6 +123,8 @@ macro_rules! impl_float_ext {
             fn lerp(self, to: Self, t: Self) -> Self {
                 (1.0 - t) * self + to * t
             }
+            // t = 0    => self
+            // t = 1    => to
 
             #[inline]
             fn inv_lerp(self, to: Self, res: Self) -> Self {

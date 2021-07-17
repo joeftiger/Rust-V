@@ -93,7 +93,8 @@ macro_rules! color {
 
             #[inline(always)]
             pub fn lambda_of_index(index: usize) -> Float {
-                LAMBDA_START.lerp(LAMBDA_END, index as Float / $size as Float)
+                let t = index as Float / ($size - 1) as Float;
+                LAMBDA_START.lerp(LAMBDA_END, t)
             }
 
             #[inline]

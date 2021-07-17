@@ -21,12 +21,14 @@ mod path;
 mod spectral_path;
 mod spectral_path_single;
 mod whitted;
+// mod hero;
 
 pub use debug_normals::*;
 pub use path::*;
 pub use spectral_path::*;
 pub use spectral_path_single::*;
 pub use whitted::*;
+// pub use hero::*;
 
 use crate::bxdf::{Type, BSDF};
 use crate::objects::Emitter;

@@ -52,17 +52,18 @@ impl Intersectable for BiconvexLens {
                     return Some(i0);
                 }
 
-                // outside lens return max
-                return if i0.t > i1.t { Some(i0) } else { Some(i1) };
+                // outside lens return None
+                return None;
+                //return if i0.t > i1.t { Some(i0) } else { Some(i1) };
             }
         }
 
         None
     }
 
-    fn intersects(&self, ray: &Ray) -> bool {
-        self.sphere0.intersects(ray) && self.sphere1.intersects(ray)
-    }
+    //fn intersects(&self, ray: &Ray) -> bool {
+    //    self.sphere0.intersects(ray) && self.sphere1.intersects(ray)
+    // }
 }
 
 #[typetag::serde]

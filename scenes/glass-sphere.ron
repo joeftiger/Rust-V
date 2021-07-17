@@ -1,6 +1,6 @@
 ( 
     config: (
-        filename: Some("batch.png"),
+        filename: Some("single.png"),
         // bounds: Some((
         //     min: (
         //         x: 0.4,
@@ -16,8 +16,8 @@
             x: 32,
             y: 32,
         ),
-        passes: 100,
-        threads: Some(8),
+        passes: 5000,
+        threads: Some(1),
     ),
     camera: {
         "PerspectiveCamera": (
@@ -45,9 +45,9 @@
         ),
     },
     integrator: {
-        // "Path": (
-        //     max_depth: 80,
-        // ),
+        //"Path": (
+        //    max_depth: 80,
+        //),
         "SpectralPath": (
             max_depth: 8,
             light_wave_samples: 6,
@@ -209,9 +209,9 @@
                 geometry: {
                     "Sphere": (
                         center: (
-                            x: 0.5,
-                            y: -1,
-                            z: 0,
+                            x: 0.25,
+                            y: -0.25,
+                            z: 1,
                         ),
                         radius: 1,
                     ),
@@ -247,8 +247,8 @@
                     // )),
                     "Sphere": (
                         center: (
-                            x: -1,
-                            y: 1,
+                            x: 0,
+                            y: 0,
                             z: -1,
                         ),
                         radius: 0.5,

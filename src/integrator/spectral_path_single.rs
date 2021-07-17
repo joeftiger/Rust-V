@@ -28,21 +28,16 @@ impl SpectralPathSingle {
         let mut illumination = 0.0;
         let mut throughput = 1.0;
 
-        let mut specular = false;
-        for bounce in 0..self.max_depth {
+        for _ in 0..self.max_depth {
             let outgoing = -hit.ray.direction;
             let normal = hit.normal;
             let bsdf = hit.object.bsdf();
 
-            if bounce == 0 || specular {
-                if let SceneObject::Emitter(e) = &hit.object {
-                    illumination += throughput * e.emission[index];
-                    break;
-                }
-            }
-
-            illumination += throughput
-                * direct_illumination_wavelength(
+            if let SceneObject::Emitter(e) = &hit.object {
+                illumination += throughput * e.emission[index];
+            } else {
+                illumination += throughput
+                    * direct_illumination_wavelength(
                     scene,
                     sampler,
                     self.direct_light_strategy,
@@ -50,6 +45,7 @@ impl SpectralPathSingle {
                     bsdf,
                     index,
                 );
+            }
 
             if let Some(bxdf_sample) =
                 bsdf.sample_light_wave(normal, outgoing, Type::ALL, sampler.get_sample(), index)
@@ -58,7 +54,7 @@ impl SpectralPathSingle {
                     break;
                 }
 
-                specular = bxdf_sample.typ.is_specular();
+                let specular = bxdf_sample.typ.is_specular();
                 let cos_abs = if specular {
                     // division of cosine omitted in specular bxdfs
                     1.0

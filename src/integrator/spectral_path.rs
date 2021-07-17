@@ -1,6 +1,7 @@
 use crate::bxdf::{BxDFSampleResult, Type};
 use crate::integrator::{
     direct_illumination_buf, direct_illumination_wavelength, DirectLightStrategy, Integrator,
+    SpectralPathSingle,
 };
 use crate::objects::SceneObject;
 use crate::samplers::spectral_samplers::SpectralSampler;
@@ -30,21 +31,16 @@ impl SpectralPath {
         throughput: &mut Float,
         current_bounce: u32,
     ) {
-        let mut specular = false;
         for _ in current_bounce..self.max_depth {
             let outgoing = -hit.ray.direction;
             let normal = hit.normal;
             let bsdf = hit.object.bsdf();
 
-            if specular {
-                if let SceneObject::Emitter(e) = &hit.object {
-                    *illumination += *throughput * e.emission[index];
-                    break;
-                }
-            }
-
-            *illumination += *throughput
-                * direct_illumination_wavelength(
+            if let SceneObject::Emitter(e) = &hit.object {
+                *illumination += *throughput * e.emission[index];
+            } else {
+                *illumination += *throughput
+                    * direct_illumination_wavelength(
                     scene,
                     sampler,
                     self.direct_light_strategy,
@@ -52,6 +48,7 @@ impl SpectralPath {
                     bsdf,
                     index,
                 );
+            }
 
             if let Some(bxdf_sample) =
                 bsdf.sample_light_wave(normal, outgoing, Type::ALL, sampler.get_sample(), index)
@@ -60,7 +57,7 @@ impl SpectralPath {
                     break;
                 }
 
-                specular = bxdf_sample.typ.is_specular();
+                let specular = bxdf_sample.typ.is_specular();
                 let cos_abs = if specular {
                     // division of cosine omitted in specular bxdfs
                     1.0
@@ -95,33 +92,28 @@ impl SpectralPath {
         assert_eq!(buf_size, illumination.len());
         assert_eq!(buf_size, throughput.len());
 
-        let mut specular = false;
         for bounce in 0..self.max_depth {
             let outgoing = -hit.ray.direction;
             let normal = hit.normal;
             let bsdf = hit.object.bsdf();
 
-            // immediately hitting emitter?
-            if bounce == 0 || specular {
-                if let SceneObject::Emitter(e) = &hit.object {
-                    for i in 0..buf_size {
-                        illumination[i] = throughput[i] * e.emission[i];
-                    }
-                    break;
+            if let SceneObject::Emitter(e) = &hit.object {
+                for i in 0..buf_size {
+                    illumination[i] = throughput[i] * e.emission[i];
                 }
+            } else {
+                // add direction illumination
+                direct_illumination_buf(
+                    scene,
+                    sampler,
+                    self.direct_light_strategy,
+                    &hit,
+                    bsdf,
+                    indices,
+                    illumination,
+                    throughput,
+                );
             }
-
-            // add direction illumination
-            direct_illumination_buf(
-                scene,
-                sampler,
-                self.direct_light_strategy,
-                &hit,
-                bsdf,
-                indices,
-                illumination,
-                throughput,
-            );
 
             if let Some(spectral_sample) =
                 bsdf.sample_buf(normal, outgoing, Type::ALL, sampler.get_sample(), indices)
@@ -133,7 +125,7 @@ impl SpectralPath {
                             break;
                         }
 
-                        specular = bxdf_sample.typ.is_specular();
+                        let specular = bxdf_sample.typ.is_specular();
                         let cos_abs = if specular {
                             // division of cosine omitted in specular bxdfs
                             1.0
@@ -141,8 +133,13 @@ impl SpectralPath {
                             bxdf_sample.incident.dot(normal).abs()
                         };
 
+                        let pdf = bxdf_sample.pdf / match self.spectral_sampler {
+                            SpectralSampler::Random => 1.0 / crate::Spectrum::size() as Float,
+                            SpectralSampler::Hero => buf_size as Float / crate::Spectrum::size() as Float,
+                        };
+
                         for i in 0..buf_size {
-                            throughput[i] *= bxdf_sample.spectrum[i] * cos_abs / bxdf_sample.pdf;
+                            throughput[i] *= bxdf_sample.spectrum[i] * cos_abs / pdf;
                         }
 
                         let ray = offset_ray_towards(hit.point, hit.normal, bxdf_sample.incident);
@@ -152,6 +149,22 @@ impl SpectralPath {
                         }
                     }
                     BxDFSampleResult::ScatteredBundle(bundle) => {
+                        // let total: Float = bundle.iter().map(|s| s.pdf).sum();
+                        // total = 36
+
+                        /*         /    1 / n,   if random
+                        p( λ^k ) = \    C / n,   if hero
+
+                        p( X_i, λ_i^j ) = 1/C * SUM_k p( λ_i^k ) * p( X_i | λ_i^k)
+                                        |                          -------------- will be 1 if j = k
+                                        |                                         otherwise 0
+                                        |
+                                        = 1/C * p( λ_i^k ) * 1
+                                        |
+                                        | /     1/Cn,    if random
+                                        = \     1/n,     if hero
+                        */
+
                         for sample in bundle {
                             if sample.pdf == 0.0 || sample.intensity == 0.0 {
                                 continue;
@@ -165,19 +178,42 @@ impl SpectralPath {
                                 sample.incident.dot(normal).abs()
                             };
 
-                            throughput[sample.index] *= sample.intensity * cos_abs / sample.pdf;
+                            // let modifier = crate::Spectrum::size() as Float / buf_size as Float;
+
+                            let pdf = sample.pdf / match self.spectral_sampler {
+                                SpectralSampler::Random => 1.0 / crate::Spectrum::size() as Float,
+                                SpectralSampler::Hero => buf_size as Float / crate::Spectrum::size() as Float,
+                            };
+
+                            throughput[sample.index] *=
+                                sample.intensity * cos_abs / pdf;
 
                             let ray = offset_ray_towards(hit.point, hit.normal, sample.incident);
                             match scene.intersect(&ray) {
-                                Some(new_hit) => self.trace_single(
-                                    scene,
-                                    new_hit,
-                                    sampler,
-                                    sample.index,
-                                    &mut illumination[sample.index],
-                                    &mut throughput[sample.index],
-                                    bounce,
-                                ),
+                                Some(new_hit) => {
+                                    self.trace_single(
+                                        scene,
+                                        new_hit,
+                                        sampler,
+                                        sample.index,
+                                        &mut illumination[sample.index],
+                                        &mut throughput[sample.index],
+                                        bounce,
+                                    );
+                                    // let tracer = SpectralPathSingle {
+                                    //     max_depth: self.max_depth - bounce,
+                                    //     light_wave_samples: 0, // ignored
+                                    //     direct_light_strategy: self.direct_light_strategy,
+                                    //     spectral_sampler: self.spectral_sampler,
+                                    // };
+                                    // illumination[sample.index] += throughput[sample.index]
+                                    //     * tracer.trace_single(
+                                    //         scene,
+                                    //         new_hit,
+                                    //         sampler,
+                                    //         sample.index,
+                                    //     );
+                                }
                                 None => continue,
                             }
                         }
