@@ -1,6 +1,6 @@
+use crate::Vector2;
 use serde::{Deserialize, Serialize};
 use ultraviolet::UVec2;
-use crate::Vector2;
 
 pub type UBounds2 = Bound<UVec2>;
 pub type Bounds2 = Bound<Vector2>;

@@ -38,13 +38,13 @@ impl SpectralPathSingle {
             } else {
                 illumination += throughput
                     * direct_illumination_wavelength(
-                    scene,
-                    sampler,
-                    self.direct_light_strategy,
-                    &hit,
-                    bsdf,
-                    index,
-                );
+                        scene,
+                        sampler,
+                        self.direct_light_strategy,
+                        &hit,
+                        bsdf,
+                        index,
+                    );
             }
 
             if let Some(bxdf_sample) =

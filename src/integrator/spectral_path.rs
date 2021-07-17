@@ -1,7 +1,6 @@
 use crate::bxdf::{BxDFSampleResult, Type};
 use crate::integrator::{
     direct_illumination_buf, direct_illumination_wavelength, DirectLightStrategy, Integrator,
-    SpectralPathSingle,
 };
 use crate::objects::SceneObject;
 use crate::samplers::spectral_samplers::SpectralSampler;
@@ -41,13 +40,13 @@ impl SpectralPath {
             } else {
                 *illumination += *throughput
                     * direct_illumination_wavelength(
-                    scene,
-                    sampler,
-                    self.direct_light_strategy,
-                    &hit,
-                    bsdf,
-                    index,
-                );
+                        scene,
+                        sampler,
+                        self.direct_light_strategy,
+                        &hit,
+                        bsdf,
+                        index,
+                    );
             }
 
             if let Some(bxdf_sample) =
@@ -133,10 +132,13 @@ impl SpectralPath {
                             bxdf_sample.incident.dot(normal).abs()
                         };
 
-                        let pdf = bxdf_sample.pdf / match self.spectral_sampler {
-                            SpectralSampler::Random => 1.0 / crate::Spectrum::size() as Float,
-                            SpectralSampler::Hero => buf_size as Float / crate::Spectrum::size() as Float,
-                        };
+                        let pdf = bxdf_sample.pdf
+                            / match self.spectral_sampler {
+                                SpectralSampler::Random => 1.0 / crate::Spectrum::size() as Float,
+                                SpectralSampler::Hero => {
+                                    buf_size as Float / crate::Spectrum::size() as Float
+                                }
+                            };
 
                         for i in 0..buf_size {
                             throughput[i] *= bxdf_sample.spectrum[i] * cos_abs / pdf;
@@ -180,13 +182,17 @@ impl SpectralPath {
 
                             // let modifier = crate::Spectrum::size() as Float / buf_size as Float;
 
-                            let pdf = sample.pdf / match self.spectral_sampler {
-                                SpectralSampler::Random => 1.0 / crate::Spectrum::size() as Float,
-                                SpectralSampler::Hero => buf_size as Float / crate::Spectrum::size() as Float,
-                            };
+                            let pdf = sample.pdf
+                                / match self.spectral_sampler {
+                                    SpectralSampler::Random => {
+                                        1.0 / crate::Spectrum::size() as Float
+                                    }
+                                    SpectralSampler::Hero => {
+                                        buf_size as Float / crate::Spectrum::size() as Float
+                                    }
+                                };
 
-                            throughput[sample.index] *=
-                                sample.intensity * cos_abs / pdf;
+                            throughput[sample.index] *= sample.intensity * cos_abs / pdf;
 
                             let ray = offset_ray_towards(hit.point, hit.normal, sample.incident);
                             match scene.intersect(&ray) {
@@ -200,19 +206,6 @@ impl SpectralPath {
                                         &mut throughput[sample.index],
                                         bounce,
                                     );
-                                    // let tracer = SpectralPathSingle {
-                                    //     max_depth: self.max_depth - bounce,
-                                    //     light_wave_samples: 0, // ignored
-                                    //     direct_light_strategy: self.direct_light_strategy,
-                                    //     spectral_sampler: self.spectral_sampler,
-                                    // };
-                                    // illumination[sample.index] += throughput[sample.index]
-                                    //     * tracer.trace_single(
-                                    //         scene,
-                                    //         new_hit,
-                                    //         sampler,
-                                    //         sample.index,
-                                    //     );
                                 }
                                 None => continue,
                             }

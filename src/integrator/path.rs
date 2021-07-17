@@ -30,7 +30,7 @@ impl Integrator for Path {
             let mut hit = intersection;
             let mut specular = false;
 
-            for bounce in 0..self.max_depth {
+            for _ in 0..self.max_depth {
                 let outgoing = -hit.ray.direction;
                 let normal = hit.normal;
                 let bsdf = hit.object.bsdf();

@@ -3,10 +3,11 @@ use crate::config::Config;
 use crate::integrator::Integrator;
 use crate::samplers::Sampler;
 use crate::scene::Scene;
-use crate::sensor::bounds::{UBounds2, Bounds2};
+use crate::sensor::bounds::{Bounds2, UBounds2};
 use crate::sensor::sensor_tile::SensorTile;
 use crate::sensor::Sensor;
 use crate::serialization::Serialization;
+use crate::{Float, Vector2};
 use image::{ImageBuffer, Rgb};
 use indicatif::{ProgressBar, ProgressStyle};
 use parking_lot::Mutex;
@@ -15,7 +16,6 @@ use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
 use ultraviolet::UVec2;
-use crate::{Vector2, Float};
 
 /// A render job consists of thread handles.
 /// It can be stopped or joined at the end of execution.
@@ -119,7 +119,9 @@ impl Renderer {
         let config = serialization.config.clone();
 
         let resolution = camera.resolution();
-        let mut bounds = config.bounds.unwrap_or(Bounds2::new(Vector2::zero(), Vector2::one()));
+        let mut bounds = config
+            .bounds
+            .unwrap_or(Bounds2::new(Vector2::zero(), Vector2::one()));
         bounds.min.clamp(Vector2::zero(), Vector2::one());
         bounds.max.clamp(Vector2::zero(), Vector2::one());
 
