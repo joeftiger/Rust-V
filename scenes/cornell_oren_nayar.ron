@@ -1,6 +1,6 @@
 ( 
     config: (
-        filename: Some("batch.png"),
+        filename: Some("cornell.png"),
         // bounds: Some((
         //     min: (
         //         x: 0.4,
@@ -16,8 +16,8 @@
             x: 32,
             y: 32,
         ),
-        passes: 100,
-        threads: Some(8),
+        passes: 10000000,
+        threads: None,
     ),
     camera: {
         "PerspectiveCamera": (
@@ -50,7 +50,7 @@
         // ),
         "SpectralPath": (
             max_depth: 8,
-            light_wave_samples: 6,
+            light_wave_samples: 36,
             direct_light_strategy: All,
             spectral_sampler: Hero,
         ),

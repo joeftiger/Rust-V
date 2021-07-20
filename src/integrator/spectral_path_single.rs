@@ -54,8 +54,7 @@ impl SpectralPathSingle {
                     break;
                 }
 
-                let specular = bxdf_sample.typ.is_specular();
-                let cos_abs = if specular {
+                let cos_abs = if bxdf_sample.typ.is_specular() {
                     // division of cosine omitted in specular bxdfs
                     1.0
                 } else {

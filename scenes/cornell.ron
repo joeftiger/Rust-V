@@ -1,6 +1,6 @@
 ( 
     config: (
-        filename: Some("batch2.png"),
+        filename: Some("batch_full_rng.png"),
         // bounds: Some((
         //     min: (
         //         x: 0.4,
@@ -39,14 +39,17 @@
             ),
             FovY: 70,
             Resolution: (
-                x: 256,
-                y: 256,
+                x: 512,
+                y: 512,
             ),
         ),
     },
     integrator: {
-        "Path": (
+        "SpectralPath": (
             max_depth: 8,
+            light_wave_samples: 36,
+            direct_light_strategy: All,
+            spectral_sampler: Random,
         ),
     },
     sampler: Random,

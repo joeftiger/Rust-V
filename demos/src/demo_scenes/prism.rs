@@ -14,7 +14,7 @@ use rust_v::Spectrum;
 #[cfg(not(feature = "f64"))]
 use std::f32::consts::FRAC_PI_2;
 #[cfg(feature = "f64")]
-use std::f32::consts::FRAC_PI_2;
+use std::f64::consts::FRAC_PI_2;
 use std::sync::Arc;
 use ultraviolet::UVec2;
 

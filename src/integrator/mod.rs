@@ -122,6 +122,7 @@ fn direct_illumination(
     illumination
 }
 
+#[allow(clippy::too_many_arguments)]
 fn direct_illumination_buf(
     scene: &Scene,
     sampler: Sampler,

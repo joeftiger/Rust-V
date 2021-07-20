@@ -222,9 +222,8 @@ impl BxDF for SpecularTransmission {
 
         let mut bundle = Vec::with_capacity(indices.len());
 
-        #[allow(clippy::needless_range_loop)]
-        for index in 0..indices.len() {
-            let lambda = Spectrum::lambda_of_index(indices[index]);
+        for &index in indices {
+            let lambda = Spectrum::lambda_of_index(index);
             let eta = eta_i.n(lambda) / eta_t.n(lambda);
 
             let incident = match refract(outgoing, normal, eta) {
@@ -399,8 +398,8 @@ impl BxDF for FresnelSpecular {
 
         let mut bundle = Vec::with_capacity(indices.len());
 
-        for index in 0..indices.len() {
-            let lambda = Spectrum::lambda_of_index(indices[index]);
+        for &index in indices {
+            let lambda = Spectrum::lambda_of_index(index);
 
             let eta_i = self.fresnel.eta_i.n(lambda);
             let eta_t = self.fresnel.eta_t.n(lambda);

@@ -119,11 +119,14 @@ impl Renderer {
         let config = serialization.config.clone();
 
         let resolution = camera.resolution();
-        let mut bounds = config
-            .bounds
-            .unwrap_or(Bounds2::new(Vector2::zero(), Vector2::one()));
-        bounds.min.clamp(Vector2::zero(), Vector2::one());
-        bounds.max.clamp(Vector2::zero(), Vector2::one());
+        let bounds = config.bounds.map_or_else(
+            || Bounds2::new(Vector2::zero(), Vector2::one()),
+            |mut bounds| {
+                bounds.min.clamp(Vector2::zero(), Vector2::one());
+                bounds.max.clamp(Vector2::zero(), Vector2::one());
+                bounds
+            },
+        );
 
         let sensor_bounds = UBounds2::new(
             UVec2::new(

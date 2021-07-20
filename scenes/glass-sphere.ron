@@ -17,7 +17,7 @@
             y: 32,
         ),
         passes: 5000,
-        threads: Some(1),
+        threads: None,
     ),
     camera: {
         "PerspectiveCamera": (

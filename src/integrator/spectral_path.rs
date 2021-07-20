@@ -20,6 +20,7 @@ pub struct SpectralPath {
 }
 
 impl SpectralPath {
+    #[allow(clippy::too_many_arguments)]
     fn trace_single(
         &self,
         scene: &Scene,
@@ -56,8 +57,7 @@ impl SpectralPath {
                     break;
                 }
 
-                let specular = bxdf_sample.typ.is_specular();
-                let cos_abs = if specular {
+                let cos_abs = if bxdf_sample.typ.is_specular() {
                     // division of cosine omitted in specular bxdfs
                     1.0
                 } else {
@@ -77,7 +77,6 @@ impl SpectralPath {
         }
     }
 
-    #[allow(clippy::needless_range_loop)] // clippy is stupid here
     fn trace(
         &self,
         scene: &Scene,
@@ -124,24 +123,16 @@ impl SpectralPath {
                             break;
                         }
 
-                        let specular = bxdf_sample.typ.is_specular();
-                        let cos_abs = if specular {
+                        let cos_abs = if bxdf_sample.typ.is_specular() {
                             // division of cosine omitted in specular bxdfs
                             1.0
                         } else {
                             bxdf_sample.incident.dot(normal).abs()
                         };
 
-                        let pdf = bxdf_sample.pdf
-                            / match self.spectral_sampler {
-                                SpectralSampler::Random => 1.0 / crate::Spectrum::size() as Float,
-                                SpectralSampler::Hero => {
-                                    buf_size as Float / crate::Spectrum::size() as Float
-                                }
-                            };
-
-                        for i in 0..buf_size {
-                            throughput[i] *= bxdf_sample.spectrum[i] * cos_abs / pdf;
+                        let mul = cos_abs / bxdf_sample.pdf;
+                        for (t, s) in throughput.iter_mut().zip(bxdf_sample.spectrum) {
+                            *t *= s * mul;
                         }
 
                         let ray = offset_ray_towards(hit.point, hit.normal, bxdf_sample.incident);
@@ -151,48 +142,19 @@ impl SpectralPath {
                         }
                     }
                     BxDFSampleResult::ScatteredBundle(bundle) => {
-                        // let total: Float = bundle.iter().map(|s| s.pdf).sum();
-                        // total = 36
-
-                        /*         /    1 / n,   if random
-                        p( λ^k ) = \    C / n,   if hero
-
-                        p( X_i, λ_i^j ) = 1/C * SUM_k p( λ_i^k ) * p( X_i | λ_i^k)
-                                        |                          -------------- will be 1 if j = k
-                                        |                                         otherwise 0
-                                        |
-                                        = 1/C * p( λ_i^k ) * 1
-                                        |
-                                        | /     1/Cn,    if random
-                                        = \     1/n,     if hero
-                        */
-
-                        for sample in bundle {
+                        for (index, sample) in bundle.iter().enumerate() {
                             if sample.pdf == 0.0 || sample.intensity == 0.0 {
                                 continue;
                             }
 
-                            let specular = sample.typ.is_specular();
-                            let cos_abs = if specular {
+                            let cos_abs = if sample.typ.is_specular() {
                                 // division of cosine omitted in specular bxdfs
                                 1.0
                             } else {
                                 sample.incident.dot(normal).abs()
                             };
 
-                            // let modifier = crate::Spectrum::size() as Float / buf_size as Float;
-
-                            let pdf = sample.pdf
-                                / match self.spectral_sampler {
-                                    SpectralSampler::Random => {
-                                        1.0 / crate::Spectrum::size() as Float
-                                    }
-                                    SpectralSampler::Hero => {
-                                        buf_size as Float / crate::Spectrum::size() as Float
-                                    }
-                                };
-
-                            throughput[sample.index] *= sample.intensity * cos_abs / pdf;
+                            throughput[index] *= sample.intensity * cos_abs / sample.pdf;
 
                             let ray = offset_ray_towards(hit.point, hit.normal, sample.incident);
                             match scene.intersect(&ray) {
@@ -202,8 +164,8 @@ impl SpectralPath {
                                         new_hit,
                                         sampler,
                                         sample.index,
-                                        &mut illumination[sample.index],
-                                        &mut throughput[sample.index],
+                                        &mut illumination[index],
+                                        &mut throughput[index],
                                         bounce,
                                     );
                                 }

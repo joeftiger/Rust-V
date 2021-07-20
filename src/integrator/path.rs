@@ -28,7 +28,6 @@ impl Integrator for Path {
             let mut throughput = Spectrum::broadcast(1.0);
 
             let mut hit = intersection;
-            let mut specular = false;
 
             for _ in 0..self.max_depth {
                 let outgoing = -hit.ray.direction;
@@ -47,8 +46,7 @@ impl Integrator for Path {
                         break;
                     }
 
-                    specular = bxdf_sample.typ.is_specular();
-                    let cos_abs = if specular {
+                    let cos_abs = if bxdf_sample.typ.is_specular() {
                         // division of cosine omitted in specular bxdfs
                         1.0
                     } else {
