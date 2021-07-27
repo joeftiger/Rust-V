@@ -16,7 +16,7 @@
             x: 32,
             y: 32,
         ),
-        passes: 5000,
+        passes: 500000,
         threads: None,
     ),
     camera: {
@@ -39,8 +39,8 @@
             ),
             FovY: 70,
             Resolution: (
-                x: 256,
-                y: 256,
+                x: 512,
+                y: 512,
             ),
         ),
     },
@@ -213,7 +213,7 @@
                             y: -0.25,
                             z: 1,
                         ),
-                        radius: 1,
+                        radius: 0.5,
                     ),
                 },
                 bsdf: (

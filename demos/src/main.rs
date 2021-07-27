@@ -19,20 +19,14 @@ type Rotation3 = ultraviolet::DRotor3;
 mod demo_scenes;
 
 fn main() {
-    let c = SerdeColors::MulColor(4., Colors::White);
-    let serde = to_string_pretty(&c, PrettyConfig::default()).unwrap();
+    CornellScene::create();
+    // let scene = CornellScene::create();
 
-    println!("{}", serde);
+    // let serialization =
+    //     to_string_pretty(&scene, PrettyConfig::default()).expect("Could not serialize to RON");
+
+    // std::fs::write("./scenes/dragon.ron", serialization).expect("Could not write to RON file");
 }
-
-// fn main() {
-//     let scene = CornellScene::create();
-//
-//     let serialization =
-//         to_string_pretty(&scene, PrettyConfig::default()).expect("Could not serialize to RON");
-//
-//     std::fs::write("./scenes/cornell.ron", serialization).expect("Could not write to RON file");
-// }
 
 /*#[show_image::main]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

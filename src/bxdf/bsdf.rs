@@ -4,8 +4,9 @@ use crate::samplers::Sample;
 use crate::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct BSDF {
+    #[serde(default)]
     bxdfs: Vec<Box<dyn BxDF>>,
 }
 

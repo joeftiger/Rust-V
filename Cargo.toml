@@ -53,9 +53,9 @@ harness = false
 f64 = ["ultraviolet/f64", "color/f64", "geometry/f64", "utility/f64"]
 
 [profile.release]
-#codegen-units = 1
+codegen-units = 1
 opt-level = 3
-#lto = true
+lto = true
 incremental = true
 
 [profile.dev]

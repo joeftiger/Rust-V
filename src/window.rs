@@ -8,7 +8,6 @@ use std::thread;
 pub struct RenderWindow<'a> {
     window: WindowProxy,
     renderer: &'a mut Renderer,
-    auto_reload: bool,
 }
 
 impl<'a> RenderWindow<'a> {
@@ -27,11 +26,7 @@ impl<'a> RenderWindow<'a> {
 
         let window = create_window(name, options)?;
 
-        Ok(Self {
-            window,
-            renderer,
-            auto_reload: false,
-        })
+        Ok(Self { window, renderer })
     }
 
     pub fn render(&mut self) -> Result<(), InvalidWindowId> {
@@ -40,24 +35,11 @@ impl<'a> RenderWindow<'a> {
         let mut early_stop = false;
 
         'main: while !self.renderer.is_done() {
-            if self.auto_reload {
-                let image = self.renderer.get_image_u8();
-                if let Err(err) = self.window.set_image("Rendering", image) {
-                    eprintln!("{}\nSkipping this image!", err);
-                }
-            }
-
             for e in self.window.event_channel()? {
                 if let event::WindowEvent::KeyboardInput(event) = e {
                     if event.input.state.is_pressed() {
                         if let Some(key) = event.input.key_code {
                             match key {
-                                VirtualKeyCode::R => {
-                                    self.auto_reload = !self.auto_reload;
-
-                                    println!("Auto reload: {}", self.auto_reload);
-                                    break;
-                                }
                                 VirtualKeyCode::Escape => {
                                     early_stop = true;
                                     break 'main;

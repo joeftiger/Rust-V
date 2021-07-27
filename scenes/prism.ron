@@ -3,8 +3,8 @@
         filename: Some("./prism.png"),
         bounds: None,
         block_size: (
-            x: 8,
-            y: 8,
+            x: 16,
+            y: 16,
         ),
         passes: 1000000,
         threads: None,
@@ -37,7 +37,7 @@
     },
     integrator: {
         "SpectralPath": (
-            max_depth: 5,
+            max_depth: 8,
             light_wave_samples: 6,
             direct_light_strategy: All,
             spectral_sampler: Hero,
@@ -152,7 +152,6 @@
                                 z: 1,
                             ),
                         ],
-                        //VertexNormals: [], // Optional, may be omitted
                         Faces: [
                             // BACK
                             (
@@ -195,7 +194,7 @@
                                 vn: None,
                             ),
                         ],
-                        Bounds: (
+                        bounds: (
                             min: (
                                 x: -1,
                                 y: 0.00001,
@@ -207,7 +206,7 @@
                                 z: 1,
                             ),
                         ),
-                        ShadingMode: Flat,
+                        shading_mode: Flat,
                     ),
                 },
                 bsdf: (
@@ -218,7 +217,7 @@
                                 t: Constant(1),
                                 fresnel: (
                                     eta_i: Air,
-                                    eta_t: Glass,
+                                    eta_t: Sapphire,
                                 ),
                             ),
                         },
@@ -229,99 +228,98 @@
                 geometry: {
                     "Sphere": (
                         center: (
-                            x: -1.5,
+                            x: -2.5,
                             y: 1,
                             z: 0,
                         ),
-                        radius: 0.05,
+                        radius: 0.5,
                     ),
                 },
                 bsdf: (
                     bxdfs: [],
                 ),
-                // emission: Color(White),
-                emission: Constant(10000),
+                emission: Color(White),
             )),
             // Light Block Bottom
-            Receiver((
-                geometry: {
-                    "Aabb": (
-                        min: (
-                            x: -1.01,
-                            y: 0,
-                            z: -100,
-                        ),
-                        max: (
-                            x: -1,
-                            y: 0.995,
-                            z: 100,
-                        ),
-                    ),
-                },
-                bsdf: (
-                    bxdfs: [],
-                ),
-            )),
-            // Light Block Top
-            Receiver((
-                geometry: {
-                    "Aabb": (
-                        min: (
-                            x: -1.01,
-                            y: 1.005,
-                            z: -100,
-                        ),
-                        max: (
-                            x: -1,
-                            y: 2,
-                            z: 100,
-                        ),
-                    ),
-                },
-                bsdf: (
-                    bxdfs: [],
-                ),
-            )),
-            // Light Block Left
-            Receiver((
-                geometry: {
-                    "Aabb": (
-                        min: (
-                            x: -1.01,
-                            y: 0.995,
-                            z: -100,
-                        ),
-                        max: (
-                            x: -1,
-                            y: 1.005,
-                            z: -0.025,
-                        ),
-                    ),
-                },
-                bsdf: (
-                    bxdfs: [],
-                ),
-            )),
-            // Light Block Right
-            Receiver((
-                geometry: {
-                    "Aabb": (
-                        min: (
-                            x: -1.01,
-                            y: 0.995,
-                            z: 0.025,
-                        ),
-                        max: (
-                            x: -1,
-                            y: 1.005,
-                            z: 100,
-                        ),
-                    ),
-                },
-                bsdf: (
-                    bxdfs: [],
-                ),
-            )),
+            // Receiver((
+            //     geometry: {
+            //         "Aabb": (
+            //             min: (
+            //                 x: -1.01,
+            //                 y: -1,
+            //                 z: -100,
+            //             ),
+            //             max: (
+            //                 x: -1,
+            //                 y: 0.995,
+            //                 z: 100,
+            //             ),
+            //         ),
+            //     },
+            //     bsdf: (
+            //         bxdfs: [],
+            //     ),
+            // )),
+            // // Light Block Top
+            // Receiver((
+            //     geometry: {
+            //         "Aabb": (
+            //             min: (
+            //                 x: -1.01,
+            //                 y: 1.005,
+            //                 z: -100,
+            //             ),
+            //             max: (
+            //                 x: -1,
+            //                 y: 2,
+            //                 z: 100,
+            //             ),
+            //         ),
+            //     },
+            //     bsdf: (
+            //         bxdfs: [],
+            //     ),
+            // )),
+            // // Light Block Left
+            // Receiver((
+            //     geometry: {
+            //         "Aabb": (
+            //             min: (
+            //                 x: -1.01,
+            //                 y: 0.995,
+            //                 z: -100,
+            //             ),
+            //             max: (
+            //                 x: -1,
+            //                 y: 1.005,
+            //                 z: -0.025,
+            //             ),
+            //         ),
+            //     },
+            //     bsdf: (
+            //         bxdfs: [],
+            //     ),
+            // )),
+            // // Light Block Right
+            // Receiver((
+            //     geometry: {
+            //         "Aabb": (
+            //             min: (
+            //                 x: -1.01,
+            //                 y: 0.995,
+            //                 z: 0.025,
+            //             ),
+            //             max: (
+            //                 x: -1,
+            //                 y: 1.005,
+            //                 z: 100,
+            //             ),
+            //         ),
+            //     },
+            //     bsdf: (
+            //         bxdfs: [],
+            //     ),
+            // )),
         ],
     ),
 )

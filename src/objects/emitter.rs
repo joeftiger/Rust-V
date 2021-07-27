@@ -14,6 +14,7 @@ use utility::floats::FloatExt;
 #[derive(Serialize, Deserialize)]
 pub struct Emitter {
     geometry: Box<dyn Sampleable>,
+    #[serde(default)]
     pub bsdf: BSDF,
     pub emission: Spectrum,
 }

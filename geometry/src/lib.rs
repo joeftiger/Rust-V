@@ -22,6 +22,8 @@ pub type Rotation3 = ultraviolet::Rotor3;
 #[cfg(not(feature = "f64"))]
 pub type Matrix3 = ultraviolet::Mat3;
 #[cfg(not(feature = "f64"))]
+pub type Matrix4 = ultraviolet::Mat4;
+#[cfg(not(feature = "f64"))]
 use std::f32::consts::{PI, TAU};
 #[cfg(feature = "f64")]
 pub type Float = f64;
@@ -31,6 +33,8 @@ pub type Vector3 = ultraviolet::DVec3;
 pub type Rotation3 = ultraviolet::DRotor3;
 #[cfg(feature = "f64")]
 pub type Matrix3 = ultraviolet::DMat3;
+#[cfg(feature = "f64")]
+pub type Matrix4 = ultraviolet::DMat4;
 #[cfg(feature = "f64")]
 use std::f64::consts::{PI, TAU};
 

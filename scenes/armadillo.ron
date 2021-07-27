@@ -1,0 +1,262 @@
+(
+    config: (
+        filename: Some("dragon.png"),
+        //bounds: Some((
+        //     min: (
+        //         x: 0.25,
+        //         y: 0.525,
+        //     ),
+        //     max: (
+        //         x: 0.75,
+        //         y: 0.95,
+        //     ),
+        //)),
+        bounds: None,
+        block_size: (
+            x: 32,
+            y: 32,
+        ),
+        passes: 100000,
+        threads: None,
+    ),
+    camera: {
+        "PerspectiveCamera": (
+            Sampler: Random,
+            Position: (
+                x: 0,
+                y: 0,
+                z: 4,
+            ),
+            Target: (
+                x: 0,
+                y: 0,
+                z: 0,
+            ),
+            Up: (
+                x: 0,
+                y: 1,
+                z: 0,
+            ),
+            FovY: 70,
+            Resolution: (
+                x: 1080,
+                y: 1080,
+                // x: 400,
+                // y: 400,
+            ),
+        ),
+    },
+    integrator: {
+        //"Whitted": (
+        //    max_depth: 8,
+        //)
+        "SpectralPath": (
+            max_depth: 12,
+            light_wave_samples: 6,
+            direct_light_strategy: All,
+            spectral_sampler: Hero,
+        ),
+    },
+    sampler: Random,
+    scene: (
+        bounding_box: (
+            min: (
+                x: -2.08,
+                y: -2.08,
+                z: -2.08,
+            ),
+            max: (
+                x: 2.08,
+                y: 2.25,
+                z: 2,
+            ),
+        ),
+        objects: [
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -2.08,
+                            y: 2,
+                            z: -2.08,
+                        ),
+                        max: (
+                            x: 2.08,
+                            y: 2.08,
+                            z: 2,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "OrenNayar": (
+                                r: Color(White),
+                                a: 0.86516786,
+                                b: 0.25882423,
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -2.08,
+                            y: -2.08,
+                            z: -2.08,
+                        ),
+                        max: (
+                            x: -2,
+                            y: 2.08,
+                            z: 2,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "OrenNayar": (
+                                r: Color(Red),
+                                a: 0.86516786,
+                                b: 0.25882423,
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -2.08,
+                            y: -2.08,
+                            z: -2.08,
+                        ),
+                        max: (
+                            x: 2.08,
+                            y: 2.08,
+                            z: -2,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "OrenNayar": (
+                                r: Color(White),
+                                a: 0.86516786,
+                                b: 0.25882423,
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: 2,
+                            y: -2.08,
+                            z: -2.08,
+                        ),
+                        max: (
+                            x: 2.08,
+                            y: 2.08,
+                            z: 2,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "OrenNayar": (
+                                r: Color(Green),
+                                a: 0.86516786,
+                                b: 0.25882423,
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Receiver((
+                geometry: {
+                    "Aabb": (
+                        min: (
+                            x: -2.08,
+                            y: -2.08,
+                            z: -2.08,
+                        ),
+                        max: (
+                            x: 2.08,
+                            y: -2,
+                            z: 2,
+                        ),
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "OrenNayar": (
+                                r: Color(White),
+                                a: 0.86516786,
+                                b: 0.25882423,
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Receiver((
+                geometry: {
+                    "Mesh": (
+                        obj: (
+                        	path: "./meshes/armadillo.obj",
+                        	//scale: Some((x: 13.147903, y: 13.147903, z: 13.147903)),
+                    		rotation: Some((
+                    			(
+                    				x: 0,
+                    				y: 1,
+                    				z: 0,
+                    			),
+                    			3.141592653589793,
+                			)),
+                			translation: Some((x: 0, y: -0.95, z: 0)),
+                        ),
+                        shading_mode: Flat,
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [
+                        {
+                            "FresnelSpecular": (
+                                r: MulColor(0.75, White),
+                                t: MulColor(0.75, White),
+                                fresnel: (
+                                    eta_i: Air,
+                                    eta_t: Sapphire, //Linear(1.5, 1.8),
+                                ),
+                            ),
+                        },
+                    ],
+                ),
+            )),
+            Emitter((
+                geometry: {
+                    "Sphere": (
+                        center: (
+                            x: -1,
+                            y: 1,
+                            z: -1,
+                        ),
+                        radius: 0.5,
+                    ),
+                },
+                bsdf: (
+                    bxdfs: [],
+                ),
+                emission: MulColor(2, White),
+            )),
+        ],
+    ),
+)

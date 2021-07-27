@@ -3,14 +3,22 @@
 use crate::demo_scenes::{Demo, Float, Vector3, FOVY, SIGMA};
 use color::{Color, Colors};
 use geometry::{Aabb, BiconvexLens, Boundable, Bubble, Mesh, ShadingMode, Sphere};
-use rust_v::bxdf::{FresnelSpecular, OrenNayar, BSDF};
+use rust_v::bxdf::{
+    BeckmannDistribution, FresnelDielectric, FresnelSpecular, FresnelType, MicrofacetReflection,
+    OrenNayar, BSDF,
+};
 use rust_v::camera::{Camera, PerspectiveCamera};
 use rust_v::objects::{Emitter, Receiver, SceneObject};
 use rust_v::refractive_index::RefractiveType;
 use rust_v::samplers::camera::CameraSampler;
 
+use crate::Rotation3;
 use rust_v::serialization::Serialization;
 use rust_v::Spectrum;
+#[cfg(not(feature = "f64"))]
+use std::f32::consts::FRAC_PI_2;
+#[cfg(feature = "f64")]
+use std::f64::consts::FRAC_PI_2;
 use std::sync::Arc;
 use ultraviolet::UVec2;
 
@@ -54,7 +62,8 @@ impl Demo for CornellScene {
         });
 
         // scene.add(create_sphere());
-        // scene.add(create_dragon());
+        scene.add(create_dragon());
+        // scene.add(create_bunny());
         // scene.add(create_biconvex_lens());
         // scene.add(create_bubble());
         scene.add(create_emitter());
@@ -91,17 +100,72 @@ fn create_dragon() -> SceneObject {
 
     // scaling the dragon to (DIMENSION / 1.5)
     let scale = Vector3::broadcast(DIMENSION / 1.5) / dragon.bounds().size();
-    dragon.scale(Vector3::broadcast(scale.component_min()));
+    let scale = Vector3::broadcast(scale.component_min());
+    dragon.scale(scale);
+    println!("Scale: {:?}", scale);
+
+    // rotate dragon
+    let rotation = Rotation3::from_rotation_xz(FRAC_PI_2 as Float);
+    dragon.rotate(Rotation3::from_rotation_xz(FRAC_PI_2 as Float));
+    println!("Rotation: {:?}", rotation);
 
     // translate dragon to center
     let bounds = dragon.bounds();
     let center = bounds.center();
     let center_floor = Vector3::new(center.x, bounds.min.y, center.z);
-
     let translation = Vector3::new(X_CENTER, FLOOR + 0.01, Z_CENTER) - center_floor;
-    // dragon.rotate(Rotation3::from_rotation_xz(FRAC_PI_2 as Float));
     dragon.translate(translation);
+    println!("Translation: {:?}", translation);
+
     dragon.build_bvh();
+
+    let specular = FresnelSpecular::new(
+        Spectrum::broadcast(1.0),
+        Spectrum::broadcast(1.0),
+        RefractiveType::Air,
+        RefractiveType::Sapphire,
+    );
+
+    let microfacet = MicrofacetReflection::new(
+        Spectrum::from(Colors::Cyan),
+        Box::new(BeckmannDistribution::new(0.25, 0.25, false)),
+        FresnelType::Dielectric(FresnelDielectric::new(
+            RefractiveType::Air,
+            RefractiveType::Sapphire,
+        )),
+    );
+
+    let bsdf = BSDF::new(vec![Box::new(specular), Box::new(microfacet)]);
+    let geometry = Box::new(dragon);
+
+    let receiver = Arc::new(Receiver::new(geometry, bsdf));
+
+    SceneObject::Receiver(receiver)
+}
+
+fn create_bunny() -> SceneObject {
+    let mut bunny = Mesh::load("./meshes/bunny.obj", ShadingMode::Flat);
+
+    // scaling the bunny to (DIMENSION / 1.5)
+    let scale = Vector3::broadcast(DIMENSION / 1.5) / bunny.bounds().size();
+    let scale = Vector3::broadcast(scale.component_min());
+    bunny.scale(scale);
+    println!("Scale: {:?}", scale);
+
+    // rotate bunny
+    let rotation = Rotation3::from_rotation_xz(FRAC_PI_2 as Float);
+    bunny.rotate(Rotation3::from_rotation_xz(FRAC_PI_2 as Float));
+    println!("Rotation: {:?}", rotation);
+
+    // translate bunny to center
+    let bounds = bunny.bounds();
+    let center = bounds.center();
+    let center_floor = Vector3::new(center.x, bounds.min.y, center.z);
+    let translation = Vector3::new(X_CENTER, FLOOR + 0.001, Z_CENTER) - center_floor;
+    bunny.translate(translation);
+    println!("Translation: {:?}", translation);
+
+    bunny.build_bvh();
 
     let specular = FresnelSpecular::new(
         Spectrum::broadcast(1.0),
@@ -113,7 +177,7 @@ fn create_dragon() -> SceneObject {
     let bxdf = Box::new(specular);
 
     let bsdf = BSDF::new(vec![bxdf]);
-    let geometry = Box::new(dragon);
+    let geometry = Box::new(bunny);
 
     let receiver = Arc::new(Receiver::new(geometry, bsdf));
 

@@ -90,7 +90,7 @@
             Receiver((
                 geometry: {
                     "Mesh": (
-                        Vertices: [
+                        vertices: [
                             // 0: LEFT BACK
                             (
                                 x: -1,
@@ -128,7 +128,7 @@
                                 z: 1,
                             ),
                         ],
-                        Faces: [
+                        faces: [
                             // BACK
                             (
                                 v: (0, 2, 1),
@@ -170,7 +170,7 @@
                                 vn: None,
                             ),
                         ],
-                        Bounds: (
+                        bounds: (
                             min: (
                                 x: -1,
                                 y: 0.00001,
@@ -182,7 +182,7 @@
                                 z: 1,
                             ),
                         ),
-                        ShadingMode: Flat,
+                        shading_mode: Flat,
                     ),
                 },
                 bsdf: (

@@ -45,6 +45,9 @@
         ),
     },
     integrator: {
+        // "Path": (
+        //     max_depth: 8,
+        // ),
         "SpectralPath": (
             max_depth: 8,
             light_wave_samples: 36,
